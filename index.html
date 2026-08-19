@@ -1,0 +1,2727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kaler Kantho CRM - Professional Workspace</title>
+    
+    <!-- Favicon Link -->
+    <link class="fav" rel="icon" href="favicon.ico" type="image/x-icon">
+    
+    <!-- Icons & Typography -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Third-Party Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        :root {
+            /* Light Mode Variables */
+            --bg-main: #f0f4f8;
+            --bg-sidebar: #0f172a;
+            --bg-card: #ffffff;
+            --bg-input: #f1f5f9;
+            --bg-hover: #e8f0fe;
+            --sidebar-active: #2563eb;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --text-inverted: #ffffff;
+            --border-color: #e2e8f0;
+            --color-danger: #ef4444;
+            --color-success: #10b981;
+            --color-success-bg: #d1fae5;
+            --color-primary: #3b82f6;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.06), 0 1px 2px rgb(0 0 0 / 0.04);
+            --shadow-md: 0 4px 16px -2px rgb(0 0 0 / 0.08), 0 2px 6px -2px rgb(0 0 0 / 0.05);
+            --shadow-lg: 0 10px 30px -4px rgb(0 0 0 / 0.12), 0 4px 10px -4px rgb(0 0 0 / 0.06);
+            --transition-fast: all 0.18s cubic-bezier(0.4,0,0.2,1);
+            --transition-med: all 0.28s cubic-bezier(0.4,0,0.2,1);
+            
+            /* Badges / Specific Items */
+            --badge-bg: #eff6ff;
+            --badge-border: #bfdbfe;
+            --tag-bg: #d1fae5;
+            --tag-text: #065f46;
+            --tag-bw-bg: #e2e2e2;
+            --tag-bw-text: #475569;
+        }
+
+        /* Dark Mode Variables */
+        body.dark-mode {
+            --bg-main: #0b1120;
+            --bg-sidebar: #020617;
+            --bg-card: #1a2540;
+            --bg-input: #253253;
+            --bg-hover: #2a3a5e;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border-color: #2a3a5e;
+            
+            --badge-bg: #1e3a8a;
+            --badge-border: #1e40af;
+            --tag-bg: #064e3b;
+            --tag-text: #34d399;
+            --tag-bw-bg: #334155;
+            --tag-bw-text: #e2e8f0;
+            --color-success-bg: #064e3b;
+            --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.4), 0 1px 2px rgb(0 0 0 / 0.3);
+            --shadow-md: 0 4px 16px -2px rgb(0 0 0 / 0.5), 0 2px 6px -2px rgb(0 0 0 / 0.3);
+            --shadow-lg: 0 10px 30px -4px rgb(0 0 0 / 0.6), 0 4px 10px -4px rgb(0 0 0 / 0.4);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        html { scroll-behavior: smooth; }
+        
+        body { 
+            font-family: 'Inter', 'Noto Sans Bengali', sans-serif; 
+            background-color: var(--bg-main); 
+            color: var(--text-main); 
+            display: flex; 
+            height: 100vh; 
+            overflow: hidden; 
+            position: relative; 
+            transition: background-color 0.35s ease, color 0.35s ease; 
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 6px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+        
+        /* Focus ring */
+        *:focus-visible { outline: 2px solid var(--sidebar-active); outline-offset: 2px; border-radius: 4px; }
+
+        /* --- LOGIN OVERLAY --- */
+        .login-overlay { 
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%); 
+            display: flex; justify-content: center; align-items: center; 
+            z-index: 10000; 
+            transition: opacity 0.4s ease; 
+        }
+        .login-overlay::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse at 30% 70%, rgba(37,99,235,0.15) 0%, transparent 60%),
+                        radial-gradient(ellipse at 70% 30%, rgba(16,185,129,0.08) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        .login-box { 
+            background: var(--bg-card); 
+            padding: 44px 40px; 
+            border-radius: 20px; 
+            width: 100%; max-width: 400px; 
+            box-shadow: 0 30px 60px -12px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05); 
+            text-align: center; 
+            position: relative;
+            animation: loginSlideUp 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+        }
+        @keyframes loginSlideUp { from { opacity: 0; transform: translateY(30px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .login-box img { max-width: 150px; margin-bottom: 20px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
+        body.dark-mode .login-box img { filter: brightness(0) invert(1); }
+        .login-box h2 { margin-bottom: 5px; color: var(--text-main); font-size: 1.6rem; font-weight: 700; letter-spacing: -0.5px; }
+        .login-box p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 28px; }
+        .login-box input[type="text"], .login-box input[type="password"] { 
+            width: 100%; padding: 13px 16px; margin-bottom: 14px; 
+            border: 1.5px solid var(--border-color); border-radius: 10px; 
+            background: var(--bg-input); color: var(--text-main); 
+            outline: none; font-size: 0.95rem; 
+            transition: var(--transition-fast);
+        }
+        .login-box input:focus { border-color: var(--sidebar-active); box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12); background: var(--bg-card); }
+        .login-box .checkbox-group { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; color: var(--text-main); font-size: 0.9rem; text-align: left; cursor: pointer; }
+        .login-box .btn { width: 100%; justify-content: center; padding: 13px; font-size: 1rem; margin-bottom: 10px; }
+        .login-error { color: var(--color-danger); font-size: 0.85rem; margin-bottom: 15px; display: none; font-weight: 600; padding: 10px 14px; background: rgba(239,68,68,0.08); border-radius: 8px; border: 1px solid rgba(239,68,68,0.2); }
+
+        /* --- SIDEBAR NAVIGATION --- */
+        .sidebar { 
+            width: 262px; 
+            background: linear-gradient(180deg, #0f172a 0%, #0d1526 100%);
+            color: var(--text-inverted); 
+            display: flex; flex-direction: column; flex-shrink: 0; 
+            transition: all 0.32s cubic-bezier(0.4, 0, 0.2, 1); 
+            z-index: 1000;
+            border-right: 1px solid rgba(255,255,255,0.04);
+        }
+        .sidebar-brand { 
+            padding: 26px 20px 22px; 
+            display: flex; flex-direction: column; align-items: center; gap: 10px; 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07); 
+            text-align: center; position: relative; 
+        }
+        .sidebar-logo { max-width: 85%; height: auto; filter: brightness(0) invert(1); }
+        .sidebar-brand-text { 
+            font-size: 0.78rem; font-weight: 700; 
+            color: #60a5fa; 
+            letter-spacing: 1.2px; text-transform: uppercase; 
+        }
+        .sidebar-menu { list-style: none; padding: 16px 10px; overflow-y: auto; flex: 1; }
+        .sidebar-item a { 
+            display: flex; align-items: center; gap: 13px; 
+            padding: 12px 16px; 
+            color: #94a3b8; text-decoration: none; 
+            font-size: 0.9rem; font-weight: 500; 
+            transition: var(--transition-fast); 
+            border-radius: 10px;
+            margin-bottom: 2px;
+        }
+        .sidebar-item.active a { 
+            background: linear-gradient(135deg, #2563eb, #1d4ed8); 
+            color: #ffffff; font-weight: 600; 
+            box-shadow: 0 4px 12px rgba(37,99,235,0.35);
+        }
+        .sidebar-item a:hover:not(.active a) { 
+            background: rgba(255, 255, 255, 0.06); 
+            color: #e2e8f0; 
+            transform: translateX(2px);
+        }
+        .sidebar-item a i { width: 18px; text-align: center; font-size: 0.95rem; }
+        .user-role-badge { background: rgba(59,130,246,0.25); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); padding: 2px 8px; border-radius: 12px; font-size: 0.68rem; font-weight: 700; margin-left: auto; letter-spacing: 0.3px; }
+
+        /* --- MAIN VIEW CONTENT --- */
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; overflow-y: auto; position: relative; width: 100%; display: none; }
+        .top-header { 
+            background-color: var(--bg-card); 
+            padding: 16px 28px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            border-bottom: 1px solid var(--border-color); 
+            gap: 15px; 
+            transition: var(--transition-med); 
+            position: sticky; top: 0; z-index: 100;
+            box-shadow: var(--shadow-sm);
+        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        
+        .menu-toggle-btn { 
+            display: none; 
+            background: var(--bg-input); border: 1px solid var(--border-color); 
+            font-size: 1.1rem; color: var(--text-main); cursor: pointer; 
+            padding: 8px 10px; border-radius: 8px;
+            transition: var(--transition-fast);
+        }
+        .menu-toggle-btn:hover { background: var(--bg-hover); color: var(--sidebar-active); }
+        .page-title { font-size: 1.4rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.5px; white-space: nowrap; transition: var(--transition-fast); }
+        
+        .header-search { position: relative; width: 310px; }
+        .header-search input { 
+            width: 100%; padding: 10px 16px 10px 40px; 
+            border-radius: 24px; 
+            border: 1.5px solid var(--border-color); 
+            background-color: var(--bg-input); color: var(--text-main); 
+            font-size: 0.88rem; outline: none; 
+            transition: var(--transition-fast); 
+        }
+        .header-search input::placeholder { color: var(--text-muted); }
+        .header-search input:focus { 
+            background-color: var(--bg-card); 
+            border-color: var(--sidebar-active); 
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12); 
+        }
+        .header-search i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.85rem; }
+        
+        .header-actions { display: flex; align-items: center; gap: 12px; position: relative; }
+        .theme-toggle { 
+            background: var(--bg-input); border: 1px solid var(--border-color); 
+            font-size: 1rem; color: var(--text-main); cursor: pointer; 
+            padding: 8px 10px; border-radius: 8px;
+            transition: var(--transition-fast); 
+        }
+        .theme-toggle:hover { background: var(--bg-hover); color: var(--sidebar-active); transform: scale(1.05); }
+        
+        /* --- USER AVATAR & DROPDOWN MENU --- */
+        .user-profile { 
+            display: flex; align-items: center; gap: 10px; 
+            font-weight: 600; font-size: 0.9rem; color: var(--text-main); 
+            cursor: pointer; padding: 5px 10px 5px 5px; 
+            border-radius: 24px; 
+            transition: var(--transition-fast); 
+            position: relative;
+            border: 1.5px solid transparent;
+        }
+        .user-profile:hover { background-color: var(--bg-hover); border-color: var(--border-color); }
+        .user-avatar { 
+            width: 36px; height: 36px; border-radius: 50%; 
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            display: flex; align-items: center; justify-content: center; 
+            color: #fff; font-weight: 700; font-size: 0.9rem;
+            box-shadow: 0 2px 8px rgba(37,99,235,0.3);
+            flex-shrink: 0; 
+        }
+        
+        /* User Profile Dropdown Popover */
+        .user-menu-popover { 
+            position: absolute; top: calc(100% + 10px); right: 0; 
+            background: var(--bg-card); 
+            border: 1px solid var(--border-color); 
+            border-radius: 14px; 
+            box-shadow: var(--shadow-lg); 
+            width: 256px; 
+            display: none; flex-direction: column; 
+            z-index: 2000; overflow: hidden; 
+            animation: popoverIn 0.18s cubic-bezier(0.34,1.56,0.64,1) both; 
+        }
+        .user-menu-popover.show { display: flex; }
+        .user-popover-header { padding: 16px; border-bottom: 1px solid var(--border-color); background: var(--bg-input); }
+        .user-popover-name { font-weight: 700; font-size: 0.95rem; color: var(--text-main); }
+        .user-popover-role { font-size: 0.72rem; color: var(--sidebar-active); font-weight: 600; text-transform: uppercase; margin-top: 3px; letter-spacing: 0.5px; }
+        .user-popover-menu { list-style: none; padding: 6px; margin: 0; }
+        .user-popover-item { 
+            padding: 9px 12px; 
+            display: flex; align-items: center; gap: 11px; 
+            font-size: 0.87rem; font-weight: 500; color: var(--text-main); 
+            cursor: pointer; transition: var(--transition-fast); 
+            border-radius: 8px;
+        }
+        .user-popover-item:hover { background-color: var(--bg-hover); color: var(--sidebar-active); }
+        .user-popover-item i { font-size: 0.95rem; width: 18px; text-align: center; color: var(--text-muted); transition: color 0.15s; }
+        .user-popover-item:hover i { color: var(--sidebar-active); }
+        .user-popover-divider { height: 1px; background-color: var(--border-color); margin: 4px 6px; }
+        .user-popover-item.text-danger { color: var(--color-danger); }
+        .user-popover-item.text-danger i { color: var(--color-danger); }
+        .user-popover-item.text-danger:hover { background-color: rgba(239,68,68,0.08); }
+        body.dark-mode .user-popover-item.text-danger:hover { background-color: rgba(239,68,68,0.12); }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes popoverIn { from { opacity: 0; transform: translateY(-10px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+        .content-container { padding: 28px 30px; display: flex; flex-direction: column; gap: 22px; }
+
+        /* --- CRM DASHBOARD UI SPECIFIC --- */
+        .client-selector-bar { 
+            background: var(--bg-card); padding: 18px 22px; 
+            border-radius: var(--radius-md); box-shadow: var(--shadow-sm); 
+            border: 1px solid var(--border-color); 
+            display: none; align-items: center; gap: 15px; flex-wrap: wrap; 
+            transition: var(--transition-med);
+        }
+        .selector-group { display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 300px; }
+        .selector-group label { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; width: 100%; }
+        .client-dropdown { 
+            padding: 10px 14px; border-radius: 8px; 
+            border: 1.5px solid var(--border-color); 
+            background: var(--bg-input); color: var(--text-main); 
+            font-size: 0.92rem; width: 100%; outline: none; font-weight: 500;
+            transition: var(--transition-fast);
+        }
+        .client-dropdown:focus { border-color: var(--sidebar-active); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .client-info-badge { 
+            background: var(--badge-bg); border: 1px solid var(--badge-border); 
+            padding: 10px 16px; border-radius: 8px; 
+            font-size: 0.9rem; font-weight: 600; color: var(--sidebar-active); 
+            display: flex; align-items: center; gap: 8px; flex-grow: 1; 
+        }
+        body.dark-mode .client-info-badge { color: #60a5fa; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+        .stat-card { 
+            background-color: var(--bg-card); padding: 20px 22px; 
+            border-radius: var(--radius-md); 
+            border-left: 4px solid var(--sidebar-active); 
+            box-shadow: var(--shadow-sm); 
+            display: flex; justify-content: space-between; align-items: center; 
+            border-top: 1px solid var(--border-color); 
+            border-right: 1px solid var(--border-color); 
+            border-bottom: 1px solid var(--border-color); 
+            transition: var(--transition-fast), background-color 0.35s; 
+            cursor: pointer;
+        }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+        .stat-value { font-size: 2.1rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px; line-height: 1; }
+        .stat-label { font-size: 0.77rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; }
+        .stat-icon { 
+            font-size: 1.4rem; 
+            background: var(--bg-input); 
+            width: 46px; height: 46px; 
+            display: flex; align-items: center; justify-content: center; 
+            border-radius: 12px;
+        }
+        body.dark-mode .stat-icon { color: #64748b; }
+
+        .charts-grid { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 18px; }
+        .chart-card { 
+            background-color: var(--bg-card); padding: 20px; 
+            border-radius: var(--radius-md); 
+            box-shadow: var(--shadow-sm); 
+            border: 1px solid var(--border-color); 
+            display: flex; flex-direction: column; min-height: 255px; 
+            transition: var(--transition-med), background-color 0.35s; 
+        }
+        .chart-card:hover { box-shadow: var(--shadow-md); }
+        .chart-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 14px; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+        .chart-wrapper { position: relative; height: 175px; width: 100%; display: flex; justify-content: center; align-items: center; }
+
+        /* BUTTON BEAUTIFICATION */
+        .btn { 
+            display: inline-flex; align-items: center; gap: 7px; 
+            padding: 9px 18px; border-radius: 8px; 
+            font-size: 0.875rem; font-weight: 600; 
+            border: none; cursor: pointer; 
+            transition: var(--transition-fast); 
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .btn:active { transform: scale(0.97) !important; }
+        .btn-primary { background: #3b82f6; color: white; box-shadow: 0 3px 10px rgba(59, 130, 246, 0.25); }
+        .btn-primary:hover { background: #2563eb; transform: translateY(-1px); box-shadow: 0 5px 14px rgba(59,130,246,0.35); }
+        .btn-success { background: #10b981; color: white; box-shadow: 0 3px 10px rgba(16, 185, 129, 0.25); }
+        .btn-success:hover { background: #059669; transform: translateY(-1px); box-shadow: 0 5px 14px rgba(16,185,129,0.35); }
+        .btn-warning { background: #f59e0b; color: white; box-shadow: 0 3px 8px rgba(245,158,11,0.2); }
+        .btn-warning:hover { background: #d97706; transform: translateY(-1px); }
+        .btn-info { background: #06b6d4; color: white; box-shadow: 0 3px 8px rgba(6,182,212,0.2); }
+        .btn-info:hover { background: #0891b2; transform: translateY(-1px); }
+        .btn-danger { background: #ef4444; color: white; box-shadow: 0 3px 8px rgba(239,68,68,0.2); }
+        .btn-danger:hover { background: #dc2626; transform: translateY(-1px); }
+        
+        /* PREMIUM ACTIONS FOR PRINT/DOWNLOAD */
+        .btn-premium-print { background: linear-gradient(135deg, #4f46e5, #3730a3); color: white; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35); font-size: 0.95rem; padding: 12px 22px; }
+        .btn-premium-print:hover { transform: translateY(-2px); box-shadow: 0 7px 20px rgba(79, 70, 229, 0.45); }
+        
+        .btn-premium-pdf { background: linear-gradient(135deg, #059669, #064e3b); color: white; box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35); font-size: 0.95rem; padding: 12px 22px; }
+        .btn-premium-pdf:hover { transform: translateY(-2px); box-shadow: 0 7px 20px rgba(5, 150, 105, 0.45); }
+
+        .quick-rate-list { display: flex; flex-direction: column; gap: 6px; overflow-y: auto; height: 185px; padding-right: 4px; }
+        .quick-rate-item { display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; }
+        .quick-rate-title { font-size: 0.8rem; font-weight: 600; color: var(--text-main); line-height: 1.3; }
+        .quick-rate-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+        .quick-rate-tag { font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
+        .tag-color { background: var(--tag-bg); color: var(--tag-text); }
+        .tag-bw { background: var(--tag-bw-bg); color: var(--tag-bw-text); }
+        .quick-rate-price { font-size: 0.85rem; font-weight: 700; color: var(--sidebar-active); }
+
+        .officer-panel-list { overflow-y: auto; height: 185px; display: flex; flex-direction: column; gap: 6px; padding-right: 5px; }
+        .officer-panel-item { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: var(--bg-input); border-radius: 6px; border: 1px solid var(--border-color); cursor: pointer; transition: all 0.15s ease-in-out; }
+        .officer-panel-item:hover, .officer-panel-item.active { background: var(--badge-bg); border-color: var(--badge-border); transform: translateX(2px); }
+        .officer-panel-info { display: flex; align-items: center; gap: 8px; }
+        .officer-avatar-ring { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; background: var(--bg-card); color: var(--text-main); box-shadow: inset 0 0 0 2px var(--border-color); flex-shrink: 0; }
+        .officer-panel-item.active .officer-avatar-ring { box-shadow: inset 0 0 0 2px #2563eb; color: #2563eb; }
+        .ring-active { box-shadow: inset 0 0 0 2px #10b981; color: #10b981; }
+        .officer-panel-name { font-weight: 500; font-size: 0.8rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
+        .officer-panel-count { font-weight: 700; font-size: 0.8rem; color: var(--text-main); }
+
+        .keyword-container { 
+            display: flex; align-items: center; gap: 12px; 
+            background-color: var(--bg-card); padding: 14px 20px; 
+            border-radius: var(--radius-md); box-shadow: var(--shadow-sm); 
+            border: 1px solid var(--border-color); flex-wrap: wrap; 
+            transition: var(--transition-med); 
+        }
+        .keyword-label { font-size: 0.76rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+        .keyword-tags { display: flex; gap: 7px; flex-wrap: wrap; }
+        .tag { 
+            background: var(--bg-input); color: var(--text-muted); 
+            padding: 6px 14px; border-radius: 20px; 
+            font-size: 0.8rem; font-weight: 600; 
+            cursor: pointer; border: 1.5px solid var(--border-color); 
+            transition: var(--transition-fast); 
+        }
+        .tag:hover { background: var(--bg-hover); color: var(--sidebar-active); border-color: var(--badge-border); transform: translateY(-1px); }
+        .tag.active { background: var(--sidebar-active); color: #ffffff; border-color: var(--sidebar-active); box-shadow: 0 3px 8px rgba(37,99,235,0.3); transform: translateY(-1px); }
+
+        .table-card { 
+            background-color: var(--bg-card);
+            border-radius: var(--radius-md); 
+            box-shadow: var(--shadow-sm); 
+            padding: 22px 24px; 
+            border: 1px solid var(--border-color); 
+            margin-top: 0;
+            transition: var(--transition-med);
+        }
+        .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px; }
+        .table-title-group { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .table-title { font-size: 1.05rem; font-weight: 700; display: flex; align-items: center; gap: 8px; color: var(--text-main); }
+        
+        .inline-table-search { position: relative; width: 215px; }
+        .inline-table-search input { 
+            width: 100%; padding: 7px 12px 7px 32px; 
+            border-radius: 8px; border: 1.5px solid var(--border-color); 
+            background: var(--bg-input); color: var(--text-main); 
+            font-size: 0.83rem; outline: none;
+            transition: var(--transition-fast);
+        }
+        .inline-table-search input:focus { border-color: var(--sidebar-active); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .inline-table-search i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.78rem; }
+        .filter-badge { 
+            background: var(--badge-bg); color: var(--sidebar-active); 
+            font-size: 0.78rem; padding: 5px 12px; 
+            border-radius: 20px; border: 1px solid var(--badge-border); 
+            font-weight: 600; display: none; align-items: center; gap: 6px; 
+            animation: fadeIn 0.2s ease;
+        }
+        body.dark-mode .filter-badge { color: #60a5fa; }
+        .filter-badge i { cursor: pointer; transition: var(--transition-fast); }
+        .filter-badge i:hover { color: var(--color-danger); transform: scale(1.2); }
+
+        .action-buttons { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; }
+        
+        .table-responsive-wrapper { width: 100%; overflow-x: auto; border-radius: 8px; }
+        .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.875rem; min-width: 750px; }
+        .data-table th { 
+            background-color: var(--bg-input); color: var(--text-muted); 
+            padding: 12px 16px; font-weight: 700; 
+            text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.6px; 
+            border-bottom: 2px solid var(--border-color); 
+        }
+        .data-table th:first-child { border-radius: 8px 0 0 0; }
+        .data-table th:last-child { border-radius: 0 8px 0 0; }
+        .data-table td { 
+            padding: 13px 16px; 
+            border-bottom: 1px solid var(--border-color); 
+            color: var(--text-main); vertical-align: middle; 
+            transition: background-color 0.12s;
+        }
+        .data-table tbody tr:last-child td { border-bottom: none; }
+        .data-table tr:hover td { background-color: var(--bg-hover); }
+        
+        .col-sl { width: 55px; font-weight: 700; color: #b45309; font-size: 0.8rem; }
+        body.dark-mode .col-sl { color: #fbbf24; }
+        .col-pf { font-weight: 600; color: var(--text-muted); width: 105px; font-size: 0.83rem; }
+        .col-name { font-weight: 600; color: var(--text-main); }
+        .assigned-officer { color: var(--sidebar-active); display: flex; align-items: center; gap: 6px; font-weight: 500; }
+        body.dark-mode .assigned-officer { color: #60a5fa; }
+        .status-badge { 
+            background-color: var(--color-success-bg); color: var(--color-success); 
+            padding: 4px 11px; border-radius: 12px; 
+            font-size: 0.73rem; font-weight: 700; 
+            display: inline-block; letter-spacing: 0.2px;
+        }
+        .delete-row-btn { 
+            background: none; border: none; color: var(--color-danger); 
+            cursor: pointer; font-size: 0.9rem; padding: 5px 7px; 
+            border-radius: 6px; 
+            transition: var(--transition-fast);
+        }
+        .delete-row-btn:hover { background: rgba(239,68,68,0.1); transform: scale(1.1); }
+        body.dark-mode .delete-row-btn:hover { background: rgba(239,68,68,0.15); }
+
+        .rate-badge-color { background-color: var(--tag-bg); color: var(--tag-text); padding: 4px 10px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; }
+        .rate-badge-bw { background-color: var(--tag-bw-bg); color: var(--tag-bw-text); padding: 4px 10px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; }
+
+        .inline-edit-input { 
+            width: 100%; padding: 6px 10px; 
+            border: 1.5px solid var(--sidebar-active); 
+            background: var(--bg-card); color: var(--text-main); 
+            border-radius: 6px; font-size: 0.875rem; font-family: inherit;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+        }
+        .inline-edit-select { 
+            width: 100%; padding: 6px 10px; 
+            border: 1.5px solid var(--sidebar-active); 
+            background: var(--bg-card); color: var(--text-main); 
+            border-radius: 6px; font-size: 0.875rem;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+        }
+
+        .modal-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(8, 16, 36, 0.65); backdrop-filter: blur(6px); 
+            display: none; justify-content: center; align-items: center; 
+            z-index: 9999; padding: 15px; 
+        }
+        .modal-box { 
+            background: var(--bg-card); padding: 26px 28px; 
+            border-radius: 16px; width: 100%; max-width: 480px; 
+            box-shadow: var(--shadow-lg); 
+            color: var(--text-main);
+            animation: modalIn 0.25s cubic-bezier(0.34,1.56,0.64,1) both;
+        }
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.92) translateY(16px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .modal-box h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 6px; }
+        .modal-desc { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px; }
+        .form-group { margin-bottom: 13px; }
+        .form-group label { display: block; font-size: 0.77rem; font-weight: 700; margin-bottom: 5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; }
+        .form-group input, .form-group select, .form-group textarea { 
+            width: 100%; padding: 10px 12px; 
+            border: 1.5px solid var(--border-color); border-radius: 8px; 
+            outline: none; font-size: 0.9rem; font-family: inherit; 
+            background: var(--bg-input); color: var(--text-main);
+            transition: var(--transition-fast);
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { 
+            border-color: var(--sidebar-active); 
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+            background: var(--bg-card);
+        }
+        .bulk-textarea { 
+            width: 100%; height: 140px; padding: 12px; 
+            border: 1.5px solid var(--border-color); border-radius: 8px; 
+            font-family: 'JetBrains Mono', monospace; font-size: 0.83rem; 
+            resize: vertical; outline: none; 
+            background: var(--bg-input); color: var(--text-main); 
+            transition: var(--transition-fast);
+        }
+        .bulk-textarea:focus { border-color: var(--sidebar-active); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .modal-buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color); }
+        .btn-secondary { background-color: var(--bg-input); color: var(--text-muted); border: 1.5px solid var(--border-color); }
+        .btn-secondary:hover { background-color: var(--bg-hover); color: var(--text-main); transform: translateY(-1px); }
+        .editable-cell { cursor: pointer; transition: var(--transition-fast); }
+        .editable-cell:hover { background: var(--bg-hover) !important; outline: 1.5px dashed var(--sidebar-active); outline-offset: -2px; border-radius: 4px; }
+
+        /* --- USER MANAGEMENT SPECIFIC --- */
+        #userManagementSection { display: none; }
+        .role-badge { padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+        .role-admin { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+        .role-user { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
+        body.dark-mode .role-admin { background: #1e3a8a; color: #93c5fd; border-color: #1e40af; }
+        body.dark-mode .role-user { background: #374151; color: #d1d5db; border-color: #4b5563; }
+
+        /* --- QUOTATION STUDIO INTERFACE SPECIFIC --- */
+        #quotationStudioSection { display: none; }
+        .range-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: var(--bg-input); padding: 12px; border-radius: 6px; margin-bottom: 15px; }
+        .range-group { display: flex; flex-direction: column; gap: 4px; }
+        .range-group label { font-size: 0.8rem; font-weight: 600; color: var(--text-main); display: flex; justify-content: space-between; }
+        .range-group input[type="range"] { width: 100%; cursor: pointer; }
+        .quote-workspace-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 30px; align-items: start; }
+        .quote-form-panel { background: var(--bg-card); padding: 24px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); max-height: 85vh; overflow-y: auto; transition: background-color 0.3s;}
+        .quote-preview-panel { background: #525659; padding: 30px; border-radius: var(--radius-md); display: flex; justify-content: center; overflow-x: auto; }
+        
+        /* SHUNDOR DYNAMIC ROW STYLE */
+        .dynamic-item-row { display: grid; grid-template-columns: 2fr 1fr 1.2fr 1fr; gap: 10px; margin-bottom: 12px; align-items: center; background: var(--bg-input); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: inset 0 1px 2px rgba(0,0,0,0.02); }
+        .dynamic-item-row select, .dynamic-item-row input { width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border-color); outline: none; font-size: 0.85rem; background: var(--bg-card); color: var(--text-main); }
+        .dynamic-item-row select:focus, .dynamic-item-row input:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.1); }
+
+        /* A4 SHEET SPECIFIC - ALWYAS LIGHT THEME FOR PRINTING */
+        .a4-document-sheet { 
+            background: #ffffff !important; width: 210mm; min-height: 297mm; padding: 50mm 22mm 45mm 22mm; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3); color: #000 !important; font-size: 14.5px; line-height: 1.5; 
+            font-family: 'Noto Sans Bengali', sans-serif; position: relative; box-sizing: border-box; display: flex; flex-direction: column;
+        }
+        .a4-document-sheet * { color: #000 !important; }
+        .bn-date { margin-bottom: 18px; font-weight: 500; }
+        .bn-recipient { margin-bottom: 18px; line-height: 1.5; }
+        .bn-subject { font-weight: 700; margin-bottom: 18px; padding-bottom: 2px; }
+        .bn-salutation { margin-bottom: 10px; }
+        .bn-body-text { text-align: justify; margin-bottom: 22px; white-space: pre-wrap; line-height: 1.6; }
+        .bn-table { width: 100%; border-collapse: collapse; margin-bottom: 22px; font-size: 13.5px; }
+        .bn-table th { background: #f8fafc !important; padding: 10px 8px; border: 1px solid #000; font-weight: 600; text-align: center; color: #000 !important; font-size: 13.5px; }
+        .bn-table td { padding: 10px 8px; border: 1px solid #000; vertical-align: middle; background: transparent !important;}
+        .bn-signoff { margin-top: auto; line-height: 1.5; page-break-inside: avoid; }
+        .bn-signature-container { height: 55px; display: flex; align-items: center; margin: 4px 0; }
+        .bn-signature-img { max-height: 50px; width: auto; object-fit: contain; }
+        .bn-footer-pub-date { font-weight: bold; font-size: 13.5px; color: #000; margin-top: 6px; }
+
+        /* --- COMMERCIAL EXECUTIVE SECTION --- */
+        #commercialExecutiveSection, #classifiedAdRateSection { display: none; animation: sectionFadeIn 0.25s ease both; }
+        
+        .commercial-header-card {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #0f172a 100%);
+            color: #fff;
+            border-radius: var(--radius-lg);
+            padding: 28px 32px 20px;
+            margin-bottom: 24px;
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255,255,255,0.07);
+        }
+        .commercial-header-card h2 {
+            font-size: 1.7rem; font-weight: 800; letter-spacing: -0.5px;
+            color: #fff; margin-bottom: 4px;
+        }
+        .commercial-header-card .dept-subtitle {
+            font-size: 1rem; font-weight: 600;
+            color: #93c5fd; letter-spacing: 0.5px;
+        }
+        .commercial-table-wrapper {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+        .commercial-table {
+            width: 100%; border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+        .commercial-table thead tr {
+            background: linear-gradient(135deg, #0f172a, #1e3a5f);
+        }
+        .commercial-table thead th {
+            padding: 13px 14px;
+            font-size: 0.8rem; font-weight: 700;
+            color: #fff; text-align: center;
+            letter-spacing: 0.3px; border: none;
+            white-space: nowrap;
+        }
+        .commercial-table thead th:first-child { border-radius: 0; }
+        .commercial-table tbody tr:nth-child(even) { background: var(--bg-input); }
+        .commercial-table tbody tr:hover td { background: var(--bg-hover); }
+        .commercial-table td {
+            padding: 11px 14px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-main); vertical-align: middle;
+            text-align: center;
+        }
+        .commercial-table td.col-name-exec {
+            text-align: left; font-weight: 600;
+            color: var(--text-main);
+        }
+        .commercial-table td.col-place {
+            text-align: left; font-size: 0.83rem;
+            color: var(--text-muted);
+        }
+        .commercial-table td.col-pf-exec {
+            font-weight: 700; color: var(--sidebar-active);
+            font-size: 0.82rem;
+        }
+        .commercial-table td.col-phone {
+            font-weight: 600; color: #059669;
+            font-family: 'Courier New', monospace; font-size: 0.85rem;
+        }
+        body.dark-mode .commercial-table td.col-phone { color: #34d399; }
+        .commercial-sl-badge {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 26px; height: 26px; border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #fff; font-size: 0.72rem; font-weight: 800;
+            box-shadow: 0 2px 6px rgba(37,99,235,0.3);
+        }
+        .commercial-search-bar {
+            padding: 16px 20px; border-bottom: 1px solid var(--border-color);
+            display: flex; align-items: center; gap: 12px;
+            background: var(--bg-card); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        }
+        .commercial-search-bar input {
+            flex: 1; padding: 9px 14px 9px 36px;
+            border: 1.5px solid var(--border-color); border-radius: 20px;
+            background: var(--bg-input); color: var(--text-main);
+            font-size: 0.875rem; outline: none; transition: var(--transition-fast);
+        }
+        .commercial-search-bar input:focus {
+            border-color: var(--sidebar-active);
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+            background: var(--bg-card);
+        }
+        .commercial-search-bar .search-icon-wrap {
+            position: relative; flex: 1;
+        }
+        .commercial-search-bar .search-icon-wrap i {
+            position: absolute; left: 12px; top: 50%;
+            transform: translateY(-50%); color: var(--text-muted); font-size: 0.8rem;
+        }
+        .commercial-count-badge {
+            background: var(--badge-bg); color: var(--sidebar-active);
+            border: 1px solid var(--badge-border);
+            padding: 4px 12px; border-radius: 12px; font-size: 0.78rem; font-weight: 700;
+            white-space: nowrap;
+        }
+
+        /* --- CLASSIFIED AD RATE SECTION --- */
+        .classified-header-card {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #0f172a 100%);
+            color: #fff;
+            border-radius: var(--radius-lg);
+            padding: 28px 32px 20px;
+            margin-bottom: 24px;
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255,255,255,0.07);
+        }
+        .classified-header-card h2 {
+            font-size: 1.7rem; font-weight: 800; color: #fff;
+            margin-bottom: 4px; letter-spacing: -0.5px;
+        }
+        .classified-header-card .dept-subtitle {
+            font-size: 1rem; font-weight: 600; color: #93c5fd;
+        }
+        .classified-table-wrapper {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+        .classified-table {
+            width: 100%; border-collapse: collapse; font-size: 0.875rem;
+        }
+        .classified-table thead tr {
+            background: linear-gradient(135deg, #0f172a, #1e3a5f);
+        }
+        .classified-table thead th {
+            padding: 13px 12px; font-size: 0.78rem; font-weight: 700;
+            color: #fff; text-align: center; letter-spacing: 0.3px;
+            border: 1px solid rgba(255,255,255,0.1); white-space: nowrap;
+        }
+        .classified-table tbody tr:nth-child(even) { background: var(--bg-input); }
+        .classified-table tbody tr:hover td { background: var(--bg-hover); }
+        .classified-table td {
+            padding: 9px 12px;
+            border: 1px solid var(--border-color);
+            color: var(--text-main); text-align: center; vertical-align: middle;
+            font-size: 0.855rem;
+        }
+        .classified-table td.col-words {
+            font-weight: 800; color: #2563eb; font-size: 0.9rem;
+        }
+        body.dark-mode .classified-table td.col-words { color: #60a5fa; }
+        .classified-table td.col-total {
+            font-weight: 800; color: #059669; font-size: 0.92rem;
+            background: var(--color-success-bg) !important;
+        }
+        body.dark-mode .classified-table td.col-total { color: #34d399; }
+        .classified-table td.col-vat {
+            color: #f59e0b; font-weight: 700;
+        }
+        body.dark-mode .classified-table td.col-vat { color: #fbbf24; }
+        .classified-sl-badge {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 26px; height: 26px; border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: #fff; font-size: 0.7rem; font-weight: 800;
+        }
+        .classified-search-bar {
+            padding: 16px 20px; border-bottom: 1px solid var(--border-color);
+            display: flex; align-items: center; gap: 12px;
+            background: var(--bg-card); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        }
+        .classified-search-bar input {
+            flex: 1; padding: 9px 14px 9px 36px;
+            border: 1.5px solid var(--border-color); border-radius: 20px;
+            background: var(--bg-input); color: var(--text-main);
+            font-size: 0.875rem; outline: none; transition: var(--transition-fast);
+        }
+        .classified-search-bar input:focus {
+            border-color: var(--sidebar-active);
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+            background: var(--bg-card);
+        }
+        .classified-search-bar .search-icon-wrap { position: relative; flex: 1; }
+        .classified-search-bar .search-icon-wrap i {
+            position: absolute; left: 12px; top: 50%;
+            transform: translateY(-50%); color: var(--text-muted); font-size: 0.8rem;
+        }
+        .classified-info-pills {
+            display: flex; gap: 12px; flex-wrap: wrap;
+            padding: 12px 20px; background: var(--bg-input);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .classified-info-pill {
+            display: flex; align-items: center; gap: 6px;
+            padding: 5px 12px; border-radius: 20px;
+            font-size: 0.78rem; font-weight: 700;
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+        .classified-info-pill i { font-size: 0.75rem; }
+        
+        /* --- RESPONSIVE BREAKPOINTS --- */
+        @media (max-width: 1200px) {
+            .charts-grid { grid-template-columns: 1fr 1fr; }
+            .charts-grid .chart-card:last-child { grid-column: span 2; }
+            .officer-panel-list { height: auto; max-height: 220px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .quote-workspace-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 992px) {
+            body { flex-direction: column; }
+            .sidebar { width: 260px; height: 100vh; position: fixed; left: -260px; top: 0; box-shadow: 4px 0 15px rgba(0,0,0,0.1); }
+            .sidebar.active { left: 0; }
+            .menu-toggle-btn { display: block; }
+            .top-header { padding: 15px 20px; }
+            .content-container { padding: 20px; gap: 20px; }
+            .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.4); z-index: 99; }
+            .sidebar-overlay.active { display: block; }
+        }
+
+        @media (max-width: 768px) {
+            .top-header { flex-wrap: wrap; }
+            .header-search { order: 3; width: 100%; margin-top: 5px; }
+            .stats-grid { grid-template-columns: 1fr; gap: 12px; }
+            .charts-grid { grid-template-columns: 1fr; gap: 20px; }
+            .charts-grid .chart-card:last-child { grid-column: span 1; }
+            .officer-panel-list { grid-template-columns: 1fr; }
+            .table-card { padding: 15px; }
+            .table-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .action-buttons { width: 100%; justify-content: flex-start; }
+            .inline-table-search { width: 100%; }
+            .dynamic-item-row { grid-template-columns: 1fr; gap: 8px; }
+        }
+
+        /* --- TOAST NOTIFICATIONS --- */
+        .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 99999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast { 
+            display: flex; align-items: center; gap: 12px; 
+            padding: 13px 18px; 
+            border-radius: 12px; 
+            background: var(--bg-card); 
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg); 
+            font-size: 0.875rem; font-weight: 500; color: var(--text-main);
+            min-width: 260px; max-width: 360px;
+            pointer-events: all;
+            animation: toastIn 0.3s cubic-bezier(0.34,1.56,0.64,1) both;
+        }
+        .toast.fade-out { animation: toastOut 0.3s ease forwards; }
+        @keyframes toastIn { from { opacity: 0; transform: translateX(40px) scale(0.9); } to { opacity: 1; transform: translateX(0) scale(1); } }
+        @keyframes toastOut { from { opacity: 1; transform: translateX(0) scale(1); } to { opacity: 0; transform: translateX(40px) scale(0.9); } }
+        .toast-icon { font-size: 1.1rem; flex-shrink: 0; }
+        .toast.toast-success { border-left: 4px solid var(--color-success); }
+        .toast.toast-success .toast-icon { color: var(--color-success); }
+        .toast.toast-danger { border-left: 4px solid var(--color-danger); }
+        .toast.toast-danger .toast-icon { color: var(--color-danger); }
+        .toast.toast-info { border-left: 4px solid var(--sidebar-active); }
+        .toast.toast-info .toast-icon { color: var(--sidebar-active); }
+        
+        /* --- SECTION TRANSITION ANIMATION --- */
+        #crmStandardStandardViews, #quotationStudioSection, #userManagementSection { 
+            animation: sectionFadeIn 0.25s ease both; 
+        }
+        @keyframes sectionFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* --- STATS GRID ENTRY ANIMATION --- */
+        .stat-card { animation: cardPop 0.3s cubic-bezier(0.34,1.2,0.64,1) both; }
+        .stat-card:nth-child(1) { animation-delay: 0.05s; }
+        .stat-card:nth-child(2) { animation-delay: 0.1s; }
+        .stat-card:nth-child(3) { animation-delay: 0.15s; }
+        @keyframes cardPop { from { opacity: 0; transform: translateY(14px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+        /* DYNAMIC CONTEXTUAL PRINT RULES */
+        @media print {
+            html, body { background: #fff !important; color: #000 !important; width: 100% !important; height: auto !important; }
+            .sidebar, .top-header, .quote-form-panel, .client-selector-bar, .stats-grid, .charts-grid, .keyword-container, #actionButtonsArea, .inline-table-search, .filter-badge, .login-overlay { display: none !important; }
+            
+            /* Shared print resets */
+            .main-content, .content-container { padding: 0 !important; margin: 0 !important; width: 100% !important; background: transparent !important; display: block !important; }
+            
+            /* Table Print Specifics */
+            body.printing-table #quotationStudioSection { display: none !important; }
+            body.printing-table #crmStandardStandardViews { display: block !important; }
+            body.printing-table .table-card { margin: 0 !important; padding: 0 !important; box-shadow: none !important; border: none !important; }
+            body.printing-table .data-table { border-collapse: collapse !important; width: 100% !important; }
+            body.printing-table .data-table th, body.printing-table .data-table td { border: 1px solid #000 !important; padding: 8px !important; color: #000 !important; font-size: 12px !important; }
+            body.printing-table .data-table th:last-child, body.printing-table .data-table td:last-child { display: none !important; } /* Hide action column */
+            body.printing-table .status-badge { border: 1px solid #000; color: #000 !important; background: transparent !important; }
+            body.printing-table .assigned-officer { color: #000 !important; }
+            
+            /* Quotation Print Specifics */
+            body.printing-quote #crmStandardStandardViews { display: none !important; }
+            body.printing-quote #quotationStudioSection { display: block !important; padding: 0 !important; margin: 0 !important; }
+            body.printing-quote .quote-workspace-grid, body.printing-quote .quote-preview-panel { display: block !important; padding: 0 !important; margin: 0 !important; background: transparent !important; }
+            body.printing-quote #banglaPrintTarget { position: absolute !important; left: 0 !important; top: 0 !important; width: 210mm !important; height: 297mm !important; box-shadow: none !important; margin: 0 !important; }
+            @page { size: A4 portrait; margin: 10mm !important; }
+        }
+    </style>
+</head>
+<body onload="checkAuthStatus()">
+
+    <!-- Login System Overlay -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <img src="Kaler_Kantho_logo.svg_.png" onerror="this.style.display='none';" alt="Logo">
+            <h2>System Login</h2>
+            <p>Enter your credentials to access the CRM.</p>
+            
+            <div id="loginErrorMsg" class="login-error">Invalid Username or Password!</div>
+            
+            <input type="text" id="loginUsername" placeholder="Username" onkeypress="handleEnter(event)">
+            <input type="password" id="loginPassword" placeholder="Password" onkeypress="handleEnter(event)">
+            
+            <label class="checkbox-group">
+                <input type="checkbox" id="loginRememberMe"> Remember my password
+            </label>
+            
+            <button class="btn btn-primary" onclick="processLogin()">Secure Login</button>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileSidebar(false)"></div>
+
+    <!-- Sidebar Frame -->
+    <aside class="sidebar" id="appSidebar">
+        <div class="sidebar-brand">
+            <img src="Kaler_Kantho_logo.svg_.png" onerror="this.style.display='none'; document.getElementById('altBrandTxt').style.display='block';" alt="Logo" class="sidebar-logo">
+            <span id="altBrandTxt" style="display:none; font-size:1.2rem; font-weight:bold; color:#fff; margin-bottom:5px;">কালের কণ্ঠ</span>
+            <span class="sidebar-brand-text">KK Client Management</span>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="sidebar-item active" id="menuDashboard"><a href="#" id="linkDashboard"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
+            <li class="sidebar-item" id="menuQuotation"><a href="#" id="linkQuotation"><i class="fa-solid fa-file-invoice-dollar"></i> Quotation Studio</a></li>
+            <li class="sidebar-item" id="menuClients"><a href="#" id="linkClients"><i class="fa-solid fa-users"></i> Client List</a></li>
+            <li class="sidebar-item" id="menuOfficers"><a href="#" id="linkOfficers"><i class="fa-solid fa-user-tie"></i> Officers</a></li>
+            <li class="sidebar-item" id="menuRateChart"><a href="#" id="linkRateChart"><i class="fa-solid fa-tags"></i> Rate Chart</a></li>
+            <li class="sidebar-item" id="menuClientRate"><a href="#" id="linkClientRate"><i class="fa-solid fa-address-card"></i> Client Rate</a></li>
+            
+            <li class="sidebar-item" id="menuCommercial"><a href="#" id="linkCommercial"><i class="fa-solid fa-handshake"></i> Commercial Executive</a></li>
+            <li class="sidebar-item" id="menuClassifiedRate"><a href="#" id="linkClassifiedRate"><i class="fa-solid fa-newspaper"></i> Classified Ad Rate</a></li>
+            
+            <!-- Hidden by default, shown only to admins -->
+            <li class="sidebar-item" id="menuUsers" style="display:none;"><a href="#" id="linkUsers"><i class="fa-solid fa-user-shield"></i> User Management</a></li>
+            
+            <li class="sidebar-item" onclick="openExportModal(); toggleMobileSidebar(false);"><a href="#"><i class="fa-solid fa-file-arrow-down"></i> Export (Excel)</a></li>
+            <li class="sidebar-item" onclick="openPrintModal(); toggleMobileSidebar(false);"><a href="#"><i class="fa-solid fa-print"></i> Print</a></li>
+            
+            <!-- Logout Button -->
+            <li class="sidebar-item" style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05);" onclick="processLogout()"><a href="#"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+        </ul>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="main-content" id="mainContentArea">
+        <header class="top-header">
+            <div class="header-left">
+                <button class="menu-toggle-btn" onclick="toggleMobileSidebar(true)"><i class="fa-solid fa-bars"></i></button>
+                <h1 class="page-title" id="mainPageTitle">Client Directory</h1>
+            </div>
+            <div class="header-search" id="globalHeaderSearch">
+                <i class="fa-solid fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Global system lookup..." onkeyup="searchGlobalTable(this.value)">
+            </div>
+            <div class="header-actions">
+                <button id="themeToggleBtn" class="theme-toggle" title="Toggle Dark Mode">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+                
+                <!-- USER PROFILE AVATAR WITH INTERACTIVE DROPDOWN POPOVER -->
+                <div class="user-profile" id="userProfileBtn" onclick="toggleUserPopover(event)">
+                    <div class="user-avatar" id="headerUserAvatar"><i class="fa-solid fa-user"></i></div>
+                    <span id="headerUserName">Admin</span>
+                    <i class="fa-solid fa-chevron-down" style="font-size: 0.75rem; color: var(--text-muted); margin-left: 2px;"></i>
+                    
+                    <!-- USER POPOVER MENU -->
+                    <div class="user-menu-popover" id="userMenuPopover">
+                        <div class="user-popover-header">
+                            <div class="user-popover-name" id="popoverUserName">Admin User</div>
+                            <div class="user-popover-role" id="popoverUserRole">Administrator</div>
+                        </div>
+                        <ul class="user-popover-menu">
+                            <li class="user-popover-item" onclick="openUserInfoModal()"><i class="fa-solid fa-id-card"></i> User Information</li>
+                            <li class="user-popover-item" onclick="openChangePasswordModal()"><i class="fa-solid fa-key"></i> Change Password</li>
+                            <li class="user-popover-item" id="popoverCreateUserBtn" style="display:none;" onclick="openCreateUserFromPopover()"><i class="fa-solid fa-user-plus"></i> Create User</li>
+                            <div class="user-popover-divider"></div>
+                            <li class="user-popover-item text-danger" onclick="processLogout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="content-container">
+            
+            <!-- SECTION 1: CRM STANDARD VIEWS -->
+            <div id="crmStandardStandardViews">
+                <section class="client-selector-bar" id="clientRateSelectorBar">
+                    <div class="selector-group">
+                        <label>Select Individual Client to Check Rate</label>
+                        <select class="client-dropdown" id="clientRateDropdown" onchange="onClientRateSelected()">
+                        </select>
+                    </div>
+                    <div class="client-info-badge" id="clientTypeDisplayBadge">
+                        <i class="fa-solid fa-circle-info"></i> Select a client to load type profile
+                    </div>
+                </section>
+
+                <section class="stats-grid" id="statsGridSection" style="margin-bottom: 10px;">
+                    <div class="stat-card" style="cursor:pointer;" onclick="resetAllFilters()">
+                        <div><div class="stat-value" id="totalClientsCount">0</div><div class="stat-label">Total Client</div></div>
+                        <div class="stat-icon"><i class="fa-solid fa-building" style="color:var(--sidebar-active)"></i></div>
+                    </div>
+                    <div class="stat-card" style="cursor:pointer;" onclick="filterByType('Government Client')">
+                        <div><div class="stat-value" id="govtClientsCount">0</div><div class="stat-label">Government Client</div></div>
+                        <div class="stat-icon"><i class="fa-solid fa-gavel" style="color:#f59e0b"></i></div>
+                    </div>
+                    <div class="stat-card" style="cursor:pointer;" onclick="filterByType('Private Client')">
+                        <div><div class="stat-value" id="privateClientsCount">0</div><div class="stat-label">Private Client</div></div>
+                        <div class="stat-icon"><i class="fa-solid fa-briefcase" style="color:var(--color-success)"></i></div>
+                    </div>
+                </section>
+
+                <section class="charts-grid" id="chartsGridSection" style="margin-bottom: 10px;">
+                    <div class="chart-card">
+                        <h3><i class="fa-solid fa-chart-pie" style="color: var(--sidebar-active);"></i> Segments Allocation</h3>
+                        <div class="chart-wrapper"><canvas id="clientDonutChart"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <h3><i class="fa-solid fa-receipt" style="color: var(--color-success);"></i> Quick Rate Preview</h3>
+                        <div class="quick-rate-list" id="middleQuickRateList"></div>
+                    </div>
+                    <div class="chart-card">
+                        <h3><i class="fa-solid fa-id-card-clip" style="color: #6366f1;"></i> Officer Portfolio Load</h3>
+                        <div class="officer-panel-list" id="officerWorkloadPanel"></div>
+                    </div>
+                </section>
+
+                <section class="keyword-container" id="keywordContainerSection" style="margin-bottom: 10px;">
+                    <div class="keyword-label"><i class="fa-solid fa-tags"></i> Industries:</div>
+                    <div class="keyword-tags">
+                        <span class="tag" onclick="filterByKeyword(this, 'University')">University</span>
+                        <span class="tag" onclick="filterByKeyword(this, 'Bank')">Bank</span>
+                        <span class="tag" onclick="filterByKeyword(this, 'School')">School</span>
+                        <span class="tag" onclick="filterByKeyword(this, 'Mills')">Mills</span>
+                        <span class="tag" onclick="filterByKeyword(this, 'Hospital')">Hospital</span>
+                        <span class="tag" onclick="filterByKeyword(this, 'Group')">Group</span>
+                    </div>
+                </section>
+
+                <section class="table-card">
+                    <div class="table-header">
+                        <div class="table-title-group">
+                            <div class="table-title" id="tableCardTitle">All Client Records</div>
+                            <div class="inline-table-search" id="inlineSearchContainer">
+                                <i class="fa-solid fa-filter"></i>
+                                <input type="text" placeholder="Filter current list..." onkeyup="searchGlobalTable(this.value)">
+                            </div>
+                            <span class="filter-badge" id="activeFilterBadge">
+                                Filter Active <i class="fa-solid fa-circle-xmark" onclick="resetAllFilters()"></i>
+                            </span>
+                        </div>
+                        <div class="action-buttons" id="actionButtonsArea">
+                            <button class="btn btn-warning" onclick="backupDatabase()"><i class="fa-solid fa-download"></i> Backup</button>
+                            <button class="btn btn-info" onclick="document.getElementById('importFile').click()"><i class="fa-solid fa-upload"></i> Import</button>
+                            <input type="file" id="importFile" accept=".json" style="display:none" onchange="importDatabase(event)">
+                            <button class="btn btn-danger" onclick="clearAll()"><i class="fa-solid fa-trash-can"></i> Clear All</button>
+                            <button class="btn btn-success" onclick="toggleBulkModal(true)"><i class="fa-solid fa-file-excel"></i> Bulk Add</button>
+                            <button class="btn btn-primary" onclick="toggleSingleModal(true)"><i class="fa-solid fa-plus"></i> Add Single</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive-wrapper" id="dynamicTableContainer">
+                        <table class="data-table" id="clientTable">
+                            <thead id="tableHead">
+                                <tr>
+                                    <th>SL</th><th>PF Number</th><th>Client Name</th><th>Organisation Type</th><th>Officer</th><th>Status</th><th id="thActionCol" style="width: 50px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- SECTION 2: DYNAMIC QUOTATION STUDIO PANEL -->
+            <div id="quotationStudioSection">
+                <div class="quote-workspace-grid">
+                    <div class="quote-form-panel">
+                        <div style="margin-bottom: 12px; padding-bottom:6px; border-bottom:1px solid var(--border-color);">
+                            <h3 style="font-size:1.05rem; color:#4f46e5;"><i class="fa-solid fa-sliders"></i> প্যাড মার্জিন অ্যাডজাস্টমেন্ট (Print Setup)</h3>
+                        </div>
+                        <div class="range-container">
+                            <div class="range-group">
+                                <label>ওপরের ফাঁকা জায়গা (Top): <span id="lblTopMargin">50mm</span></label>
+                                <input type="range" id="cfgTopMargin" min="30" max="80" value="50" oninput="syncQuoteData()">
+                            </div>
+                            <div class="range-group">
+                                <label>নিচের ফাঁকা জায়গা (Bottom): <span id="lblBottomMargin">45mm</span></label>
+                                <input type="range" id="cfgBottomMargin" min="25" max="75" value="45" oninput="syncQuoteData()">
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 15px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
+                            <h3 style="font-size:1.05rem;">পত্র ও প্রাপকের তথ্য</h3>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                            <div class="form-group"><label>পত্রের তারিখ</label><input type="date" id="qInputDate" value="2026-07-07" onchange="syncQuoteData()"></div>
+                            <div class="form-group"><label>প্রকাশের তারিখ (ফুটার)</label><input type="date" id="qInputPubDate" value="2026-07-19" onchange="syncQuoteData()"></div>
+                        </div>
+                        
+                        <div class="form-group"><label>প্রাপকের পদবি</label><input type="text" id="qInputDesignation" value="ব্যবস্থাপনা পরিচালক" oninput="syncQuoteData()"></div>
+                        <div class="form-group"><label>প্রতিষ্ঠানের নাম</label><input type="text" id="qInputOrg" value="সাউথইস্ট ব্যাংক পিএলসি" oninput="syncQuoteData()"></div>
+                        <div class="form-group"><label>ঠিকানা</label><input type="text" id="qInputAddress" value="মতিঝিল, ঢাকা।" oninput="syncQuoteData()"></div>
+                        <div class="form-group"><label>বিষয়</label><input type="text" id="qInputSubject" value="২০২৬ ফিফা বিশ্বকাপ সমাপনী উপলক্ষে বিশেষ সংখ্যা প্রসঙ্গে।" oninput="syncQuoteData()"></div>
+                        <div class="form-group"><label>সম্বোধন (Salutation)</label><input type="text" id="qInputSalutation" value="মহোদয়, শুভেচ্ছা নেবেন।" oninput="syncQuoteData()"></div>
+                        <div class="form-group"><label>মূল বক্তব্য (Body)</label><textarea id="qInputBody" rows="5" oninput="syncQuoteData()">১৯ জুলাই পর্দা নামবে ২০২৬ ফিফা বিশ্বকাপের। বিশ্বের সবচেয়ে জনপ্রিয় ক্রীড়া আয়োজনগুলোর একটি এই ফুটবল বিশ্বকাপ। প্রতি আসরে কোটি কোটি দর্শক গভর্ণমেন্ট আয়োজন উপভোগ করেন। বাংলাদেশেও বিশ্বকাপ ঘিরে তৈরি হয়েছে ব্যাপক উৎসাহ ও উচ্ছ্বাস। ফুটবলপ্রেমীদের আবেগে মুখর হয়েছে ওঠে পুরো দেশ।
+
+এই প্রেক্ষাপটে ২০২৬ ফিফা ফুটবল বিশ্বকাপ সমাপনী উপলক্ষে একটি বিশেষ সংখ্যা প্রকাশ করতে যাচ্ছে কালের কণ্ঠ। এতে বিশ্বকাপের উল্লেখযোগ্য মুহূর্ত, সেরা দল ও খেলোয়াড়দের পারফরম্যান্স, কৌশলগত বিশ্লেষণ, রেকর্ড, পরিসংখ্যান, আলোচিত ম্যাচ এবং টুর্নামেন্টের নানা দিক তুলে ধরা হবে।</textarea></div>
+                        
+                        <!-- DISCOUNT & CONFIGURATION CONTROL -->
+                        <div style="margin-bottom: 15px; padding-bottom:8px; border-bottom:1px solid var(--border-color); margin-top:20px; display:flex; justify-content:space-between; align-items:center;">
+                            <h3 style="font-size:1.05rem; color:#10b981;"><i class="fa-solid fa-percentage"></i> ডিসকাউন্ট সেটিংস (Discount Option)</h3>
+                        </div>
+                        <div class="form-group" style="background:var(--color-success-bg); padding:12px; border-radius:8px; border:1px solid var(--border-color);">
+                            <label style="font-weight:700;">বিশেষ রেট ছাড় / ডিসকাউন্ট (%)</label>
+                            <input type="number" id="qInputDiscount" min="0" max="99" value="0" placeholder="যেমন: ১০" oninput="syncQuoteData()" style="padding:10px; border-radius:6px; font-weight:700;">
+                        </div>
+
+                        <div style="margin-bottom: 15px; padding-bottom:8px; border-bottom:1px solid var(--border-color); margin-top:20px; display:flex; justify-content:space-between; align-items:center;">
+                            <h3 style="font-size:1.05rem;">বিজ্ঞাপনের বিবরণ ও আকার</h3>
+                            <button class="btn btn-primary" style="padding:5px 10px; font-size:0.8rem;" onclick="addNewPriceItem()"><i class="fa-solid fa-plus"></i> Add Item</button>
+                        </div>
+                        <div id="dynamicItemsContainer"></div>
+
+                        <div style="margin-bottom: 15px; padding-bottom:8px; border-bottom:1px solid var(--border-color); margin-top:25px;">
+                            <h3 style="font-size:1.05rem;">স্বাক্ষর ও প্রেরক সেটিংস</h3>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom: 12px;">
+                            <div class="form-group"><label>প্রেরকের নাম</label><input type="text" id="qInputSenderName" value="মেহেদী হাসান তালুকদার" oninput="syncQuoteData()"></div>
+                            <div class="form-group"><label>পদবি</label><input type="text" id="qInputSenderDesignation" value="ভারপ্রাপ্ত সম্পাদক" oninput="syncQuoteData()"></div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:20px; background:var(--bg-input); padding:10px; border-radius:6px; margin-bottom:15px;">
+                            <label style="font-size:0.85rem; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px;">
+                                <input type="checkbox" id="qShowSignature" checked onchange="syncQuoteData()"> ডিজিটাল স্বাক্ষর প্রিন্ট করুন
+                            </label>
+                            <input type="file" id="qUploadSign" accept="image/*" style="font-size:0.75rem; width:150px;" onchange="handleSignatureUpload(event)">
+                        </div>
+
+                        <!-- BEAUTIFIED ACTION BUTTONS -->
+                        <div style="display:flex; gap:15px; margin-top:25px;">
+                            <button class="btn btn-premium-print" style="flex:1; justify-content:center;" onclick="printQuotation()">
+                                <i class="fa-solid fa-print" style="font-size:1.1rem;"></i> Print Quotation (A4)
+                            </button>
+                            <button class="btn btn-premium-pdf" style="flex:1; justify-content:center;" onclick="exportBanglaPDF()">
+                                <i class="fa-solid fa-file-pdf" style="font-size:1.1rem;"></i> Download PDF Document
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="quote-preview-panel">
+                        <div class="a4-document-sheet" id="banglaPrintTarget">
+                            <div class="bn-date">তারিখ: <span id="pDate"></span></div>
+                            <div class="bn-recipient">
+                                বরাবর<br>
+                                <span id="pDesignation" style="font-weight: 600;"></span><br>
+                                <span id="pOrg" style="font-weight: 600;"></span><br>
+                                <span id="pAddress"></span>
+                            </div>
+                            <div class="bn-subject">বিষয়: <span id="pSubject"></span></div>
+                            <div class="bn-salutation" id="pSalutation"></div>
+                            <div class="bn-body-text" id="pBody"></div>
+                            
+                            <div class="table-title" style="font-weight: 700; margin-bottom: 8px; font-size: 14.5px;">বিজ্ঞাপনের মূল্যতালিকা (কলাম/ইঞ্চি)</div>
+                            <table class="bn-table">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align:left; width: 45%;">জ্যাকেট/বিশেষ আয়োজন</th>
+                                        <th style="text-align:center; width: 15%;">আকার</th>
+                                        <th style="text-align:right; width: 20%;">মূল্য (৳)</th>
+                                        <th style="text-align:right; width: 20%;">মোট (৳)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pTableBody"></tbody>
+                            </table>
+                            
+                            <div class="bn-signoff">
+                                ধন্যবাদ।
+                                <div class="bn-signature-container" id="pSignatureWrapper">
+                                    <img src="" class="bn-signature-img" id="pSignatureImg" alt="Signature">
+                                </div>
+                                <span style="font-weight:600; font-size:15px; display:block;" id="pSenderName"></span>
+                                <span id="pSenderDesignation"></span>
+                                <div class="bn-footer-pub-date">* প্রকাশের তারিখ : <span id="pPubDate"></span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 3: USER MANAGEMENT (ADMIN ONLY) -->
+            <div id="userManagementSection">
+                <section class="table-card">
+                    <div class="table-header">
+                        <div class="table-title-group">
+                            <div class="table-title">System Users & Permissions</div>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="toggleUserModal(true)"><i class="fa-solid fa-user-plus"></i> Create New User</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive-wrapper">
+                        <table class="data-table" id="usersTable">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Password (Stored)</th>
+                                    <th>Role / Permission</th>
+                                    <th style="width: 100px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- SECTION 4: COMMERCIAL EXECUTIVE OUTSIDE DHAKA -->
+            <div id="commercialExecutiveSection">
+                <div class="commercial-header-card">
+                    <h2><i class="fa-solid fa-handshake" style="margin-right:10px; color:#93c5fd;"></i>Commercial Executive Outside Dhaka</h2>
+                    <div class="dept-subtitle">Advertisement Department</div>
+                </div>
+                <div class="commercial-table-wrapper">
+                    <div class="commercial-search-bar">
+                        <div class="search-icon-wrap">
+                            <i class="fa-solid fa-search"></i>
+                            <input type="text" id="commercialSearchInput" placeholder="Search by name, place, or PF number..." onkeyup="filterCommercialTable(this.value)">
+                        </div>
+                        <span class="commercial-count-badge" id="commercialCountBadge">16 Executives</span>
+                    </div>
+                    <div class="table-responsive-wrapper" style="overflow-x:auto;">
+                        <table class="commercial-table" id="commercialTable">
+                            <thead>
+                                <tr>
+                                    <th style="width:55px;">SL No</th>
+                                    <th>Name Of Executive</th>
+                                    <th>Place Of Work</th>
+                                    <th style="width:100px;">PF Number</th>
+                                    <th style="width:140px;">Phone NO</th>
+                                </tr>
+                            </thead>
+                            <tbody id="commercialTableBody">
+                                <!-- Data rendered by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 5: CLASSIFIED ADVERTISEMENT RATE -->
+            <div id="classifiedAdRateSection">
+                <div class="classified-header-card">
+                    <h2><i class="fa-solid fa-newspaper" style="margin-right:10px; color:#93c5fd;"></i>Rate For Classified Ad</h2>
+                    <div class="dept-subtitle">Classified Advertisement Department — Direct Party Pricing</div>
+                </div>
+                <div class="classified-table-wrapper">
+                    <div class="classified-info-pills">
+                        <span class="classified-info-pill"><i class="fa-solid fa-percent" style="color:#f59e0b;"></i> 15% VAT Applied on Direct Party Amount</span>
+                        <span class="classified-info-pill"><i class="fa-solid fa-align-justify" style="color:#2563eb;"></i> Total Word Count Determines Rate</span>
+                        <span class="classified-info-pill"><i class="fa-solid fa-circle-info" style="color:#10b981;"></i> All prices in BDT (৳)</span>
+                    </div>
+                    <div class="classified-search-bar">
+                        <div class="search-icon-wrap">
+                            <i class="fa-solid fa-search"></i>
+                            <input type="text" id="classifiedSearchInput" placeholder="Search by word count or price..." onkeyup="filterClassifiedTable(this.value)">
+                        </div>
+                        <span class="commercial-count-badge" id="classifiedCountBadge">60 Rate Tiers</span>
+                    </div>
+                    <div class="table-responsive-wrapper" style="overflow-x:auto;">
+                        <table class="classified-table" id="classifiedTable">
+                            <thead>
+                                <tr>
+                                    <th style="width:55px;">SL</th>
+                                    <th>Direct Party 0% Discount</th>
+                                    <th>Direct Party Amount</th>
+                                    <th>15% VAT</th>
+                                    <th>Direct Party Payment With VAT</th>
+                                    <th>Total Words</th>
+                                </tr>
+                            </thead>
+                            <tbody id="classifiedTableBody">
+                                <!-- Data rendered by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="bulkModalOverlay">
+        <div class="modal-box">
+            <h3>Bulk Add from Excel</h3>
+            <p class="modal-desc">কলাম সিকোয়েন্স: <b>Client Name</b> &rarr; <b>Officers Name</b> &rarr; <b>Type</b></p>
+            <textarea class="bulk-textarea" id="bulkPasteInput" placeholder="Paste data here..."></textarea>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="toggleBulkModal(false)">Cancel</button>
+                <button class="btn btn-success" onclick="saveBulkData()">Save Records</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="singleModalOverlay">
+        <div class="modal-box">
+            <h3>Add New Client Record</h3>
+            <div class="form-group"><label>Officer Name</label><select id="formOfficer" onchange="autoFillPf()"></select></div>
+            <div class="form-group"><label>PF Number (Auto)</label><input type="text" id="formPf" readonly></div>
+            <div class="form-group"><label>Client Name</label><input type="text" id="formName"></div>
+            <div class="form-group">
+                <label>Organisation Type</label>
+                <select id="formType"><option value="Private Client">Private Client</option><option value="Government Client">Government Client</option></select>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="toggleSingleModal(false)">Cancel</button>
+                <button class="btn btn-primary" onclick="addSingleClient()">Save Client</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD/EDIT USER MODAL (ADMIN ONLY) -->
+    <div class="modal-overlay" id="userModalOverlay">
+        <div class="modal-box">
+            <h3 id="userModalTitle">Create / Edit User</h3>
+            <div class="form-group"><label>Username</label><input type="text" id="formUsername"></div>
+            <div class="form-group"><label>Password</label><input type="text" id="formUserPass"></div>
+            <div class="form-group">
+                <label>Permissions (Role)</label>
+                <select id="formUserRole">
+                    <option value="user">Standard User (Read & Print Only)</option>
+                    <option value="admin">Admin (Full Control)</option>
+                </select>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="toggleUserModal(false)">Cancel</button>
+                <button class="btn btn-primary" onclick="saveSystemUser()">Save User</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- USER INFORMATION MODAL (FOR ALL USERS) -->
+    <div class="modal-overlay" id="userInfoModalOverlay">
+        <div class="modal-box">
+            <h3><i class="fa-solid fa-circle-user" style="color:var(--sidebar-active);"></i> User Profile Info</h3>
+            <p class="modal-desc">Account details and system clearance level.</p>
+            <div style="background:var(--bg-input); padding:15px; border-radius:8px; border:1px solid var(--border-color); display:flex; flex-direction:column; gap:10px; margin-bottom:15px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-weight:600; color:var(--text-muted); font-size:0.85rem;">Username:</span>
+                    <span id="infoModalUsername" style="font-weight:700; color:var(--text-main); font-size:0.95rem;">-</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-weight:600; color:var(--text-muted); font-size:0.85rem;">Account Access Role:</span>
+                    <span id="infoModalRole" class="role-badge role-user">-</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-weight:600; color:var(--text-muted); font-size:0.85rem;">System Rights:</span>
+                    <span id="infoModalRights" style="font-size:0.8rem; font-weight:600; color:var(--text-main);">-</span>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-primary" onclick="toggleUserInfoModal(false)">Close Profile</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHANGE PASSWORD MODAL (FOR ALL USERS) -->
+    <div class="modal-overlay" id="changePasswordModalOverlay">
+        <div class="modal-box">
+            <h3><i class="fa-solid fa-key" style="color:var(--color-primary);"></i> Change Password</h3>
+            <p class="modal-desc">Update security credentials for your account.</p>
+            <div id="changePassErrorMsg" class="login-error" style="margin-bottom: 12px; text-align: left;">Passwords do not match!</div>
+            <div class="form-group"><label>Current Password</label><input type="password" id="passCurrent"></div>
+            <div class="form-group"><label>New Password</label><input type="password" id="passNew"></div>
+            <div class="form-group"><label>Confirm New Password</label><input type="password" id="passConfirm"></div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="toggleChangePasswordModal(false)">Cancel</button>
+                <button class="btn btn-success" onclick="processPasswordChange()">Update Password</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONFIRMATION MODAL -->
+    <div class="modal-overlay" id="confirmModalOverlay">
+        <div class="modal-box" style="text-align: center;">
+            <i class="fa-solid fa-circle-exclamation" style="font-size: 3rem; color: var(--color-danger); margin-bottom: 15px;"></i>
+            <h3 id="confirmModalTitle">Are you sure?</h3>
+            <p class="modal-desc" id="confirmModalDesc">Do you really want to delete this? This action cannot be undone.</p>
+            <div class="modal-buttons" style="justify-content: center; gap: 15px; margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="toggleConfirmModal(false)">Cancel</button>
+                <button class="btn btn-danger" id="confirmActionBtn">Confirm Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRINT OPTIONS MODAL -->
+    <div class="modal-overlay" id="printModalOverlay">
+        <div class="modal-box">
+            <h3><i class="fa-solid fa-print"></i> Print Reports</h3>
+            <p class="modal-desc">Select what you want to print.</p>
+            <div class="form-group">
+                <label>Print Option</label>
+                <select id="printOptionSelect" onchange="togglePrintSubOptions()">
+                    <option value="all">All Clients</option>
+                    <option value="officer">By Officer</option>
+                    <option value="industry">By Industry (University, Bank, etc.)</option>
+                </select>
+            </div>
+            <div class="form-group" id="printSubOptionOfficer" style="display:none;">
+                <label>Select Officer</label>
+                <select id="printOfficerSelect"></select>
+            </div>
+            <div class="form-group" id="printSubOptionIndustry" style="display:none;">
+                <label>Select Industry Keyword / Type</label>
+                <select id="printIndustrySelect">
+                    <option value="Government Client">Government Client</option>
+                    <option value="Private Client">Private Client</option>
+                    <option value="University">University</option>
+                    <option value="Bank">Bank</option>
+                    <option value="School">School</option>
+                    <option value="Mills">Mills</option>
+                    <option value="Hospital">Hospital</option>
+                    <option value="Group">Group</option>
+                </select>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="togglePrintModal(false)">Cancel</button>
+                <button class="btn btn-primary" onclick="executePrintReport()">Print Now</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EXPORT EXCEL MODAL -->
+    <div class="modal-overlay" id="exportModalOverlay">
+        <div class="modal-box">
+            <h3><i class="fa-solid fa-file-excel"></i> Custom Excel Export</h3>
+            <p class="modal-desc">Select filtering options for your highly customized report.</p>
+            <div class="form-group">
+                <label>Export Data Grouping</label>
+                <select id="exportOptionSelect" onchange="toggleExportSubOptions()">
+                    <option value="all">All Clients (Full Database)</option>
+                    <option value="officer">Short by Officer</option>
+                    <option value="industry">Short by Industry (Govt, University, Bank, School...)</option>
+                </select>
+            </div>
+            <div class="form-group" id="exportSubOptionOfficer" style="display:none;">
+                <label>Select Officer</label>
+                <select id="exportOfficerSelect"></select>
+            </div>
+            <div class="form-group" id="exportSubOptionIndustry" style="display:none;">
+                <label>Select Industry Keyword / Type</label>
+                <select id="exportIndustrySelect">
+                    <option value="Government Client">Government Client</option>
+                    <option value="Private Client">Private Client</option>
+                    <option value="University">University</option>
+                    <option value="Bank">Bank</option>
+                    <option value="School">School</option>
+                    <option value="Mills">Mills</option>
+                    <option value="Hospital">Hospital</option>
+                    <option value="Group">Group</option>
+                </select>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="toggleExportModal(false)">Cancel</button>
+                <button class="btn btn-success" onclick="executeExcelExport()">Download Excel Sheet</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* --- TOAST NOTIFICATION SYSTEM --- */
+        function showToast(message, type = 'info', duration = 3200) {
+            const container = document.getElementById('toastContainer');
+            const icons = { success: 'fa-circle-check', danger: 'fa-circle-exclamation', info: 'fa-circle-info' };
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info} toast-icon"></i><span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('fade-out');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        // --- HARDCODED DEFAULT DATABASES (Add your static data here) ---
+        const defaultUsersDB = [
+            { username: 'admin', password: 'admin123', role: 'admin' },
+            { username: 'user', password: 'user123', role: 'user' }
+        ];
+
+        const defaultClientsDB = [
+            // Add your clients here to make sure they load everywhere!
+            // { pf: "1234", name: "Example University", type: "Private Client", officer: "Md. Masud Alam" }
+        ];
+
+        // --- AUTHENTICATION & USER MANAGEMENT LOGIC ---
+        
+        let loggedInUser = null;
+        
+        function getUsersDB() {
+            let data = localStorage.getItem("kk_crm_users_db");
+            if (!data) { 
+                localStorage.setItem("kk_crm_users_db", JSON.stringify(defaultUsersDB));
+                return defaultUsersDB;
+            }
+            return JSON.parse(data);
+        }
+        
+        function saveUsersDB(db) {
+            localStorage.setItem("kk_crm_users_db", JSON.stringify(db));
+        }
+
+        function checkAuthStatus() {
+            let sessionUser = sessionStorage.getItem("kk_crm_session");
+            let localUser = localStorage.getItem("kk_crm_remembered");
+            
+            if (sessionUser) {
+                loggedInUser = JSON.parse(sessionUser);
+                startApplication();
+            } else if (localUser) {
+                loggedInUser = JSON.parse(localUser);
+                startApplication();
+            } else {
+                document.getElementById('loginOverlay').style.display = 'flex';
+                document.getElementById('mainContentArea').style.display = 'none';
+            }
+        }
+
+        function handleEnter(e) {
+            if (e.key === 'Enter') processLogin();
+        }
+
+        function processLogin() {
+            let userVal = document.getElementById("loginUsername").value.trim();
+            let passVal = document.getElementById("loginPassword").value.trim();
+            let remVal = document.getElementById("loginRememberMe").checked;
+            
+            let users = getUsersDB();
+            let foundUser = users.find(u => u.username === userVal && u.password === passVal);
+            
+            if (foundUser) {
+                loggedInUser = { username: foundUser.username, role: foundUser.role };
+                
+                if (remVal) {
+                    localStorage.setItem("kk_crm_remembered", JSON.stringify(loggedInUser));
+                } else {
+                    sessionStorage.setItem("kk_crm_session", JSON.stringify(loggedInUser));
+                }
+                
+                document.getElementById('loginErrorMsg').style.display = 'none';
+                startApplication();
+            } else {
+                document.getElementById('loginErrorMsg').style.display = 'block';
+            }
+        }
+
+        function processLogout() {
+            localStorage.removeItem("kk_crm_remembered");
+            sessionStorage.removeItem("kk_crm_session");
+            loggedInUser = null;
+            
+            document.getElementById("loginUsername").value = "";
+            document.getElementById("loginPassword").value = "";
+            document.getElementById('loginErrorMsg').style.display = 'none';
+            closeUserPopover();
+            
+            document.getElementById('loginOverlay').style.display = 'flex';
+            document.getElementById('mainContentArea').style.display = 'none';
+        }
+
+        function startApplication() {
+            const overlay = document.getElementById('loginOverlay');
+            overlay.style.transition = 'opacity 0.4s ease';
+            overlay.style.opacity = '0';
+            setTimeout(() => { overlay.style.display = 'none'; overlay.style.opacity = '1'; }, 400);
+            document.getElementById('mainContentArea').style.display = 'flex';
+            
+            document.getElementById('headerUserName').innerText = loggedInUser.username;
+            document.getElementById('headerUserAvatar').innerText = loggedInUser.username.charAt(0).toUpperCase();
+            
+            document.getElementById('popoverUserName').innerText = loggedInUser.username;
+            document.getElementById('popoverUserRole').innerText = loggedInUser.role === 'admin' ? 'Administrator' : 'Standard User';
+            
+            document.getElementById('popoverCreateUserBtn').style.display = (loggedInUser.role === 'admin') ? 'flex' : 'none';
+            
+            let isAdmin = loggedInUser.role === 'admin';
+            
+            document.getElementById('actionButtonsArea').style.display = isAdmin ? 'flex' : 'none';
+            document.getElementById('menuUsers').style.display = isAdmin ? 'block' : 'none';
+            
+            switchViewLayouts('dashboard');
+            let select = document.getElementById("formOfficer");
+            if (select) {
+                select.innerHTML = "";
+                officerList.forEach(off => { select.innerHTML += `<option value="${off}">${off}</option>`; });
+            }
+        }
+
+        /* --- USER PROFILE POPOVER LOGIC --- */
+        function toggleUserPopover(e) {
+            e.stopPropagation();
+            let popover = document.getElementById('userMenuPopover');
+            popover.classList.toggle('show');
+        }
+
+        function closeUserPopover() {
+            let popover = document.getElementById('userMenuPopover');
+            if (popover) popover.classList.remove('show');
+        }
+
+        document.addEventListener('click', function(e) {
+            let profileContainer = document.getElementById('userProfileBtn');
+            if (profileContainer && !profileContainer.contains(e.target)) {
+                closeUserPopover();
+            }
+        });
+
+        function openUserInfoModal() {
+            closeUserPopover();
+            document.getElementById('infoModalUsername').innerText = loggedInUser.username;
+            
+            let roleSpan = document.getElementById('infoModalRole');
+            if (loggedInUser.role === 'admin') {
+                roleSpan.className = 'role-badge role-admin';
+                roleSpan.innerText = 'Administrator';
+                document.getElementById('infoModalRights').innerText = 'Full Access (Read, Write, Edit, Delete, Admin Tools)';
+            } else {
+                roleSpan.className = 'role-badge role-user';
+                roleSpan.innerText = 'Standard User';
+                document.getElementById('infoModalRights').innerText = 'Standard Access (Read & Print Only)';
+            }
+            toggleUserInfoModal(true);
+        }
+
+        function toggleUserInfoModal(show) {
+            document.getElementById('userInfoModalOverlay').style.display = show ? 'flex' : 'none';
+        }
+
+        function openChangePasswordModal() {
+            closeUserPopover();
+            document.getElementById('passCurrent').value = "";
+            document.getElementById('passNew').value = "";
+            document.getElementById('passConfirm').value = "";
+            document.getElementById('changePassErrorMsg').style.display = "none";
+            toggleChangePasswordModal(true);
+        }
+
+        function toggleChangePasswordModal(show) {
+            document.getElementById('changePasswordModalOverlay').style.display = show ? 'flex' : 'none';
+        }
+
+        function processPasswordChange() {
+            let curr = document.getElementById('passCurrent').value;
+            let newP = document.getElementById('passNew').value;
+            let confP = document.getElementById('passConfirm').value;
+            let errBox = document.getElementById('changePassErrorMsg');
+            
+            let db = getUsersDB();
+            let currentUser = db.find(u => u.username === loggedInUser.username);
+            
+            if (!currentUser || currentUser.password !== curr) {
+                errBox.innerText = "Current password incorrect!";
+                errBox.style.display = "block";
+                return;
+            }
+            if (!newP) {
+                errBox.innerText = "New password cannot be empty!";
+                errBox.style.display = "block";
+                return;
+            }
+            if (newP !== confP) {
+                errBox.innerText = "New passwords do not match!";
+                errBox.style.display = "block";
+                return;
+            }
+            
+            currentUser.password = newP;
+            saveUsersDB(db);
+            
+            showToast("Password updated successfully!", "success");
+            toggleChangePasswordModal(false);
+            if (currentView === "users") renderUserManagement();
+        }
+
+        function openCreateUserFromPopover() {
+            closeUserPopover();
+            toggleUserModal(true);
+        }
+
+        // --- USER MANAGEMENT CRUDS ---
+        function renderUserManagement() {
+            let db = getUsersDB();
+            let tbody = document.getElementById("usersTableBody");
+            tbody.innerHTML = "";
+            
+            db.forEach((user, index) => {
+                let badgeClass = user.role === 'admin' ? 'role-admin' : 'role-user';
+                let roleName = user.role === 'admin' ? 'Administrator' : 'Standard User';
+                
+                let actionHTML = '';
+                if (user.username === 'admin') {
+                    actionHTML = `<span style="font-size:0.75rem; color:var(--text-muted);">Root Protected</span>`;
+                } else {
+                    actionHTML = `
+                        <button class="delete-row-btn" style="color:var(--sidebar-active);" onclick="editSystemUser(${index})"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="delete-row-btn" onclick="deleteSystemUser(${index})"><i class="fa-solid fa-trash"></i></button>
+                    `;
+                }
+
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight:600; color:var(--text-main);"><i class="fa-solid fa-user" style="color:var(--text-muted); margin-right:8px;"></i>${user.username}</td>
+                    <td><input type="password" value="${user.password}" readonly style="border:none; background:transparent; font-family:monospace; color:var(--text-muted); outline:none;"></td>
+                    <td><span class="role-badge ${badgeClass}">${roleName}</span></td>
+                    <td>${actionHTML}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        let editingUserIndex = -1;
+
+        function toggleUserModal(show) {
+            document.getElementById('userModalOverlay').style.display = show ? 'flex' : 'none';
+            if (!show) {
+                document.getElementById('formUsername').value = "";
+                document.getElementById('formUserPass').value = "";
+                document.getElementById('formUserRole').value = "user";
+                document.getElementById('formUsername').disabled = false;
+                document.getElementById('userModalTitle').innerText = "Create New User";
+                editingUserIndex = -1;
+            }
+        }
+
+        function editSystemUser(index) {
+            let db = getUsersDB();
+            let user = db[index];
+            document.getElementById('userModalTitle').innerText = "Edit User Credentials";
+            document.getElementById('formUsername').value = user.username;
+            document.getElementById('formUsername').disabled = true;
+            document.getElementById('formUserPass').value = user.password;
+            document.getElementById('formUserRole').value = user.role;
+            editingUserIndex = index;
+            toggleUserModal(true);
+        }
+
+        function saveSystemUser() {
+            let un = document.getElementById('formUsername').value.trim();
+            let pw = document.getElementById('formUserPass').value.trim();
+            let role = document.getElementById('formUserRole').value;
+            
+            if(!un || !pw) return showToast("Username and Password are required.", "danger");
+            
+            let db = getUsersDB();
+            
+            if (editingUserIndex > -1) {
+                db[editingUserIndex].password = pw;
+                db[editingUserIndex].role = role;
+            } else {
+                if (db.find(u => u.username === un)) return showToast("Username already exists!", "danger");
+                db.push({ username: un, password: pw, role: role });
+            }
+            
+            saveUsersDB(db);
+            showToast(editingUserIndex > -1 ? "User updated successfully!" : "New user created!", "success");
+            toggleUserModal(false);
+            if (currentView === "users") renderUserManagement();
+        }
+
+        function deleteSystemUser(index) {
+            showConfirmModal("Delete User?", "Are you sure you want to delete this user? They will instantly lose access.", function() {
+                let db = getUsersDB();
+                db.splice(index, 1);
+                saveUsersDB(db);
+                renderUserManagement();
+            });
+        }
+
+        // --- ORIGINAL SYSTEM LOGIC ---
+        const pageRateMap = {
+            "প্রথম পৃষ্ঠা": 18000,
+            "শেষ পৃষ্ঠা": 15000,
+            "দ্বিতীয় পৃষ্ঠা": 8000,
+            "ভেতরের পৃষ্ঠা": 5500
+        };
+
+        const officerRegistry = [
+            { name: "Md. Masud Alam", pf: "264" }, { name: "SMA Salek", pf: "253" },
+            { name: "Sheikh Abdul Halim Sabuj", pf: "255" }, { name: "Mohammad Shahjahan", pf: "269" },
+            { name: "Naimur Rahman Khan", pf: "263" }, { name: "Kazi Obaidul Islam Munna", pf: "267" },
+            { name: "Md. Nabi Hossain", pf: "2079" }, { name: "Md. Ziaul Haque Khan", pf: "272" },
+            { name: "Md. Firoz Ahmed", pf: "1748" }, { name: "Md. Rashidul Islam Sajal", pf: "1117" },
+            { name: "Maminul Islam", pf: "1140" }, { name: "Waliullah Shahin", pf: "2190" },
+            { name: "Muhammad Toufiqul Islam", pf: "1106" }, { name: "Bahauddin Buhaiya", pf: "1289" },
+            { name: "Md. Shourav Hossain", pf: "1746" }, { name: "Mahadi Hasan", pf: "2189" },
+            { name: "Md. Khairul Islam (Ripon)", pf: "1676" }
+        ];
+
+        const defaultRatesMaster = [
+            { category: "জ্যাকেট/বিশেষ আয়োজন - প্রথম পৃষ্ঠা", type: "রঙিন", rate: "৳১৮,০০০" },
+            { category: "জ্যাকেট/বিশেষ আয়োজন - শেষ পৃষ্ঠা", type: "রঙিন", rate: "৳১৫,০০০" },
+            { category: "জ্যাকেট/বিশেষ আয়োজন - দ্বিতীয় পৃষ্ঠা", type: "রঙিন", rate: "৳৮,০০০" },
+            { category: "জ্যাকেট/বিশেষ আয়োজন - ভেতরের পৃষ্ঠা", type: "রঙিন", rate: "৳৫,৫০০" }
+        ];
+
+        const officerList = officerRegistry.map(o => o.name);
+        let currentView = "dashboard";
+        let selectedOfficerFilter = null;
+        let selectedKeywordFilter = null;
+        let selectedTypeFilter = null;
+        let globalSearchQuery = "";
+        let donutChartInstance = null;
+
+        // Quotation States
+        let defaultSignatureBase64 = "data:image/svg+xml;utf8,<svg viewBox='0 0 150 50' xmlns='http://www.w3.org/2000/svg'><path d='M 10 30 C 30 5, 40 5, 55 25 C 70 45, 60 40, 80 15 C 95 -5, 105 10, 115 25 C 120 30, 125 10, 140 20' stroke='black' stroke-width='2.5' fill='none'/><path d='M 25 25 L 125 25' stroke='black' stroke-width='1'/></svg>";
+        let currentSignatureData = defaultSignatureBase64;
+        
+        let pricingItems = [
+            { id: 1, pageKey: "প্রথম পৃষ্ঠা", col: 4, inch: 5 },
+            { id: 2, pageKey: "শেষ পৃষ্ঠা", col: 4, inch: 5 }
+        ];
+
+        // --- DARK MODE LOGIC ---
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const bodyElement = document.body;
+
+        if (localStorage.getItem('kk_crm_theme') === 'dark') {
+            bodyElement.classList.add('dark-mode');
+            themeToggleBtn.innerHTML = '<i class="fa-solid fa-sun"></i>';
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            bodyElement.classList.toggle('dark-mode');
+            const isDark = bodyElement.classList.contains('dark-mode');
+            
+            if (isDark) {
+                localStorage.setItem('kk_crm_theme', 'dark');
+                themeToggleBtn.innerHTML = '<i class="fa-solid fa-sun"></i>';
+            } else {
+                localStorage.setItem('kk_crm_theme', 'light');
+                themeToggleBtn.innerHTML = '<i class="fa-solid fa-moon"></i>';
+            }
+            
+            if (donutChartInstance && (document.getElementById("govtClientsCount").innerText !== "0" || document.getElementById("privateClientsCount").innerText !== "0")) {
+                let chartGovt = parseInt(document.getElementById("govtClientsCount").innerText);
+                let chartPvt = parseInt(document.getElementById("privateClientsCount").innerText);
+                initCharts(chartGovt, chartPvt);
+            }
+        });
+
+        /* --- CORE ARCHITECTURE SYSTEMS --- */
+        function getRatesDatabase() {
+            let data = localStorage.getItem("crm_rates_db");
+            if (!data) { 
+                localStorage.setItem("crm_rates_db", JSON.stringify(defaultRatesMaster)); 
+                return defaultRatesMaster; 
+            }
+            return JSON.parse(data);
+        }
+        function saveRatesDatabase(array) { localStorage.setItem("crm_rates_db", JSON.stringify(array)); refreshUI(); }
+        
+        function getDatabase() {
+            let data = localStorage.getItem("crm_desktop_db");
+            if (!data) {
+                localStorage.setItem("crm_desktop_db", JSON.stringify(defaultClientsDB));
+                return defaultClientsDB;
+            }
+            let arr = JSON.parse(data);
+            return arr.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+        }
+        
+        // This is only called when we WANT a full UI refresh.
+        function saveDatabase(array) { localStorage.setItem("crm_desktop_db", JSON.stringify(array)); refreshUI(); }
+
+        function refreshUI() { 
+            if (currentView === "officers") { renderOfficersTable(); } 
+            else if (currentView === "ratechart") { renderRateChartTable(); } 
+            else if (currentView === "clientrate") { renderClientSpecificRateView(); }
+            else if (currentView === "users") { renderUserManagement(); }
+            else if (currentView === "quotation") { }
+            else { renderTable(); } 
+        }
+
+        function toggleMobileSidebar(open) {
+            const sidebar = document.getElementById("appSidebar");
+            const overlay = document.getElementById("sidebarOverlay");
+            if(open) { sidebar.classList.add("active"); overlay.classList.add("active"); } 
+            else { sidebar.classList.remove("active"); overlay.classList.remove("active"); }
+        }
+
+        /* --- NAVIGATION MANIPULATION --- */
+        function switchViewLayouts(targetView) {
+            currentView = targetView;
+            toggleMobileSidebar(false);
+            
+            const standardLayout = document.getElementById("crmStandardStandardViews");
+            const quotationLayout = document.getElementById("quotationStudioSection");
+            const userManagement = document.getElementById("userManagementSection");
+            const commercialSection = document.getElementById("commercialExecutiveSection");
+            const classifiedSection = document.getElementById("classifiedAdRateSection");
+            const globalSearch = document.getElementById("globalHeaderSearch");
+            
+            document.querySelectorAll(".sidebar-item").forEach(i => i.classList.remove("active"));
+            
+            standardLayout.style.display = "none";
+            quotationLayout.style.display = "none";
+            userManagement.style.display = "none";
+            commercialSection.style.display = "none";
+            classifiedSection.style.display = "none";
+
+            let isAdmin = loggedInUser && loggedInUser.role === 'admin';
+            
+            if(targetView === "quotation") {
+                quotationLayout.style.display = "block";
+                globalSearch.style.display = "none";
+                document.getElementById("menuQuotation").classList.add("active");
+                document.getElementById("mainPageTitle").innerText = "অফিসিয়াল কোটেশন জেনারেটর";
+                // Ensure Quotation functionality runs if available
+                if (typeof renderFormPricingRows === "function") {
+                    renderFormPricingRows();
+                    syncQuoteData();
+                }
+            } else if (targetView === "users") {
+                if(!isAdmin) return;
+                userManagement.style.display = "block";
+                globalSearch.style.display = "none";
+                document.getElementById("menuUsers").classList.add("active");
+                document.getElementById("mainPageTitle").innerText = "User Security Matrix";
+                renderUserManagement();
+            } else if (targetView === "commercial") {
+                commercialSection.style.display = "block";
+                globalSearch.style.display = "none";
+                document.getElementById("menuCommercial").classList.add("active");
+                document.getElementById("mainPageTitle").innerText = "Commercial Executive Outside Dhaka";
+                renderCommercialTable(commercialExecutivesData);
+            } else if (targetView === "classified") {
+                classifiedSection.style.display = "block";
+                globalSearch.style.display = "none";
+                document.getElementById("menuClassifiedRate").classList.add("active");
+                document.getElementById("mainPageTitle").innerText = "Classified Advertisement Rate";
+                renderClassifiedTable(classifiedAdRateData);
+            } else {
+                standardLayout.style.display = "block";
+                globalSearch.style.display = "block";
+                
+                if (targetView === "dashboard") {
+                    setActiveMenuItem("menuDashboard");
+                    document.getElementById("mainPageTitle").innerText = "Client Directory";
+                    document.getElementById("tableCardTitle").innerText = "All Client Records";
+                    document.getElementById("chartsGridSection").style.display = "grid";
+                    document.getElementById("statsGridSection").style.display = "grid";
+                    document.getElementById("keywordContainerSection").style.display = "flex";
+                    document.getElementById("actionButtonsArea").style.display = isAdmin ? "flex" : "none";
+                    document.getElementById("clientRateSelectorBar").style.display = "none";
+                    resetTableHTMLStructure(); renderTable();
+                } else if (targetView === "clients") {
+                    setActiveMenuItem("menuClients");
+                    document.getElementById("mainPageTitle").innerText = "Clients View";
+                    document.getElementById("tableCardTitle").innerText = "Client Records Directory";
+                    document.getElementById("chartsGridSection").style.display = "none";
+                    document.getElementById("statsGridSection").style.display = "none";
+                    document.getElementById("keywordContainerSection").style.display = "none";
+                    document.getElementById("actionButtonsArea").style.display = isAdmin ? "flex" : "none";
+                    document.getElementById("clientRateSelectorBar").style.display = "none";
+                    resetTableHTMLStructure(); renderTable();
+                } else if (targetView === "officers") {
+                    setActiveMenuItem("menuOfficers");
+                    document.getElementById("mainPageTitle").innerText = "Officers Matrix";
+                    document.getElementById("tableCardTitle").innerText = "Registered System Officers";
+                    document.getElementById("chartsGridSection").style.display = "none";
+                    document.getElementById("statsGridSection").style.display = "none";
+                    document.getElementById("keywordContainerSection").style.display = "none";
+                    document.getElementById("actionButtonsArea").style.display = "none";
+                    document.getElementById("clientRateSelectorBar").style.display = "none";
+                    renderOfficersTable();
+                } else if (targetView === "ratechart") {
+                    setActiveMenuItem("menuRateChart");
+                    document.getElementById("mainPageTitle").innerText = "Advertisement Rate Chart";
+                    document.getElementById("tableCardTitle").innerText = isAdmin ? "Official Pricing (Tariff) [Click cells to Edit]" : "Official Pricing (Tariff)";
+                    document.getElementById("chartsGridSection").style.display = "none";
+                    document.getElementById("statsGridSection").style.display = "none";
+                    document.getElementById("keywordContainerSection").style.display = "none";
+                    document.getElementById("actionButtonsArea").style.display = "none";
+                    document.getElementById("clientRateSelectorBar").style.display = "none";
+                    renderRateChartTable();
+                } else if (targetView === "clientrate") {
+                    setActiveMenuItem("menuClientRate");
+                    document.getElementById("mainPageTitle").innerText = "Individual Client Rates Control";
+                    document.getElementById("tableCardTitle").innerText = isAdmin ? "Optimized Pricing Filter for Selected Profile [Click cells to Edit]" : "Optimized Pricing Filter for Selected Profile";
+                    document.getElementById("chartsGridSection").style.display = "none";
+                    document.getElementById("statsGridSection").style.display = "none";
+                    document.getElementById("keywordContainerSection").style.display = "none";
+                    document.getElementById("actionButtonsArea").style.display = "none";
+                    document.getElementById("clientRateSelectorBar").style.display = "flex";
+                    setupClientRateDropdown(); renderClientSpecificRateView();
+                }
+            }
+        }
+
+        function setActiveMenuItem(id) { document.getElementById(id).classList.add("active"); }
+        function resetTableHTMLStructure() { 
+            let isAdmin = loggedInUser && loggedInUser.role === 'admin';
+            let actionTh = isAdmin ? `<th id="thActionCol" style="width: 50px;">Action</th>` : '';
+            document.getElementById("dynamicTableContainer").innerHTML = `<table class="data-table" id="clientTable"><thead><tr><th>SL</th><th>PF Number</th><th>Client Name</th><th>Organisation Type</th><th>Officer</th><th>Status</th>${actionTh}</tr></thead><tbody id="tableBody"></tbody></table>`; 
+        }
+
+        document.getElementById("linkDashboard").addEventListener("click", () => switchViewLayouts("dashboard"));
+        document.getElementById("linkQuotation").addEventListener("click", () => switchViewLayouts("quotation"));
+        document.getElementById("linkClients").addEventListener("click", () => switchViewLayouts("clients"));
+        document.getElementById("linkOfficers").addEventListener("click", () => switchViewLayouts("officers"));
+        document.getElementById("linkRateChart").addEventListener("click", () => switchViewLayouts("ratechart"));
+        document.getElementById("linkClientRate").addEventListener("click", () => switchViewLayouts("clientrate"));
+        document.getElementById("linkUsers").addEventListener("click", () => switchViewLayouts("users"));
+        document.getElementById("linkCommercial").addEventListener("click", () => switchViewLayouts("commercial"));
+        document.getElementById("linkClassifiedRate").addEventListener("click", () => switchViewLayouts("classified"));
+
+        /* --- CRM DASHBOARD ARCHITECTURE SCRIPTS --- */
+        function initCharts(govtCount, pvtCount) {
+            const canvas = document.getElementById('clientDonutChart');
+            if(!canvas) return;
+            if (donutChartInstance) donutChartInstance.destroy();
+            const total = govtCount + pvtCount;
+            const govtText = total > 0 ? `Govt (${((govtCount/total)*100).toFixed(1)}%)` : 'Govt (0%)';
+            const pvtText = total > 0 ? `Pvt (${((pvtCount/total)*100).toFixed(1)}%)` : 'Pvt (0%)';
+            
+            const isDark = document.body.classList.contains('dark-mode');
+
+            donutChartInstance = new Chart(canvas.getContext('2d'), {
+                type: 'doughnut',
+                data: { labels: [govtText, pvtText], datasets: [{ data: [govtCount, pvtCount], backgroundColor: ['#3b82f6', '#10b981'], borderWidth: isDark ? 0 : 1 }] },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { 
+                        legend: { 
+                            position: 'bottom', 
+                            labels: { 
+                                boxWidth: 8,
+                                color: isDark ? '#cbd5e1' : '#64748b'
+                            } 
+                        } 
+                    }, 
+                    cutout: '70%' 
+                }
+            });
+        }
+
+        function renderMiddleRates() {
+            const container = document.getElementById("middleQuickRateList");
+            if (!container) return; container.innerHTML = "";
+            let rates = getRatesDatabase();
+            rates.slice(0, 8).forEach(item => {
+                let badgeClass = "tag-color";
+                container.innerHTML += `<div class="quick-rate-item"><span class="quick-rate-title">${item.category}</span><div class="quick-rate-meta"><span class="quick-rate-tag ${badgeClass}">${item.type}</span><span class="quick-rate-price">${item.rate}</span></div></div>`;
+            });
+        }
+
+        function renderWorkloadPanel(db) {
+            const panelContainer = document.getElementById("officerWorkloadPanel");
+            if (!panelContainer) return; panelContainer.innerHTML = "";
+            let counts = {}; officerList.forEach(off => counts[off] = 0);
+            db.forEach(item => { if (counts.hasOwnProperty(item.officer)) counts[item.officer]++; });
+            officerList.forEach(officer => {
+                let count = counts[officer];
+                let isActiveClass = (selectedOfficerFilter === officer) ? "active" : "";
+                panelContainer.innerHTML += `<div class="officer-panel-item ${isActiveClass}" onclick="filterByOfficer('${officer}')"><div class="officer-panel-info"><div class="officer-avatar-ring ${count > 0 ? 'ring-active':''}">${officer.charAt(0)}</div><div class="officer-panel-name" title="${officer}">${officer}</div></div><div class="officer-panel-count">${count} Client.</div></div>`;
+            });
+        }
+
+        function filterByOfficer(officerName) {
+            selectedOfficerFilter = (selectedOfficerFilter === officerName) ? null : officerName;
+            selectedKeywordFilter = selectedTypeFilter = null; clearTagHighlights(); switchViewLayouts("dashboard");
+        }
+        function filterByType(type) {
+            selectedTypeFilter = (selectedTypeFilter === type) ? null : type;
+            selectedOfficerFilter = selectedKeywordFilter = null; clearTagHighlights(); switchViewLayouts("dashboard");
+        }
+        function filterByKeyword(element, word) {
+            clearTagHighlights();
+            if (selectedKeywordFilter === word) { selectedKeywordFilter = null; } 
+            else { selectedKeywordFilter = word; element.classList.add("active"); }
+            selectedTypeFilter = selectedOfficerFilter = null; renderTable();
+        }
+        function clearTagHighlights() { document.querySelectorAll(".keyword-tags .tag").forEach(t => t.classList.remove("active")); }
+        function resetAllFilters() { 
+            selectedOfficerFilter = selectedKeywordFilter = selectedTypeFilter = null; 
+            globalSearchQuery = "";
+            clearTagHighlights(); 
+            document.querySelectorAll(".inline-table-search input, #searchInput").forEach(i => i.value = ""); 
+            renderTable(); 
+        }
+        function searchGlobalTable(val) {
+            globalSearchQuery = val.trim().toLowerCase();
+            renderTable();
+        }
+
+        function renderTable() {
+            let db = getDatabase(); let tbody = document.getElementById("tableBody"); if(!tbody) return; tbody.innerHTML = "";
+            
+            // Map original indexes so modifying logic retains accurate DB references
+            let mappedDb = db.map((item, originalIndex) => ({ item, originalIndex }));
+
+            let govt = 0, pvt = 0; db.forEach(item => { if (item.type === "Government Client") govt++; else pvt++; });
+            document.getElementById("totalClientsCount").innerText = db.length;
+            document.getElementById("govtClientsCount").innerText = govt;
+            document.getElementById("privateClientsCount").innerText = pvt;
+
+            let isAdmin = loggedInUser && loggedInUser.role === 'admin';
+            let activeDataset = [...mappedDb];
+            
+            if(selectedOfficerFilter) activeDataset = activeDataset.filter(obj => obj.item.officer === selectedOfficerFilter);
+            if(selectedKeywordFilter) activeDataset = activeDataset.filter(obj => (obj.item.name || "").toLowerCase().includes(selectedKeywordFilter.toLowerCase()));
+            if(selectedTypeFilter) activeDataset = activeDataset.filter(obj => obj.item.type === selectedTypeFilter);
+            if(globalSearchQuery) activeDataset = activeDataset.filter(obj => (obj.item.name || "").toLowerCase().includes(globalSearchQuery) || (obj.item.officer || "").toLowerCase().includes(globalSearchQuery));
+
+            let chartGovt = 0, chartPvt = 0; activeDataset.forEach(obj => { if (obj.item.type === "Government Client") chartGovt++; else chartPvt++; });
+            initCharts(chartGovt, chartPvt); renderWorkloadPanel(db); renderMiddleRates();
+
+            document.getElementById("activeFilterBadge").style.display = (selectedOfficerFilter || selectedKeywordFilter || selectedTypeFilter || globalSearchQuery) ? "inline-flex" : "none";
+            let nameCounts = {}; activeDataset.forEach(obj => { let name = (obj.item.name || "").trim().toLowerCase(); if (name) nameCounts[name] = (nameCounts[name] || 0) + 1; });
+
+            activeDataset.forEach((obj, loopIndex) => {
+                let item = obj.item;
+                let index = obj.originalIndex;
+
+                let row = document.createElement("tr");
+                let clientNameLower = (item.name || "").trim().toLowerCase();
+                let isDuplicate = nameCounts[clientNameLower] > 1;
+                
+                if(isDuplicate && document.body.classList.contains('dark-mode')) {
+                    row.style.backgroundColor = "rgba(239, 68, 68, 0.1)";
+                } else if (isDuplicate) {
+                    row.style.backgroundColor = "#fff5f5";
+                }
+
+                let editableClass = isAdmin ? "editable-cell" : "";
+                
+                let actionCell = isAdmin ? `<td><button class="delete-row-btn" onclick="deleteClient(${index})"><i class="fa-solid fa-trash"></i></button></td>` : '';
+
+                row.innerHTML = `
+                    <td class="col-sl">${loopIndex + 1}</td>
+                    <td class="col-pf ${editableClass}" onclick="makeEditable(this, ${index}, 'pf')">${item.pf || 'N/A'}</td>
+                    <td class="col-name ${editableClass}" ${isDuplicate ? 'style="color: var(--color-danger); font-weight: bold;"' : ''} onclick="makeEditable(this, ${index}, 'name')">
+                        ${item.name || 'N/A'} ${isDuplicate ? '<span style="font-size:10px; font-weight:normal; background:#ef4444; color:#fff; padding:2px 6px; border-radius:10px; margin-left:5px;">Duplicate</span>' : ''}
+                    </td>
+                    <td class="col-type ${editableClass}" onclick="makeDropdownEditable(this, ${index}, 'type')">${item.type || 'Private Client'}</td>
+                    <td class="${editableClass}" onclick="makeOfficerDropdownEditable(this, ${index}, 'officer')"><span class="assigned-officer"><i class="fa-solid fa-user-tie"></i> ${item.officer || 'N/A'}</span></td>
+                    <td><span class="status-badge" ${isDuplicate ? 'style="background:rgba(239, 68, 68, 0.15); color:var(--color-danger);"' : ''}>${isDuplicate ? 'Duplicate' : 'Active'}</span></td>
+                    ${actionCell}`;
+                tbody.appendChild(row);
+            });
+        }
+
+        function filterByOfficerFromMatrix(officerName) { selectedOfficerFilter = officerName; selectedKeywordFilter = selectedTypeFilter = null; clearTagHighlights(); switchViewLayouts("dashboard"); }
+        
+        function renderOfficersTable() {
+            let db = getDatabase(); let container = document.getElementById("dynamicTableContainer");
+            let counts = {}; officerList.forEach(off => counts[off] = 0); db.forEach(item => { if (counts.hasOwnProperty(item.officer)) counts[item.officer]++; });
+            let html = `<div class="table-responsive-wrapper"><table class="data-table"><thead><tr><th>SL</th><th>Officer Name</th><th>Clients Count</th><th>Status</th></tr></thead><tbody>`;
+            officerList.forEach((officer, index) => {
+                html += `<tr class="clickable-row" style="cursor:pointer;" onclick="filterByOfficerFromMatrix('${officer}')"><td class="col-sl">${index + 1}</td><td style="font-weight:600;color:var(--sidebar-active)"><i class="fa-solid fa-user-tie"></i> ${officer}</td><td style="font-weight:700;">${counts[officer]} Clients</td><td><span class="status-badge" style="background:var(--badge-bg);color:#0369a1">View Portfolio &rarr;</span></td></tr>`;
+            });
+            container.innerHTML = html + `</tbody></table></div>`;
+        }
+
+        function renderRateChartTable() {
+            let isAdmin = loggedInUser && loggedInUser.role === 'admin';
+            let container = document.getElementById("dynamicTableContainer"); let rates = getRatesDatabase();
+            let html = `<div class="table-responsive-wrapper"><table class="data-table"><thead><tr><th>SL</th><th>Advertisement Description</th><th>Type</th><th>Rate</th></tr></thead><tbody>`;
+            rates.forEach((item, index) => {
+                let badgeClass = "rate-badge-color";
+                let editableClass = isAdmin ? "editable-cell" : "";
+                html += `<tr><td class="col-sl">${index + 1}</td><td class="col-name ${editableClass}" onclick="makeRateEditable(this, ${index}, 'category')">${item.category}</td><td class="col-type ${editableClass}" style="text-align:center;"><span class="${badgeClass}">${item.type}</span></td><td style="font-weight:700; color:var(--sidebar-active);" class="${editableClass}" onclick="makeRateEditable(this, ${index}, 'rate')">${item.rate}</td></tr>`;
+            });
+            container.innerHTML = html + `</tbody></table></div>`;
+        }
+
+        function setupClientRateDropdown() {
+            let dropdown = document.getElementById("clientRateDropdown"); let db = getDatabase();
+            dropdown.innerHTML = '<option value="">-- Choose/Search Client --</option>';
+            db.forEach((client, idx) => { dropdown.innerHTML += `<option value="${idx}">${client.name} (${client.type === 'Government Client' ? 'Govt' : 'Pvt'})</option>`; });
+        }
+        function onClientRateSelected() { renderClientSpecificRateView(); }
+
+        function renderClientSpecificRateView() {
+            let isAdmin = loggedInUser && loggedInUser.role === 'admin';
+            let idx = document.getElementById("clientRateDropdown").value; let container = document.getElementById("dynamicTableContainer");
+            let badge = document.getElementById("clientTypeDisplayBadge");
+            if(!idx) { badge.innerHTML = `<i class="fa-solid fa-circle-info"></i> Select a client to load type profile`; container.innerHTML = `<div style="padding:40px; text-align:center; color:var(--text-muted); font-weight:500;">Please select an individual client from the top dropdown bar above to view optimized rates.</div>`; return; }
+            let client = getDatabase()[idx];
+            badge.innerHTML = `<i class="fa-solid fa-briefcase"></i> Profile: <b>Commercial / Private Rates</b> Assigned`;
+            let rates = getRatesDatabase(); let html = `<div class="table-responsive-wrapper"><table class="data-table"><thead><tr><th>SL</th><th>Applicable Formats for [ ${client.name} ]</th><th>Type</th><th>Tariff Rate</th></tr></thead><tbody>`;
+            let slCounter = 1;
+            rates.forEach((item, masterIndex) => {
+                let badgeClass = "rate-badge-color";
+                let editableClass = isAdmin ? "editable-cell" : "";
+                html += `<tr><td class="col-sl">${slCounter++}</td><td class="col-name ${editableClass}" onclick="makeClientViewRateEditable(this, ${masterIndex}, 'category')">${item.category}</td><td class="col-type ${editableClass}" style="text-align:center;"><span class="${badgeClass}">${item.type}</span></td><td style="font-weight:700; color:var(--color-success);" class="${editableClass}" onclick="makeClientViewRateEditable(this, ${masterIndex}, 'rate')">${item.rate}</td></tr>`;
+            });
+            container.innerHTML = html + `</tbody></table></div>`;
+        }
+
+        /* Inline Editing Systems (Updated to NOT refresh full UI on blur) */
+        function makeEditable(element, index, key) {
+            if (!loggedInUser || loggedInUser.role !== 'admin') return;
+            if (element.querySelector('input')) return; 
+            let db = getDatabase(); 
+            let originalVal = db[index][key] || "";
+            let input = document.createElement("input");
+            input.className = "inline-edit-input"; 
+            input.value = originalVal; 
+            element.innerHTML = ""; 
+            element.appendChild(input); 
+            input.focus();
+            input.addEventListener("blur", function() { 
+                let val = input.value.trim();
+                if(val) { 
+                    db[index][key] = val; 
+                    localStorage.setItem("crm_desktop_db", JSON.stringify(db));
+                    element.innerHTML = val;
+                } else { 
+                    element.innerHTML = originalVal;
+                } 
+            });
+        }
+        
+        function makeDropdownEditable(element, index, key) {
+            if (!loggedInUser || loggedInUser.role !== 'admin') return;
+            if (element.querySelector('select')) return; 
+            let db = getDatabase(); 
+            let select = document.createElement("select"); 
+            select.className = "inline-edit-select";
+            select.innerHTML = `<option value="Private Client" ${db[index][key]==='Private Client'?'selected':''}>Private Client</option><option value="Government Client" ${db[index][key]==='Government Client'?'selected':''}>Government Client</option>`;
+            element.innerHTML = ""; 
+            element.appendChild(select); 
+            select.focus(); 
+            select.addEventListener("blur", function() { 
+                db[index][key] = select.value; 
+                localStorage.setItem("crm_desktop_db", JSON.stringify(db));
+                element.innerHTML = select.value; 
+            });
+        }
+        
+        function makeOfficerDropdownEditable(element, index, key) {
+            if (!loggedInUser || loggedInUser.role !== 'admin') return;
+            if (element.querySelector('select')) return; 
+            let db = getDatabase(); 
+            let select = document.createElement("select"); 
+            select.className = "inline-edit-select";
+            officerList.forEach(off => { select.innerHTML += `<option value="${off}" ${db[index][key]===off?'selected':''}>${off}</option>`; });
+            element.innerHTML = ""; 
+            element.appendChild(select); 
+            select.focus();
+            select.addEventListener("blur", function() { 
+                db[index][key] = select.value; 
+                let found = officerRegistry.find(o => o.name === select.value); 
+                if(found) db[index]['pf'] = found.pf; 
+                localStorage.setItem("crm_desktop_db", JSON.stringify(db));
+                element.innerHTML = `<span class="assigned-officer"><i class="fa-solid fa-user-tie"></i> ${select.value}</span>`;
+                
+                let tr = element.closest('tr');
+                if(tr && found) {
+                    let pfCell = tr.querySelector('.col-pf');
+                    if (pfCell) pfCell.innerText = found.pf;
+                }
+            });
+        }
+        
+        function makeRateEditable(element, index, key) {
+            if (!loggedInUser || loggedInUser.role !== 'admin') return;
+            if (element.querySelector('input')) return;
+            let rates = getRatesDatabase(); 
+            let originalVal = rates[index][key] || "";
+            let input = document.createElement("input");
+            input.className = "inline-edit-input"; 
+            input.value = originalVal; 
+            element.innerHTML = ""; 
+            element.appendChild(input); 
+            input.focus();
+            input.addEventListener("blur", function() { 
+                let val = input.value.trim();
+                if(val) { 
+                    rates[index][key] = val; 
+                    localStorage.setItem("crm_rates_db", JSON.stringify(rates));
+                    element.innerHTML = val;
+                } else { 
+                    element.innerHTML = originalVal;
+                } 
+            });
+        }
+        
+        function makeClientViewRateEditable(element, index, key) {
+            makeRateEditable(element, index, key);
+        }
+
+        /* Basic Action Helpers */
+        function toggleBulkModal(show) { document.getElementById("bulkModalOverlay").style.display = show ? "flex" : "none"; if(!show) document.getElementById("bulkPasteInput").value = ""; }
+        
+        /* RESTORED AND COMPLETED JAVASCRIPT FUNCTIONS */
+        function saveBulkData() {
+            let data = document.getElementById("bulkPasteInput").value.trim(); 
+            if(!data) return toggleBulkModal(false);
+            
+            let rows = data.split("\n"); 
+            let db = getDatabase();
+            
+            rows.forEach(r => {
+                let cols = r.split("\t");
+                if (cols.length >= 2) {
+                    let name = cols[0] ? cols[0].trim() : "";
+                    let officer = cols[1] ? cols[1].trim() : "";
+                    let type = cols[2] ? cols[2].trim() : "Private Client";
+                    let pf = "";
+                    let foundOff = officerRegistry.find(o => o.name === officer);
+                    if (foundOff) pf = foundOff.pf;
+                    if (name) {
+                        db.push({ pf: pf, name: name, officer: officer, type: type });
+                    }
+                }
+            });
+            let addedCount = rows.filter(r => r.split("\t").length >= 2 && r.split("\t")[0].trim()).length;
+            saveDatabase(db);
+            toggleBulkModal(false);
+            showToast(addedCount + " client records added from bulk paste!", "success");
+        }
+
+        function toggleSingleModal(show) {
+            document.getElementById("singleModalOverlay").style.display = show ? "flex" : "none";
+            if(show) { autoFillPf(); } else { document.getElementById("formName").value = ""; }
+        }
+
+        function autoFillPf() {
+            let off = document.getElementById("formOfficer").value;
+            let found = officerRegistry.find(o => o.name === off);
+            document.getElementById("formPf").value = found ? found.pf : "";
+        }
+
+        function addSingleClient() {
+            let off = document.getElementById("formOfficer").value;
+            let pf = document.getElementById("formPf").value;
+            let name = document.getElementById("formName").value.trim();
+            let type = document.getElementById("formType").value;
+            if(!name) return showToast("Client name is required.", "danger");
+            
+            let db = getDatabase();
+            db.push({ pf: pf, name: name, type: type, officer: off });
+            saveDatabase(db);
+            toggleSingleModal(false);
+            showToast("Client \"" + name + "\" added successfully!", "success");
+        }
+
+        function deleteClient(index) {
+            showConfirmModal("Delete Client?", "Are you sure you want to delete this client record?", function() {
+                let db = getDatabase();
+                db.splice(index, 1);
+                saveDatabase(db);
+            });
+        }
+
+        function showConfirmModal(title, desc, confirmCallback) {
+            document.getElementById("confirmModalTitle").innerText = title;
+            document.getElementById("confirmModalDesc").innerText = desc;
+            document.getElementById("confirmModalOverlay").style.display = "flex";
+            let btn = document.getElementById("confirmActionBtn");
+            btn.onclick = function() {
+                confirmCallback();
+                toggleConfirmModal(false);
+            };
+        }
+
+        function toggleConfirmModal(show) {
+            document.getElementById("confirmModalOverlay").style.display = show ? "flex" : "none";
+        }
+
+        function clearAll() {
+            showConfirmModal("Clear All Clients?", "This will delete ALL clients in the database. EXTREME WARNING!", function() {
+                saveDatabase([]);
+            });
+        }
+
+        function backupDatabase() {
+            let db = getDatabase();
+            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db, null, 2));
+            let a = document.createElement("a");
+            a.href = dataStr;
+            a.download = "kk_crm_backup_" + new Date().toISOString().slice(0,10) + ".json";
+            a.click();
+            showToast("Backup downloaded (" + db.length + " records)", "success");
+        }
+
+        function importDatabase(event) {
+            let file = event.target.files[0];
+            if(!file) return;
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let json = JSON.parse(e.target.result);
+                    if(Array.isArray(json)) {
+                        saveDatabase(json);
+                        showToast("Database imported! (" + json.length + " records)", "success");
+                    } else {
+                        showToast("Invalid file format. Use a valid JSON backup.", "danger");
+                    }
+                } catch(err) { showToast("Error reading file. Please try again.", "danger"); }
+            };
+            reader.readAsText(file);
+        }
+
+        /* --- FULLY CUSTOMIZED EXPORT (EXCEL/XLS) ARCHITECTURE --- */
+        
+        function openExportModal() {
+            let offSelect = document.getElementById("exportOfficerSelect");
+            offSelect.innerHTML = "";
+            officerList.forEach(off => { offSelect.innerHTML += `<option value="${off}">${off}</option>`; });
+            toggleExportSubOptions();
+            toggleExportModal(true);
+        }
+
+        function toggleExportModal(show) { 
+            document.getElementById("exportModalOverlay").style.display = show ? "flex" : "none"; 
+        }
+
+        function toggleExportSubOptions() {
+            let opt = document.getElementById("exportOptionSelect").value;
+            document.getElementById("exportSubOptionOfficer").style.display = opt === "officer" ? "block" : "none";
+            document.getElementById("exportSubOptionIndustry").style.display = opt === "industry" ? "block" : "none";
+        }
+
+        function executeExcelExport() {
+            let opt = document.getElementById("exportOptionSelect").value;
+            let db = getDatabase();
+            let filteredDb = db;
+            let subtitle = "Full Database Report";
+            
+            if (opt === "officer") {
+                let off = document.getElementById("exportOfficerSelect").value;
+                filteredDb = db.filter(c => c.officer === off);
+                subtitle = "Filtered By Officer: " + off;
+            } else if (opt === "industry") {
+                let ind = document.getElementById("exportIndustrySelect").value;
+                if(ind === "Government Client" || ind === "Private Client") {
+                    filteredDb = db.filter(c => c.type === ind);
+                } else {
+                    filteredDb = db.filter(c => (c.name || "").toLowerCase().includes(ind.toLowerCase()));
+                }
+                subtitle = "Filtered By Industry Keyword: " + ind;
+            }
+            
+            // Build highly customized bold/centered HTML for Excel parsing
+            let htmlString = `
+            <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+            <head><meta charset="utf-8"></head>
+            <body>
+                <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;">
+                    <thead>
+                        <tr>
+                            <td colspan="5" style="text-align: center; font-size: 26pt; font-weight: bold; background-color: #0f172a; color: #ffffff; padding: 20px;">
+                                KALER KANTHO CRM REPORT
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="5" style="text-align: center; font-size: 16pt; font-weight: bold; background-color: #3b82f6; color: #ffffff; padding: 12px;">
+                                ${subtitle}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th style="font-weight: bold; font-size: 14pt; background-color: #e2e8f0; text-align: center;">SL</th>
+                            <th style="font-weight: bold; font-size: 14pt; background-color: #e2e8f0; text-align: left;">PF Number</th>
+                            <th style="font-weight: bold; font-size: 14pt; background-color: #e2e8f0; text-align: left;">Client Name</th>
+                            <th style="font-weight: bold; font-size: 14pt; background-color: #e2e8f0; text-align: left;">Organisation Type</th>
+                            <th style="font-weight: bold; font-size: 14pt; background-color: #e2e8f0; text-align: left;">Assigned Officer</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            filteredDb.forEach((item, idx) => {
+                htmlString += `
+                    <tr>
+                        <td style="text-align: center; font-size: 12pt;">${idx + 1}</td>
+                        <td style="font-size: 12pt;">${item.pf || ''}</td>
+                        <td style="font-size: 13pt; font-weight: bold;">${item.name || ''}</td>
+                        <td style="font-size: 12pt;">${item.type || ''}</td>
+                        <td style="font-size: 12pt; font-weight: bold; color: #2563eb;">${item.officer || ''}</td>
+                    </tr>
+                `;
+            });
+            
+            htmlString += `</tbody></table></body></html>`;
+            
+            let blob = new Blob(['\ufeff' + htmlString], { type: 'application/vnd.ms-excel' });
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = `CRM_Custom_Export_${new Date().getTime()}.xls`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            toggleExportModal(false);
+        }
+
+        /* --- PRINT STUDIO ARCHITECTURE --- */
+
+        function openPrintModal() {
+            let offSelect = document.getElementById("printOfficerSelect");
+            offSelect.innerHTML = "";
+            officerList.forEach(off => { offSelect.innerHTML += `<option value="${off}">${off}</option>`; });
+            togglePrintSubOptions();
+            togglePrintModal(true);
+        }
+
+        function togglePrintModal(show) { 
+            document.getElementById("printModalOverlay").style.display = show ? "flex" : "none"; 
+        }
+
+        function togglePrintSubOptions() {
+            let opt = document.getElementById("printOptionSelect").value;
+            document.getElementById("printSubOptionOfficer").style.display = opt === "officer" ? "block" : "none";
+            document.getElementById("printSubOptionIndustry").style.display = opt === "industry" ? "block" : "none";
+        }
+
+        function executePrintReport() {
+            let opt = document.getElementById("printOptionSelect").value;
+            
+            // Adjust table based on selection
+            if (opt === "all") resetAllFilters();
+            else if (opt === "officer") filterByOfficer(document.getElementById("printOfficerSelect").value);
+            else if (opt === "industry") {
+                selectedKeywordFilter = document.getElementById("printIndustrySelect").value;
+                selectedOfficerFilter = null; selectedTypeFilter = null;
+                renderTable();
+            }
+            
+            togglePrintModal(false);
+            
+            // Print action class wrapper
+            document.body.classList.add('printing-table');
+            document.body.classList.remove('printing-quote');
+            setTimeout(() => {
+                window.print();
+                document.body.classList.remove('printing-table');
+            }, 500);
+        }
+
+        /* --- COMMERCIAL EXECUTIVE OUTSIDE DHAKA DATA --- */
+        const commercialExecutivesData = [
+            { sl: 1,  name: "Mohammad Rashedul Hasan",       place: "Advertising Executive, Savar, Narayanganj", pf: "AE-209",  phone: "0181-8632328" },
+            { sl: 2,  name: "Sabbir Ahmed",                   place: "Advertising Executive, Gazipur",            pf: "AE-554",  phone: "0172-1283587" },
+            { sl: 3,  name: "Shonjib Das",                    place: "Advertising Executive, Faridpur",           pf: "AE-201",  phone: "0172-5532884" },
+            { sl: 4,  name: "Md. Selim Reza",                 place: "Advertising Executive, Chandpur",           pf: "AE-569",  phone: "0171-2408006" },
+            { sl: 5,  name: "Protap Ghosh",                   place: "Advertising Executive, Khulna",             pf: "AE-193",  phone: "0171-6130176" },
+            { sl: 6,  name: "Sheikh Md. Aminur Rashid (Sujon)",place: "Advertising Executive, Satkhira",          pf: "AE-210",  phone: "0171-2948319" },
+            { sl: 7,  name: "Tarikul Islam",                  place: "Advertising Executive, Barishal",           pf: "AE-500",  phone: "0173-6465824" },
+            { sl: 8,  name: "Bivekananda Chakraborty",        place: "Advertising Executive, Sylhet",             pf: "AE-2020", phone: "0171-1231751" },
+            { sl: 9,  name: "Abu Samsu Md. Armanul Haque",   place: "Advertising Executive, Rangpur",            pf: "AE-185",  phone: "0171-7678429" },
+            { sl: 10, name: "Md. Mashiur Rahman",             place: "Advertising Executive, Chuadanga, Jhenaidah",pf: "AE-739", phone: "0174-8336251" },
+            { sl: 11, name: "Shahid Joy",                     place: "Advertising Executive, Jashore",            pf: "AR-047",  phone: "01712-861021"  },
+            { sl: 12, name: "Tahmid Shubho",                  place: "Advertising Executive, Brahmanbaria",       pf: "AR-342",  phone: "01711-123667"  },
+            { sl: 13, name: "Mohammad Jonaied",               place: "Advertising Executive, Cox's Bazar",        pf: "AR-234",  phone: "01315-868486"  },
+            { sl: 14, name: "Mohammad Alamgir Hossain",       place: "Advertising Executive, Mongla",             pf: "AR-509",  phone: "01914-138071"  },
+            { sl: 15, name: "Md. Shahjahan",                  place: "Advertising Executive, Natore",             pf: "AR-653",  phone: "01714-474787"  },
+            { sl: 16, name: "K. M. Shahadat Hossain",         place: "Advertising Executive, Patuakhali",         pf: "AR-798",  phone: "01713-56835"   }
+        ];
+
+        function renderCommercialTable(data) {
+            const tbody = document.getElementById("commercialTableBody");
+            const badge = document.getElementById("commercialCountBadge");
+            if (!tbody) return;
+            tbody.innerHTML = "";
+            data.forEach((exec, idx) => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td><span class="commercial-sl-badge">${idx + 1}</span></td>
+                    <td class="col-name-exec"><i class="fa-solid fa-user-tie" style="color:var(--text-muted); margin-right:7px; font-size:0.78rem;"></i>${exec.name}</td>
+                    <td class="col-place"><i class="fa-solid fa-location-dot" style="color:#ef4444; margin-right:5px; font-size:0.75rem;"></i>${exec.place}</td>
+                    <td class="col-pf-exec">${exec.pf}</td>
+                    <td class="col-phone"><i class="fa-solid fa-phone" style="margin-right:5px; font-size:0.75rem; opacity:0.7;"></i>${exec.phone}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            if (badge) badge.innerText = data.length + " Executive" + (data.length !== 1 ? "s" : "");
+        }
+
+        function filterCommercialTable(val) {
+            const query = val.trim().toLowerCase();
+            const filtered = commercialExecutivesData.filter(exec =>
+                exec.name.toLowerCase().includes(query) ||
+                exec.place.toLowerCase().includes(query) ||
+                exec.pf.toLowerCase().includes(query) ||
+                exec.phone.toLowerCase().includes(query)
+            );
+            renderCommercialTable(filtered);
+        }
+
+        /* --- CLASSIFIED ADVERTISEMENT RATE DATA --- */
+        const classifiedAdRateData = [
+            { sl:1,  discount:0, amount:400,  vat:60,  withVat:460,  words:20 },
+            { sl:2,  discount:0, amount:425,  vat:64,  withVat:489,  words:21 },
+            { sl:3,  discount:0, amount:450,  vat:68,  withVat:518,  words:22 },
+            { sl:4,  discount:0, amount:475,  vat:71,  withVat:546,  words:23 },
+            { sl:5,  discount:0, amount:500,  vat:75,  withVat:575,  words:24 },
+            { sl:6,  discount:0, amount:525,  vat:79,  withVat:604,  words:25 },
+            { sl:7,  discount:0, amount:550,  vat:83,  withVat:633,  words:26 },
+            { sl:8,  discount:0, amount:575,  vat:86,  withVat:661,  words:27 },
+            { sl:9,  discount:0, amount:600,  vat:90,  withVat:690,  words:28 },
+            { sl:10, discount:0, amount:625,  vat:94,  withVat:719,  words:29 },
+            { sl:11, discount:0, amount:650,  vat:98,  withVat:748,  words:30 },
+            { sl:12, discount:0, amount:675,  vat:101, withVat:776,  words:31 },
+            { sl:13, discount:0, amount:700,  vat:105, withVat:805,  words:32 },
+            { sl:14, discount:0, amount:725,  vat:109, withVat:834,  words:33 },
+            { sl:15, discount:0, amount:750,  vat:113, withVat:863,  words:34 },
+            { sl:16, discount:0, amount:775,  vat:116, withVat:891,  words:35 },
+            { sl:17, discount:0, amount:800,  vat:120, withVat:920,  words:36 },
+            { sl:18, discount:0, amount:825,  vat:124, withVat:949,  words:37 },
+            { sl:19, discount:0, amount:850,  vat:128, withVat:978,  words:38 },
+            { sl:20, discount:0, amount:875,  vat:131, withVat:1006, words:39 },
+            { sl:21, discount:0, amount:300,  vat:135, withVat:1035, words:40 },
+            { sl:22, discount:0, amount:325,  vat:139, withVat:1064, words:41 },
+            { sl:23, discount:0, amount:350,  vat:143, withVat:1093, words:42 },
+            { sl:24, discount:0, amount:375,  vat:146, withVat:1121, words:43 },
+            { sl:25, discount:0, amount:1000, vat:150, withVat:1150, words:44 },
+            { sl:26, discount:0, amount:1025, vat:154, withVat:1179, words:45 },
+            { sl:27, discount:0, amount:1050, vat:158, withVat:1208, words:46 },
+            { sl:28, discount:0, amount:1075, vat:161, withVat:1236, words:47 },
+            { sl:29, discount:0, amount:1100, vat:165, withVat:1265, words:48 },
+            { sl:30, discount:0, amount:1125, vat:169, withVat:1294, words:49 },
+            { sl:31, discount:0, amount:1150, vat:173, withVat:1323, words:50 },
+            { sl:32, discount:0, amount:1175, vat:176, withVat:1351, words:51 },
+            { sl:33, discount:0, amount:1200, vat:180, withVat:1380, words:52 },
+            { sl:34, discount:0, amount:1225, vat:184, withVat:1409, words:53 },
+            { sl:35, discount:0, amount:1250, vat:188, withVat:1438, words:54 },
+            { sl:36, discount:0, amount:1275, vat:191, withVat:1466, words:55 },
+            { sl:37, discount:0, amount:1300, vat:195, withVat:1495, words:56 },
+            { sl:38, discount:0, amount:1325, vat:199, withVat:1524, words:57 },
+            { sl:39, discount:0, amount:1350, vat:203, withVat:1553, words:58 },
+            { sl:40, discount:0, amount:1375, vat:206, withVat:1581, words:59 },
+            { sl:41, discount:0, amount:1400, vat:210, withVat:1610, words:60 },
+            { sl:42, discount:0, amount:1425, vat:214, withVat:1639, words:61 },
+            { sl:43, discount:0, amount:1450, vat:218, withVat:1668, words:62 },
+            { sl:44, discount:0, amount:1475, vat:221, withVat:1696, words:63 },
+            { sl:45, discount:0, amount:1500, vat:225, withVat:1725, words:64 },
+            { sl:46, discount:0, amount:1525, vat:229, withVat:1754, words:65 },
+            { sl:47, discount:0, amount:1550, vat:233, withVat:1783, words:66 },
+            { sl:48, discount:0, amount:1575, vat:236, withVat:1811, words:67 },
+            { sl:49, discount:0, amount:1600, vat:240, withVat:1840, words:68 },
+            { sl:50, discount:0, amount:1625, vat:244, withVat:1869, words:69 },
+            { sl:51, discount:0, amount:1650, vat:248, withVat:1898, words:70 },
+            { sl:52, discount:0, amount:1675, vat:251, withVat:1926, words:71 },
+            { sl:53, discount:0, amount:1700, vat:255, withVat:1955, words:72 },
+            { sl:54, discount:0, amount:1725, vat:259, withVat:1984, words:73 },
+            { sl:55, discount:0, amount:1750, vat:263, withVat:2013, words:74 },
+            { sl:56, discount:0, amount:1775, vat:266, withVat:2041, words:75 },
+            { sl:57, discount:0, amount:1800, vat:270, withVat:2070, words:76 },
+            { sl:58, discount:0, amount:1825, vat:274, withVat:2099, words:77 },
+            { sl:59, discount:0, amount:1850, vat:278, withVat:2128, words:78 },
+            { sl:60, discount:0, amount:1875, vat:281, withVat:2156, words:79 }
+        ];
+
+        function renderClassifiedTable(data) {
+            const tbody = document.getElementById("classifiedTableBody");
+            const badge = document.getElementById("classifiedCountBadge");
+            if (!tbody) return;
+            tbody.innerHTML = "";
+            data.forEach((row, idx) => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td><span class="classified-sl-badge">${idx + 1}</span></td>
+                    <td>${row.discount === 0 ? '<span style="color:var(--text-muted); font-size:0.8rem;">0</span>' : row.discount}</td>
+                    <td style="font-weight:600;">৳ ${row.amount.toLocaleString()}</td>
+                    <td class="col-vat">৳ ${row.vat.toLocaleString()}</td>
+                    <td style="font-weight:700; color:var(--sidebar-active);">৳ ${row.withVat.toLocaleString()}</td>
+                    <td class="col-words">${row.words}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            if (badge) badge.innerText = data.length + " Rate Tier" + (data.length !== 1 ? "s" : "");
+        }
+
+        function filterClassifiedTable(val) {
+            const query = val.trim().toLowerCase();
+            const filtered = classifiedAdRateData.filter(row =>
+                String(row.words).includes(query) ||
+                String(row.amount).includes(query) ||
+                String(row.withVat).includes(query) ||
+                String(row.vat).includes(query)
+            );
+            renderClassifiedTable(filtered);
+        }
+
+        /* Stubbing missing QUOTATION functions if required by other parts of your app */
+        function syncQuoteData() { }
+        function printQuotation() {
+            document.body.classList.add('printing-quote');
+            document.body.classList.remove('printing-table');
+            setTimeout(() => { window.print(); document.body.classList.remove('printing-quote'); }, 500);
+        }
+        function exportBanglaPDF() { alert("Ensure html2pdf integration script is fully deployed"); }
+        function addNewPriceItem() { }
+        function handleSignatureUpload() { }
+        function renderFormPricingRows() { }
+
+    </script>
+</body>
+</html>
