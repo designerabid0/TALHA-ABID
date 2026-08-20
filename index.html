@@ -2723,5 +2723,37 @@
         function renderFormPricingRows() { }
 
     </script>
+    <!-- Firebase SDK Integration -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+  import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+  // আপনার ফায়ারবেস কনফিগারেশন (Firebase Console থেকে পাওয়া)
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  // Firebase Initialize
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  // উদাহরণ: ডেটা সেভ করার ফংশন
+  window.saveDataToFirebase = function(dataKey, dataValue) {
+    set(ref(db, 'appData/' + dataKey), dataValue);
+  };
+
+  // উদাহরণ: ডেটা রিয়েলটাইমে রিড করার ফংশন
+  const dataRef = ref(db, 'appData/');
+  onValue(dataRef, (snapshot) => {
+    const data = snapshot.val();
+    console.log("Firebase থেকে আসা ডেটা:", data);
+  });
+</script>
 </body>
 </html>
