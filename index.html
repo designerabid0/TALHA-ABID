@@ -2723,37 +2723,24 @@
         function renderFormPricingRows() { }
 
     </script>
-    <!-- Firebase SDK Integration -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-  import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
-  // আপনার ফায়ারবেস কনফিগারেশন (Firebase Console থেকে পাওয়া)
-  const firebaseConfig = {
-    apiKey: "AIzaSyA1XZ9uUK4W39wiJgQQLSvQXU9hKCwY-o8",
-    authDomain: "kalerkantho-app-data.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-    projectId: "alerkantho-app-data",
-    storageBucket: "kalerkantho-app-data.firebasestorage.app",
-    messagingSenderId: "953359386725",
-    appId: ""1:953359386725:web:a36eeecbeb48c161a55e8c"
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyA1XZ9uUK4W39wiJgQQLSvQXU9hKCwY-o8",
+  authDomain: "kalerkantho-app-data.firebaseapp.com",
+  databaseURL: "https://kalerkantho-app-data-default-rtdb.firebaseio.com",
+  projectId: "kalerkantho-app-data",
+  storageBucket: "kalerkantho-app-data.firebasestorage.app",
+  messagingSenderId: "953359386725",
+  appId: "1:953359386725:web:a36eeecbeb48c161a55e8c"
 };
 
-  // Firebase Initialize
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-
-  // উদাহরণ: ডেটা সেভ করার ফংশন
-  window.saveDataToFirebase = function(dataKey, dataValue) {
-    set(ref(db, 'appData/' + dataKey), dataValue);
-  };
-
-  // উদাহরণ: ডেটা রিয়েলটাইমে রিড করার ফংশন
-  const dataRef = ref(db, 'appData/');
-  onValue(dataRef, (snapshot) => {
-    const data = snapshot.val();
-    console.log("Firebase থেকে আসা ডেটা:", data);
-  });
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
 </script>
 </body>
 </html>
