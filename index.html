@@ -192,12 +192,65 @@
         body.dark-mode .login-box img { filter: brightness(0) invert(1); }
         .login-box h2 { margin-bottom: 5px; color: var(--text-main); font-size: 1.6rem; font-weight: 700; letter-spacing: -0.5px; }
         .login-box p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 28px; }
-        .login-box input[type="text"], .login-box input[type="password"] { 
-            width: 100%; padding: 13px 16px; margin-bottom: 14px; 
-            border: 1.5px solid var(--border-color); border-radius: 10px; 
-            background: var(--bg-input); color: var(--text-main); 
-            outline: none; font-size: 0.95rem; 
+        .login-input-wrap {
+            position: relative;
+            width: 100%;
+            margin-bottom: 14px;
+        }
+        .login-box input[type="text"], .login-box input[type="password"], .login-box input[type="text"].login-password-input {
+            width: 100%; padding: 13px 16px; margin-bottom: 0;
+            border: 1.5px solid var(--border-color); border-radius: 10px;
+            background: var(--bg-input); color: var(--text-main);
+            outline: none; font-size: 0.95rem;
             transition: var(--transition-fast);
+        }
+        .login-box input.login-password-input {
+            padding-right: 48px;
+        }
+        .password-toggle-btn {
+            position: absolute;
+            right: 7px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition-fast);
+        }
+        .password-toggle-btn:hover {
+            background: var(--bg-hover);
+            color: var(--sidebar-active);
+        }
+        .login-options {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin: 2px 0 20px;
+        }
+        .login-box .checkbox-group {
+            display: flex; align-items: center; gap: 8px; margin: 0;
+            color: var(--text-main); font-size: 0.9rem; text-align: left; cursor: pointer;
+            user-select: none;
+        }
+        .login-box .checkbox-group input {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--sidebar-active);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .remember-hint {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            white-space: nowrap;
         }
         .login-box input:focus { border-color: var(--sidebar-active); box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12); background: var(--bg-card); }
         .login-box .checkbox-group { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; color: var(--text-main); font-size: 0.9rem; text-align: left; cursor: pointer; }
@@ -982,14 +1035,25 @@
             
             <div id="loginErrorMsg" class="login-error">Invalid Username or Password!</div>
             
-            <input type="text" id="loginUsername" placeholder="Username" onkeypress="handleEnter(event)">
-            <input type="password" id="loginPassword" placeholder="Password" onkeypress="handleEnter(event)">
-            
-            <label class="checkbox-group">
-                <input type="checkbox" id="loginRememberMe"> Remember my password
-            </label>
-            
-            <button class="btn btn-primary" onclick="processLogin()">Secure Login</button>
+            <input type="text" id="loginUsername" placeholder="Username" autocomplete="username" onkeypress="handleEnter(event)">
+            <div class="login-input-wrap">
+                <input type="password" id="loginPassword" class="login-password-input" placeholder="Password" autocomplete="current-password" onkeypress="handleEnter(event)">
+                <button type="button" class="password-toggle-btn" id="loginPasswordToggle" onclick="toggleLoginPassword()" aria-label="Show password" title="Show password">
+                    <i class="fa-solid fa-eye"></i>
+                </button>
+            </div>
+
+            <div class="login-options">
+                <label class="checkbox-group">
+                    <input type="checkbox" id="loginRememberMe">
+                    <span>Remember my password</span>
+                </label>
+                <span class="remember-hint">Saved on this device</span>
+            </div>
+
+            <button class="btn btn-primary" onclick="processLogin()">
+                <i class="fa-solid fa-right-to-bracket"></i> Secure Login
+            </button>
         </div>
     </div>
 
@@ -1595,10 +1659,107 @@
             });
         }
 
+        /* --- LOGIN REMEMBER-ME & PASSWORD VISIBILITY --- */
+        const LOGIN_REMEMBER_KEY = 'kalerKanthoCRMRememberedLogin';
+
+        function getRememberedLogin() {
+            try {
+                const raw = localStorage.getItem(LOGIN_REMEMBER_KEY);
+                if (!raw) return null;
+                const saved = JSON.parse(raw);
+                if (!saved || typeof saved.username !== 'string' || typeof saved.password !== 'string') {
+                    localStorage.removeItem(LOGIN_REMEMBER_KEY);
+                    return null;
+                }
+                return saved;
+            } catch (error) {
+                console.warn('Could not read remembered login:', error);
+                return null;
+            }
+        }
+
+        function saveRememberedLogin(username, password) {
+            try {
+                localStorage.setItem(LOGIN_REMEMBER_KEY, JSON.stringify({
+                    username: username,
+                    password: password
+                }));
+            } catch (error) {
+                console.warn('Could not save remembered login:', error);
+            }
+        }
+
+        function clearRememberedLogin() {
+            try {
+                localStorage.removeItem(LOGIN_REMEMBER_KEY);
+            } catch (error) {
+                console.warn('Could not clear remembered login:', error);
+            }
+        }
+
+        function loadRememberedLogin() {
+            const usernameInput = document.getElementById('loginUsername');
+            const passwordInput = document.getElementById('loginPassword');
+            const rememberInput = document.getElementById('loginRememberMe');
+
+            if (!usernameInput || !passwordInput || !rememberInput) return;
+
+            const saved = getRememberedLogin();
+            if (saved) {
+                usernameInput.value = saved.username;
+                passwordInput.value = saved.password;
+                rememberInput.checked = true;
+            } else {
+                usernameInput.value = '';
+                passwordInput.value = '';
+                rememberInput.checked = false;
+            }
+        }
+
+        function toggleLoginPassword() {
+            const passwordInput = document.getElementById('loginPassword');
+            const toggleBtn = document.getElementById('loginPasswordToggle');
+            if (!passwordInput || !toggleBtn) return;
+
+            const icon = toggleBtn.querySelector('i');
+            const isHidden = passwordInput.type === 'password';
+
+            passwordInput.type = isHidden ? 'text' : 'password';
+            if (icon) {
+                icon.className = isHidden ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+            }
+
+            toggleBtn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+            toggleBtn.setAttribute('title', isHidden ? 'Hide password' : 'Show password');
+        }
+
+        function resetLoginPasswordVisibility() {
+            const passwordInput = document.getElementById('loginPassword');
+            const toggleBtn = document.getElementById('loginPasswordToggle');
+            if (!passwordInput || !toggleBtn) return;
+
+            passwordInput.type = 'password';
+            const icon = toggleBtn.querySelector('i');
+            if (icon) icon.className = 'fa-solid fa-eye';
+            toggleBtn.setAttribute('aria-label', 'Show password');
+            toggleBtn.setAttribute('title', 'Show password');
+        }
+
         function checkAuthStatus() {
-            // Authentication/session state is intentionally kept in memory only.
-            // Reloading the page requires a fresh login because localStorage/sessionStorage were removed.
+            // Remember-me stores only the login form credentials on this browser.
+            // The CRM still requires a successful login after each page reload.
             loggedInUser = null;
+            loadRememberedLogin();
+            const rememberInput = document.getElementById('loginRememberMe');
+            if (rememberInput && !rememberInput.dataset.listenerAttached) {
+                rememberInput.addEventListener('change', function() {
+                    if (!this.checked) {
+                        clearRememberedLogin();
+                    }
+                });
+                rememberInput.dataset.listenerAttached = 'true';
+            }
+            resetLoginPasswordVisibility();
             document.getElementById('loginOverlay').style.display = 'flex';
             document.getElementById('mainContentArea').style.display = 'none';
         }
@@ -1611,28 +1772,54 @@
             let userVal = document.getElementById("loginUsername").value.trim();
             let passVal = document.getElementById("loginPassword").value.trim();
             let remVal = document.getElementById("loginRememberMe").checked;
-            
+
+            const errorBox = document.getElementById('loginErrorMsg');
+
+            if (!userVal || !passVal) {
+                errorBox.innerText = 'Please enter username and password.';
+                errorBox.style.display = 'block';
+                return;
+            }
+
             let users = getUsersDB();
             let foundUser = users.find(u => u.username === userVal && u.password === passVal);
-            
+
             if (foundUser) {
                 loggedInUser = { username: foundUser.username, role: foundUser.role };
-                
-                // Session is kept in memory only; no browser storage is used.\n\n                document.getElementById('loginErrorMsg').style.display = 'none';
+
+                if (remVal) {
+                    saveRememberedLogin(foundUser.username, passVal);
+                } else {
+                    clearRememberedLogin();
+                }
+
+                errorBox.style.display = 'none';
                 startApplication();
             } else {
-                document.getElementById('loginErrorMsg').style.display = 'block';
+                errorBox.innerText = 'Invalid Username or Password!';
+                errorBox.style.display = 'block';
             }
         }
 
         function processLogout() {
             loggedInUser = null;
-            
-            document.getElementById("loginUsername").value = "";
-            document.getElementById("loginPassword").value = "";
+
+            // Keep remembered credentials if the user selected "Remember my password".
+            const remembered = getRememberedLogin();
+            if (remembered) {
+                document.getElementById("loginUsername").value = remembered.username;
+                document.getElementById("loginPassword").value = remembered.password;
+                document.getElementById("loginRememberMe").checked = true;
+            } else {
+                document.getElementById("loginUsername").value = "";
+                document.getElementById("loginPassword").value = "";
+                document.getElementById("loginRememberMe").checked = false;
+            }
+
+            resetLoginPasswordVisibility();
             document.getElementById('loginErrorMsg').style.display = 'none';
             closeUserPopover();
-            
+
             document.getElementById('loginOverlay').style.display = 'flex';
             document.getElementById('mainContentArea').style.display = 'none';
         }
@@ -1745,6 +1932,12 @@
             
             currentUser.password = newP;
             saveUsersDB(db);
+
+            // Keep Remember My Password synchronized after a password change.
+            const rememberedLogin = getRememberedLogin();
+            if (rememberedLogin && rememberedLogin.username === loggedInUser.username) {
+                saveRememberedLogin(loggedInUser.username, newP);
+            }
             
             showToast("Password updated successfully!", "success");
             toggleChangePasswordModal(false);
