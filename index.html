@@ -14,6 +14,69 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
     
+    <!-- Firebase SDK (Realtime Database) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+
+    <script>
+        // Kaler Kantho CRM - Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyA1XZ9uUK4W39wiJgQQLSvQXU9hKCwY-o8",
+            authDomain: "kalerkantho-app-data.firebaseapp.com",
+            databaseURL: "https://kalerkantho-app-data-default-rtdb.firebaseio.com",
+            projectId: "kalerkantho-app-data",
+            storageBucket: "kalerkantho-app-data.firebasestorage.app",
+            messagingSenderId: "953359386725",
+            appId: "1:953359386725:web:a36eeecbeb48c161a55e8c"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const firebaseDB = firebase.database();
+
+        // Firebase-backed in-memory caches. No localStorage/sessionStorage is used.
+        let firebaseUsersCache = null;
+        let firebaseClientsCache = null;
+        let firebaseRatesCache = null;
+        let firebaseReady = false;
+
+        async function initializeFirebaseApp() {
+            try {
+                const [usersSnap, clientsSnap, ratesSnap] = await Promise.all([
+                    firebaseDB.ref('crm/users').once('value'),
+                    firebaseDB.ref('crm/clients').once('value'),
+                    firebaseDB.ref('crm/rates').once('value')
+                ]);
+
+                firebaseUsersCache = usersSnap.val();
+                firebaseClientsCache = clientsSnap.val();
+                firebaseRatesCache = ratesSnap.val();
+
+                if (!Array.isArray(firebaseUsersCache) || firebaseUsersCache.length === 0) {
+                    firebaseUsersCache = defaultUsersDB;
+                    await firebaseDB.ref('crm/users').set(firebaseUsersCache);
+                }
+                if (!Array.isArray(firebaseClientsCache)) {
+                    firebaseClientsCache = defaultClientsDB;
+                    await firebaseDB.ref('crm/clients').set(firebaseClientsCache);
+                }
+                if (!Array.isArray(firebaseRatesCache) || firebaseRatesCache.length === 0) {
+                    firebaseRatesCache = defaultRatesMaster;
+                    await firebaseDB.ref('crm/rates').set(firebaseRatesCache);
+                }
+
+                firebaseReady = true;
+                checkAuthStatus();
+            } catch (error) {
+                console.error('Firebase initialization/read error:', error);
+                const errorBox = document.getElementById('loginErrorMsg');
+                if (errorBox) {
+                    errorBox.innerText = 'Firebase connection failed. Check your Realtime Database rules and internet connection.';
+                    errorBox.style.display = 'block';
+                }
+            }
+        }
+    </script>
+
     <!-- Third-Party Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -908,7 +971,7 @@
         }
     </style>
 </head>
-<body onload="checkAuthStatus()">
+<body onload="initializeFirebaseApp()">
 
     <!-- Login System Overlay -->
     <div class="login-overlay" id="loginOverlay">
@@ -1521,32 +1584,23 @@
         let loggedInUser = null;
         
         function getUsersDB() {
-            let data = localStorage.getItem("kk_crm_users_db");
-            if (!data) { 
-                localStorage.setItem("kk_crm_users_db", JSON.stringify(defaultUsersDB));
-                return defaultUsersDB;
-            }
-            return JSON.parse(data);
+            return Array.isArray(firebaseUsersCache) ? firebaseUsersCache : defaultUsersDB;
         }
-        
+
         function saveUsersDB(db) {
-            localStorage.setItem("kk_crm_users_db", JSON.stringify(db));
+            firebaseUsersCache = Array.isArray(db) ? db : [];
+            firebaseDB.ref('crm/users').set(firebaseUsersCache).catch(err => {
+                console.error('Failed to save users to Firebase:', err);
+                showToast('Could not save users to Firebase.', 'danger');
+            });
         }
 
         function checkAuthStatus() {
-            let sessionUser = sessionStorage.getItem("kk_crm_session");
-            let localUser = localStorage.getItem("kk_crm_remembered");
-            
-            if (sessionUser) {
-                loggedInUser = JSON.parse(sessionUser);
-                startApplication();
-            } else if (localUser) {
-                loggedInUser = JSON.parse(localUser);
-                startApplication();
-            } else {
-                document.getElementById('loginOverlay').style.display = 'flex';
-                document.getElementById('mainContentArea').style.display = 'none';
-            }
+            // Authentication/session state is intentionally kept in memory only.
+            // Reloading the page requires a fresh login because localStorage/sessionStorage were removed.
+            loggedInUser = null;
+            document.getElementById('loginOverlay').style.display = 'flex';
+            document.getElementById('mainContentArea').style.display = 'none';
         }
 
         function handleEnter(e) {
@@ -1564,13 +1618,7 @@
             if (foundUser) {
                 loggedInUser = { username: foundUser.username, role: foundUser.role };
                 
-                if (remVal) {
-                    localStorage.setItem("kk_crm_remembered", JSON.stringify(loggedInUser));
-                } else {
-                    sessionStorage.setItem("kk_crm_session", JSON.stringify(loggedInUser));
-                }
-                
-                document.getElementById('loginErrorMsg').style.display = 'none';
+                // Session is kept in memory only; no browser storage is used.\n\n                document.getElementById('loginErrorMsg').style.display = 'none';
                 startApplication();
             } else {
                 document.getElementById('loginErrorMsg').style.display = 'block';
@@ -1578,8 +1626,6 @@
         }
 
         function processLogout() {
-            localStorage.removeItem("kk_crm_remembered");
-            sessionStorage.removeItem("kk_crm_session");
             loggedInUser = null;
             
             document.getElementById("loginUsername").value = "";
@@ -1847,20 +1893,13 @@
         const themeToggleBtn = document.getElementById('themeToggleBtn');
         const bodyElement = document.body;
 
-        if (localStorage.getItem('kk_crm_theme') === 'dark') {
-            bodyElement.classList.add('dark-mode');
-            themeToggleBtn.innerHTML = '<i class="fa-solid fa-sun"></i>';
-        }
-
         themeToggleBtn.addEventListener('click', () => {
             bodyElement.classList.toggle('dark-mode');
             const isDark = bodyElement.classList.contains('dark-mode');
             
             if (isDark) {
-                localStorage.setItem('kk_crm_theme', 'dark');
                 themeToggleBtn.innerHTML = '<i class="fa-solid fa-sun"></i>';
             } else {
-                localStorage.setItem('kk_crm_theme', 'light');
                 themeToggleBtn.innerHTML = '<i class="fa-solid fa-moon"></i>';
             }
             
@@ -1873,27 +1912,34 @@
 
         /* --- CORE ARCHITECTURE SYSTEMS --- */
         function getRatesDatabase() {
-            let data = localStorage.getItem("crm_rates_db");
-            if (!data) { 
-                localStorage.setItem("crm_rates_db", JSON.stringify(defaultRatesMaster)); 
-                return defaultRatesMaster; 
-            }
-            return JSON.parse(data);
+            return Array.isArray(firebaseRatesCache) ? firebaseRatesCache : defaultRatesMaster;
         }
-        function saveRatesDatabase(array) { localStorage.setItem("crm_rates_db", JSON.stringify(array)); refreshUI(); }
+
+        function saveRatesDatabase(array) {
+            firebaseRatesCache = Array.isArray(array) ? array : [];
+            firebaseDB.ref('crm/rates').set(firebaseRatesCache).then(() => {
+                refreshUI();
+            }).catch(err => {
+                console.error('Failed to save rates to Firebase:', err);
+                showToast('Could not save rate data to Firebase.', 'danger');
+            });
+        }
         
         function getDatabase() {
-            let data = localStorage.getItem("crm_desktop_db");
-            if (!data) {
-                localStorage.setItem("crm_desktop_db", JSON.stringify(defaultClientsDB));
-                return defaultClientsDB;
-            }
-            let arr = JSON.parse(data);
+            let arr = Array.isArray(firebaseClientsCache) ? firebaseClientsCache : defaultClientsDB;
             return arr.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
         }
         
         // This is only called when we WANT a full UI refresh.
-        function saveDatabase(array) { localStorage.setItem("crm_desktop_db", JSON.stringify(array)); refreshUI(); }
+        function saveDatabase(array) {
+            firebaseClientsCache = Array.isArray(array) ? array : [];
+            firebaseDB.ref('crm/clients').set(firebaseClientsCache).then(() => {
+                refreshUI();
+            }).catch(err => {
+                console.error('Failed to save clients to Firebase:', err);
+                showToast('Could not save client data to Firebase.', 'danger');
+            });
+        }
 
         function refreshUI() { 
             if (currentView === "officers") { renderOfficersTable(); } 
@@ -2238,7 +2284,7 @@
                 let val = input.value.trim();
                 if(val) { 
                     db[index][key] = val; 
-                    localStorage.setItem("crm_desktop_db", JSON.stringify(db));
+                    saveDatabase(db);
                     element.innerHTML = val;
                 } else { 
                     element.innerHTML = originalVal;
@@ -2258,7 +2304,7 @@
             select.focus(); 
             select.addEventListener("blur", function() { 
                 db[index][key] = select.value; 
-                localStorage.setItem("crm_desktop_db", JSON.stringify(db));
+                saveDatabase(db);
                 element.innerHTML = select.value; 
             });
         }
@@ -2277,7 +2323,7 @@
                 db[index][key] = select.value; 
                 let found = officerRegistry.find(o => o.name === select.value); 
                 if(found) db[index]['pf'] = found.pf; 
-                localStorage.setItem("crm_desktop_db", JSON.stringify(db));
+                saveDatabase(db);
                 element.innerHTML = `<span class="assigned-officer"><i class="fa-solid fa-user-tie"></i> ${select.value}</span>`;
                 
                 let tr = element.closest('tr');
@@ -2303,7 +2349,7 @@
                 let val = input.value.trim();
                 if(val) { 
                     rates[index][key] = val; 
-                    localStorage.setItem("crm_rates_db", JSON.stringify(rates));
+                    saveRatesDatabase(rates);
                     element.innerHTML = val;
                 } else { 
                     element.innerHTML = originalVal;
