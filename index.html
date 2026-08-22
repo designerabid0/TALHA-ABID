@@ -41,15 +41,17 @@
 
         async function initializeFirebaseApp() {
             try {
-                const [usersSnap, clientsSnap, ratesSnap] = await Promise.all([
+                const [usersSnap, clientsSnap, ratesSnap, categoriesSnap] = await Promise.all([
                     firebaseDB.ref('crm/users').once('value'),
                     firebaseDB.ref('crm/clients').once('value'),
-                    firebaseDB.ref('crm/rates').once('value')
+                    firebaseDB.ref('crm/rates').once('value'),
+                    firebaseDB.ref('crm/clientCategories').once('value')
                 ]);
 
                 firebaseUsersCache = usersSnap.val();
                 firebaseClientsCache = clientsSnap.val();
                 firebaseRatesCache = ratesSnap.val();
+                firebaseClientCategoriesCache = categoriesSnap.val();
 
                 if (!Array.isArray(firebaseUsersCache) || firebaseUsersCache.length === 0) {
                     firebaseUsersCache = defaultUsersDB;
@@ -62,6 +64,10 @@
                 if (!Array.isArray(firebaseRatesCache) || firebaseRatesCache.length === 0) {
                     firebaseRatesCache = defaultRatesMaster;
                     await firebaseDB.ref('crm/rates').set(firebaseRatesCache);
+                }
+                if (!Array.isArray(firebaseClientCategoriesCache) || firebaseClientCategoriesCache.length === 0) {
+                    firebaseClientCategoriesCache = [...DEFAULT_CLIENT_CATEGORIES];
+                    await firebaseDB.ref('crm/clientCategories').set(firebaseClientCategoriesCache);
                 }
 
                 firebaseReady = true;
@@ -1027,6 +1033,124 @@
             body.printing-quote #banglaPrintTarget { position: absolute !important; left: 0 !important; top: 0 !important; width: 210mm !important; height: 297mm !important; box-shadow: none !important; margin: 0 !important; }
             @page { size: A4 portrait; margin: 10mm !important; }
         }
+
+        /* --- CLIENT CATEGORY MANAGEMENT --- */
+        .category-toolbar {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px 18px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .category-toolbar-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: .82rem;
+            font-weight: 800;
+            color: var(--text-main);
+            white-space: nowrap;
+        }
+        .category-filter-select {
+            min-width: 220px;
+            padding: 9px 12px;
+            border: 1.5px solid var(--border-color);
+            border-radius: 9px;
+            background: var(--bg-input);
+            color: var(--text-main);
+            outline: none;
+            font-size: .86rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .category-filter-select:focus {
+            border-color: var(--sidebar-active);
+            box-shadow: 0 0 0 3px rgba(37,99,235,.10);
+        }
+        .category-filter-count {
+            padding: 7px 11px;
+            border-radius: 18px;
+            background: var(--badge-bg);
+            border: 1px solid var(--badge-border);
+            color: var(--sidebar-active);
+            font-size: .76rem;
+            font-weight: 800;
+        }
+        .category-manage-btn {
+            margin-left: auto;
+        }
+        .category-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 9px;
+            border-radius: 14px;
+            background: var(--badge-bg);
+            color: var(--sidebar-active);
+            border: 1px solid var(--badge-border);
+            font-size: .72rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+        .category-empty {
+            color: var(--text-muted);
+            font-size: .75rem;
+            font-style: italic;
+        }
+        .category-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 360px;
+            overflow-y: auto;
+            margin-top: 8px;
+        }
+        .category-list-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 9px;
+            background: var(--bg-input);
+        }
+        .category-list-item .category-name {
+            flex: 1;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .category-list-item .category-count {
+            color: var(--text-muted);
+            font-size: .72rem;
+            font-weight: 700;
+        }
+        .category-action-btn {
+            width: 32px;
+            height: 32px;
+            border: 1px solid var(--border-color);
+            border-radius: 7px;
+            background: var(--bg-card);
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+        .category-action-btn:hover {
+            color: var(--sidebar-active);
+            border-color: var(--badge-border);
+            background: var(--bg-hover);
+        }
+        .category-action-btn.danger:hover {
+            color: var(--color-danger);
+            border-color: rgba(239,68,68,.25);
+        }
+        @media (max-width: 720px) {
+            .category-filter-select { width: 100%; min-width: 0; }
+            .category-manage-btn { margin-left: 0; width: 100%; justify-content: center; }
+        }
+
     </style>
 </head>
 <body onload="initializeFirebaseApp()">
@@ -1195,6 +1319,20 @@
                     </div>
                 </section>
 
+
+                <section class="category-toolbar" id="clientCategoryToolbar" style="margin-bottom: 10px;">
+                    <div class="category-toolbar-title">
+                        <i class="fa-solid fa-layer-group" style="color:var(--sidebar-active);"></i>
+                        Categorize Client List
+                    </div>
+                    <select id="clientCategoryFilter" class="category-filter-select" onchange="filterByCategory(this.value)">
+                        <option value="">All Categories</option>
+                    </select>
+                    <span class="category-filter-count" id="categoryFilterCount">0 Clients</span>
+                    <button class="btn btn-primary category-manage-btn" onclick="openCategoryManager()">
+                        <i class="fa-solid fa-sliders"></i> Manage Categories
+                    </button>
+                </section>
                 <section class="table-card">
                     <div class="table-header">
                         <div class="table-title-group">
@@ -1220,7 +1358,7 @@
                         <table class="data-table" id="clientTable">
                             <thead id="tableHead">
                                 <tr>
-                                    <th>SL</th><th>PF Number</th><th>Client Name</th><th>Organisation Type</th><th>Officer</th><th>Status</th><th id="thActionCol" style="width: 50px;">Action</th>
+                                    <th>SL</th><th>PF Number</th><th>Client Name</th><th>Category</th><th>Organisation Type</th><th>Officer</th><th>Status</th><th id="thActionCol" style="width: 50px;">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="tableBody"></tbody>
@@ -1450,7 +1588,7 @@
     <div class="modal-overlay" id="bulkModalOverlay">
         <div class="modal-box">
             <h3>Bulk Add from Excel</h3>
-            <p class="modal-desc">কলাম সিকোয়েন্স: <b>Client Name</b> &rarr; <b>Officers Name</b> &rarr; <b>Type</b></p>
+            <p class="modal-desc">Column sequence: <b>Client Name</b> → <b>Officer Name</b> → <b>Type</b> → <b>Category</b></p>
             <textarea class="bulk-textarea" id="bulkPasteInput" placeholder="Paste data here..."></textarea>
             <div class="modal-buttons">
                 <button class="btn btn-secondary" onclick="toggleBulkModal(false)">Cancel</button>
@@ -1466,12 +1604,36 @@
             <div class="form-group"><label>PF Number (Auto)</label><input type="text" id="formPf" readonly></div>
             <div class="form-group"><label>Client Name</label><input type="text" id="formName"></div>
             <div class="form-group">
+                <label>Client Category</label>
+                <select id="formCategory"></select>
+            </div>
+            <div class="form-group">
                 <label>Organisation Type</label>
                 <select id="formType"><option value="Private Client">Private Client</option><option value="Government Client">Government Client</option></select>
             </div>
             <div class="modal-buttons">
                 <button class="btn btn-secondary" onclick="toggleSingleModal(false)">Cancel</button>
                 <button class="btn btn-primary" onclick="addSingleClient()">Save Client</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- CLIENT CATEGORY MANAGER (ADMIN ONLY FOR CHANGES) -->
+    <div class="modal-overlay" id="categoryManagerOverlay">
+        <div class="modal-box">
+            <h3><i class="fa-solid fa-layer-group" style="color:var(--sidebar-active);"></i> Client Category Manager</h3>
+            <p class="modal-desc">Add a new category, rename an existing category, or remove a category. Existing clients are updated automatically when a category is renamed.</p>
+
+            <div style="display:flex; gap:8px; margin-bottom:14px;">
+                <input type="text" id="newCategoryInput" placeholder="Enter new category name..." style="flex:1;">
+                <button class="btn btn-primary" onclick="addClientCategory()"><i class="fa-solid fa-plus"></i> Add</button>
+            </div>
+
+            <div class="category-list" id="categoryManagerList"></div>
+
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeCategoryManager()">Close</button>
             </div>
         </div>
     </div>
@@ -1574,6 +1736,14 @@
                     <option value="Private Client">Private Client</option>
                     <option value="University">University</option>
                     <option value="Bank">Bank</option>
+                    <option value="Electronics">Electronics</option>
+                    <option value="Ishpat">Ishpat</option>
+                    <option value="pharmacuticals">pharmacuticals</option>
+                    <option value="Sepershob">Sepershob</option>
+                    <option value="Electronics">Electronics</option>
+                    <option value="Ishpat">Ishpat</option>
+                    <option value="pharmacuticals">pharmacuticals</option>
+                    <option value="Sepershob">Sepershob</option>
                     <option value="School">School</option>
                     <option value="Mills">Mills</option>
                     <option value="Hospital">Hospital</option>
@@ -1605,7 +1775,7 @@
                 <select id="exportOfficerSelect"></select>
             </div>
             <div class="form-group" id="exportSubOptionIndustry" style="display:none;">
-                <label>Select Industry Keyword / Type</label>
+                <label>Select Industry / Client Category</label>
                 <select id="exportIndustrySelect">
                     <option value="Government Client">Government Client</option>
                     <option value="Private Client">Private Client</option>
@@ -1645,9 +1815,20 @@
             { username: 'user', password: 'user123', role: 'user' }
         ];
 
+        const DEFAULT_CLIENT_CATEGORIES = [
+            "Bank",
+            "Electronics",
+            "Hospital",
+            "Ishpat",
+            "pharmacuticals",
+            "Sepershob",
+            "University"
+        ];
+
+        let firebaseClientCategoriesCache = null;
         const defaultClientsDB = [
             // Add your clients here to make sure they load everywhere!
-            // { pf: "1234", name: "Example University", type: "Private Client", officer: "Md. Masud Alam" }
+            // { pf: "1234", name: "Example University", category: "University", type: "Private Client", officer: "Md. Masud Alam" }
         ];
 
         // --- AUTHENTICATION & USER MANAGEMENT LOGIC ---
@@ -1857,6 +2038,9 @@
                 select.innerHTML = "";
                 officerList.forEach(off => { select.innerHTML += `<option value="${off}">${off}</option>`; });
             }
+            renderCategoryControls();
+            const categoryManagerBtn = document.querySelector(".category-manage-btn");
+            if (categoryManagerBtn) categoryManagerBtn.style.display = isAdmin ? "inline-flex" : "none";
         }
 
         /* --- USER PROFILE POPOVER LOGIC --- */
@@ -2077,6 +2261,7 @@
         let selectedOfficerFilter = null;
         let selectedKeywordFilter = null;
         let selectedTypeFilter = null;
+        let selectedCategoryFilter = null;
         let globalSearchQuery = "";
         let donutChartInstance = null;
 
@@ -2125,6 +2310,234 @@
             });
         }
         
+        function getClientCategories() {
+            let categories = Array.isArray(firebaseClientCategoriesCache) ? firebaseClientCategoriesCache : DEFAULT_CLIENT_CATEGORIES;
+            return [...new Set(categories.map(c => String(c || "").trim()).filter(Boolean))]
+                .sort((a, b) => a.localeCompare(b));
+        }
+
+        function saveClientCategories(categories, afterSave) {
+            const cleaned = [...new Set((categories || []).map(c => String(c || "").trim()).filter(Boolean))];
+            firebaseClientCategoriesCache = cleaned;
+            firebaseDB.ref('crm/clientCategories').set(cleaned).then(() => {
+                if (typeof afterSave === "function") afterSave();
+            }).catch(err => {
+                console.error("Failed to save client categories:", err);
+                showToast("Could not save category data to Firebase.", "danger");
+            });
+        }
+
+        function normalizeClientCategories(db) {
+            const categories = getClientCategories();
+            let changed = false;
+            db.forEach(client => {
+                if (client.category === undefined || client.category === null) {
+                    client.category = "";
+                    changed = true;
+                }
+            });
+            return changed;
+        }
+
+        function renderCategoryControls() {
+            const filter = document.getElementById("clientCategoryFilter");
+            const formCategory = document.getElementById("formCategory");
+            const categories = getClientCategories();
+
+            if (filter) {
+                const current = selectedCategoryFilter || "";
+                filter.innerHTML = '<option value="">All Categories</option>' +
+                    categories.map(c => `<option value="${escapeHtmlAttr(c)}">${escapeHtml(c)}</option>`).join("");
+                filter.value = categories.includes(current) ? current : "";
+            }
+
+            if (formCategory) {
+                const current = formCategory.value;
+                formCategory.innerHTML = '<option value="">-- Select Category --</option>' +
+                    categories.map(c => `<option value="${escapeHtmlAttr(c)}">${escapeHtml(c)}</option>`).join("");
+                if (categories.includes(current)) formCategory.value = current;
+            }
+
+            updateCategoryFilterCount();
+        }
+
+        function updateCategoryFilterCount() {
+            const badge = document.getElementById("categoryFilterCount");
+            if (!badge) return;
+            const db = getDatabase();
+            let count = selectedCategoryFilter
+                ? db.filter(c => (c.category || "").toLowerCase() === selectedCategoryFilter.toLowerCase()).length
+                : db.length;
+            badge.innerText = count + " Client" + (count !== 1 ? "s" : "");
+        }
+
+        function filterByCategory(category) {
+            selectedCategoryFilter = (category || "").trim() || null;
+            selectedOfficerFilter = null;
+            selectedKeywordFilter = null;
+            selectedTypeFilter = null;
+            clearTagHighlights();
+            renderTable();
+        }
+
+        function openCategoryManager() {
+            renderCategoryManager();
+            document.getElementById("categoryManagerOverlay").style.display = "flex";
+            setTimeout(() => document.getElementById("newCategoryInput")?.focus(), 50);
+        }
+
+        function closeCategoryManager() {
+            document.getElementById("categoryManagerOverlay").style.display = "none";
+            const input = document.getElementById("newCategoryInput");
+            if (input) input.value = "";
+        }
+
+        function renderCategoryManager() {
+            const list = document.getElementById("categoryManagerList");
+            if (!list) return;
+            const categories = getClientCategories();
+            const db = getDatabase();
+
+            if (!categories.length) {
+                list.innerHTML = '<div class="category-empty">No categories available.</div>';
+                return;
+            }
+
+            list.innerHTML = categories.map((category, index) => {
+                const count = db.filter(c => (c.category || "").toLowerCase() === category.toLowerCase()).length;
+                const safe = escapeHtml(category);
+                return `<div class="category-list-item">
+                    <i class="fa-solid fa-tag" style="color:var(--sidebar-active);"></i>
+                    <span class="category-name">${safe}</span>
+                    <span class="category-count">${count} client${count !== 1 ? "s" : ""}</span>
+                    <button class="category-action-btn" title="Rename Category" onclick="renameClientCategory(${index})"><i class="fa-solid fa-pen"></i></button>
+                    <button class="category-action-btn danger" title="Delete Category" onclick="deleteClientCategory(${index})"><i class="fa-solid fa-trash"></i></button>
+                </div>`;
+            }).join("");
+        }
+
+        function addClientCategory() {
+            if (!loggedInUser || loggedInUser.role !== "admin") {
+                return showToast("Only administrators can manage client categories.", "danger");
+            }
+            const input = document.getElementById("newCategoryInput");
+            const name = input.value.trim();
+            if (!name) return showToast("Please enter a category name.", "danger");
+
+            const categories = getClientCategories();
+            if (categories.some(c => c.toLowerCase() === name.toLowerCase())) {
+                return showToast("This category already exists.", "danger");
+            }
+
+            categories.push(name);
+            saveClientCategories(categories, () => {
+                input.value = "";
+                renderCategoryControls();
+                renderCategoryManager();
+                showToast('Category "' + name + '" added successfully!', "success");
+            });
+        }
+
+        function renameClientCategory(index) {
+            if (!loggedInUser || loggedInUser.role !== "admin") {
+                return showToast("Only administrators can manage client categories.", "danger");
+            }
+            const categories = getClientCategories();
+            const oldName = categories[index];
+            if (!oldName) return;
+
+            const newName = prompt("Enter the new category name:", oldName);
+            if (newName === null) return;
+            const cleaned = newName.trim();
+            if (!cleaned) return showToast("Category name cannot be empty.", "danger");
+            if (cleaned.toLowerCase() !== oldName.toLowerCase() &&
+                categories.some(c => c.toLowerCase() === cleaned.toLowerCase())) {
+                return showToast("This category already exists.", "danger");
+            }
+
+            const db = getDatabase();
+            db.forEach(client => {
+                if ((client.category || "").toLowerCase() === oldName.toLowerCase()) {
+                    client.category = cleaned;
+                }
+            });
+
+            const categoryIndex = categories.findIndex(c => c === oldName);
+            if (categoryIndex >= 0) categories[categoryIndex] = cleaned;
+
+            if (selectedCategoryFilter && selectedCategoryFilter.toLowerCase() === oldName.toLowerCase()) {
+                selectedCategoryFilter = cleaned;
+            }
+
+            firebaseClientCategoriesCache = categories;
+            firebaseDB.ref("crm/clientCategories").set(categories).then(() => {
+                return firebaseDB.ref("crm/clients").set(db);
+            }).then(() => {
+                firebaseClientsCache = db;
+                renderCategoryControls();
+                renderCategoryManager();
+                refreshUI();
+                showToast('Category renamed to "' + cleaned + '".', "success");
+            }).catch(err => {
+                console.error(err);
+                showToast("Could not rename category.", "danger");
+            });
+        }
+
+        function deleteClientCategory(index) {
+            if (!loggedInUser || loggedInUser.role !== "admin") {
+                return showToast("Only administrators can manage client categories.", "danger");
+            }
+            const categories = getClientCategories();
+            const category = categories[index];
+            if (!category) return;
+
+            const usedCount = getDatabase().filter(c => (c.category || "").toLowerCase() === category.toLowerCase()).length;
+            const message = usedCount
+                ? `"${category}" is assigned to ${usedCount} client(s). Deleting it will remove the category from those clients. Continue?`
+                : `Delete category "${category}"?`;
+
+            showConfirmModal("Delete Client Category?", message, function() {
+                const db = getDatabase();
+                db.forEach(client => {
+                    if ((client.category || "").toLowerCase() === category.toLowerCase()) client.category = "";
+                });
+
+                const remaining = categories.filter((_, i) => i !== index);
+                if (selectedCategoryFilter && selectedCategoryFilter.toLowerCase() === category.toLowerCase()) {
+                    selectedCategoryFilter = null;
+                }
+
+                firebaseClientCategoriesCache = remaining;
+                Promise.all([
+                    firebaseDB.ref("crm/clientCategories").set(remaining),
+                    firebaseDB.ref("crm/clients").set(db)
+                ]).then(() => {
+                    firebaseClientsCache = db;
+                    renderCategoryControls();
+                    renderCategoryManager();
+                    refreshUI();
+                    showToast('Category "' + category + '" deleted.', "success");
+                }).catch(err => {
+                    console.error(err);
+                    showToast("Could not delete category.", "danger");
+                });
+            });
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function escapeHtmlAttr(value) {
+            return escapeHtml(value);
+        }
+
         function getDatabase() {
             let arr = Array.isArray(firebaseClientsCache) ? firebaseClientsCache : defaultClientsDB;
             return arr.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
@@ -2270,7 +2683,7 @@
         function resetTableHTMLStructure() { 
             let isAdmin = loggedInUser && loggedInUser.role === 'admin';
             let actionTh = isAdmin ? `<th id="thActionCol" style="width: 50px;">Action</th>` : '';
-            document.getElementById("dynamicTableContainer").innerHTML = `<table class="data-table" id="clientTable"><thead><tr><th>SL</th><th>PF Number</th><th>Client Name</th><th>Organisation Type</th><th>Officer</th><th>Status</th>${actionTh}</tr></thead><tbody id="tableBody"></tbody></table>`; 
+            document.getElementById("dynamicTableContainer").innerHTML = `<table class="data-table" id="clientTable"><thead><tr><th>SL</th><th>PF Number</th><th>Client Name</th><th>Category</th><th>Organisation Type</th><th>Officer</th><th>Status</th>${actionTh}</tr></thead><tbody id="tableBody"></tbody></table>`; 
         }
 
         document.getElementById("linkDashboard").addEventListener("click", () => switchViewLayouts("dashboard"));
@@ -2338,21 +2751,21 @@
 
         function filterByOfficer(officerName) {
             selectedOfficerFilter = (selectedOfficerFilter === officerName) ? null : officerName;
-            selectedKeywordFilter = selectedTypeFilter = null; clearTagHighlights(); switchViewLayouts("dashboard");
+            selectedKeywordFilter = selectedTypeFilter = selectedCategoryFilter = null; clearTagHighlights(); switchViewLayouts("dashboard");
         }
         function filterByType(type) {
             selectedTypeFilter = (selectedTypeFilter === type) ? null : type;
-            selectedOfficerFilter = selectedKeywordFilter = null; clearTagHighlights(); switchViewLayouts("dashboard");
+            selectedOfficerFilter = selectedKeywordFilter = selectedCategoryFilter = null; clearTagHighlights(); switchViewLayouts("dashboard");
         }
         function filterByKeyword(element, word) {
             clearTagHighlights();
             if (selectedKeywordFilter === word) { selectedKeywordFilter = null; } 
             else { selectedKeywordFilter = word; element.classList.add("active"); }
-            selectedTypeFilter = selectedOfficerFilter = null; renderTable();
+            selectedTypeFilter = selectedOfficerFilter = selectedCategoryFilter = null; renderTable();
         }
         function clearTagHighlights() { document.querySelectorAll(".keyword-tags .tag").forEach(t => t.classList.remove("active")); }
         function resetAllFilters() { 
-            selectedOfficerFilter = selectedKeywordFilter = selectedTypeFilter = null; 
+            selectedOfficerFilter = selectedKeywordFilter = selectedTypeFilter = selectedCategoryFilter = null; 
             globalSearchQuery = "";
             clearTagHighlights(); 
             document.querySelectorAll(".inline-table-search input, #searchInput").forEach(i => i.value = ""); 
@@ -2365,6 +2778,7 @@
 
         function renderTable() {
             let db = getDatabase(); let tbody = document.getElementById("tableBody"); if(!tbody) return; tbody.innerHTML = "";
+            renderCategoryControls();
             
             // Map original indexes so modifying logic retains accurate DB references
             let mappedDb = db.map((item, originalIndex) => ({ item, originalIndex }));
@@ -2380,12 +2794,14 @@
             if(selectedOfficerFilter) activeDataset = activeDataset.filter(obj => obj.item.officer === selectedOfficerFilter);
             if(selectedKeywordFilter) activeDataset = activeDataset.filter(obj => (obj.item.name || "").toLowerCase().includes(selectedKeywordFilter.toLowerCase()));
             if(selectedTypeFilter) activeDataset = activeDataset.filter(obj => obj.item.type === selectedTypeFilter);
-            if(globalSearchQuery) activeDataset = activeDataset.filter(obj => (obj.item.name || "").toLowerCase().includes(globalSearchQuery) || (obj.item.officer || "").toLowerCase().includes(globalSearchQuery));
+            if(selectedCategoryFilter) activeDataset = activeDataset.filter(obj => (obj.item.category || "").toLowerCase() === selectedCategoryFilter.toLowerCase());
+            if(globalSearchQuery) activeDataset = activeDataset.filter(obj => (obj.item.name || "").toLowerCase().includes(globalSearchQuery) || (obj.item.officer || "").toLowerCase().includes(globalSearchQuery) ||
+                    (obj.item.category || "").toLowerCase().includes(globalSearchQuery));
 
             let chartGovt = 0, chartPvt = 0; activeDataset.forEach(obj => { if (obj.item.type === "Government Client") chartGovt++; else chartPvt++; });
             initCharts(chartGovt, chartPvt); renderWorkloadPanel(db); renderMiddleRates();
 
-            document.getElementById("activeFilterBadge").style.display = (selectedOfficerFilter || selectedKeywordFilter || selectedTypeFilter || globalSearchQuery) ? "inline-flex" : "none";
+            document.getElementById("activeFilterBadge").style.display = (selectedOfficerFilter || selectedKeywordFilter || selectedTypeFilter || selectedCategoryFilter || globalSearchQuery) ? "inline-flex" : "none";
             let nameCounts = {}; activeDataset.forEach(obj => { let name = (obj.item.name || "").trim().toLowerCase(); if (name) nameCounts[name] = (nameCounts[name] || 0) + 1; });
 
             activeDataset.forEach((obj, loopIndex) => {
@@ -2412,6 +2828,9 @@
                     <td class="col-name ${editableClass}" ${isDuplicate ? 'style="color: var(--color-danger); font-weight: bold;"' : ''} onclick="makeEditable(this, ${index}, 'name')">
                         ${item.name || 'N/A'} ${isDuplicate ? '<span style="font-size:10px; font-weight:normal; background:#ef4444; color:#fff; padding:2px 6px; border-radius:10px; margin-left:5px;">Duplicate</span>' : ''}
                     </td>
+                    <td class="${editableClass}" onclick="makeCategoryDropdownEditable(this, ${index}, 'category')">
+                        ${item.category ? `<span class="category-pill"><i class="fa-solid fa-tag"></i>${escapeHtml(item.category)}</span>` : '<span class="category-empty">Uncategorized</span>'}
+                    </td>
                     <td class="col-type ${editableClass}" onclick="makeDropdownEditable(this, ${index}, 'type')">${item.type || 'Private Client'}</td>
                     <td class="${editableClass}" onclick="makeOfficerDropdownEditable(this, ${index}, 'officer')"><span class="assigned-officer"><i class="fa-solid fa-user-tie"></i> ${item.officer || 'N/A'}</span></td>
                     <td><span class="status-badge" ${isDuplicate ? 'style="background:rgba(239, 68, 68, 0.15); color:var(--color-danger);"' : ''}>${isDuplicate ? 'Duplicate' : 'Active'}</span></td>
@@ -2420,7 +2839,7 @@
             });
         }
 
-        function filterByOfficerFromMatrix(officerName) { selectedOfficerFilter = officerName; selectedKeywordFilter = selectedTypeFilter = null; clearTagHighlights(); switchViewLayouts("dashboard"); }
+        function filterByOfficerFromMatrix(officerName) { selectedOfficerFilter = officerName; selectedKeywordFilter = selectedTypeFilter = selectedCategoryFilter = null; clearTagHighlights(); switchViewLayouts("dashboard"); }
         
         function renderOfficersTable() {
             let db = getDatabase(); let container = document.getElementById("dynamicTableContainer");
@@ -2509,6 +2928,31 @@
             });
         }
         
+        function makeCategoryDropdownEditable(element, index, key) {
+            if (!loggedInUser || loggedInUser.role !== 'admin') return;
+            if (element.querySelector('select')) return;
+            let db = getDatabase();
+            let current = db[index][key] || "";
+            let select = document.createElement("select");
+            select.className = "inline-edit-select";
+            select.innerHTML = '<option value="">Uncategorized</option>' +
+                getClientCategories().map(c => `<option value="${escapeHtmlAttr(c)}" ${current === c ? 'selected' : ''}>${escapeHtml(c)}</option>`).join("");
+            element.innerHTML = "";
+            element.appendChild(select);
+            select.focus();
+
+            const saveCategory = function() {
+                db[index][key] = select.value;
+                saveDatabase(db);
+                element.innerHTML = select.value
+                    ? `<span class="category-pill"><i class="fa-solid fa-tag"></i>${escapeHtml(select.value)}</span>`
+                    : '<span class="category-empty">Uncategorized</span>';
+                updateCategoryFilterCount();
+            };
+            select.addEventListener("change", saveCategory);
+            select.addEventListener("blur", saveCategory, { once: true });
+        }
+
         function makeOfficerDropdownEditable(element, index, key) {
             if (!loggedInUser || loggedInUser.role !== 'admin') return;
             if (element.querySelector('select')) return; 
@@ -2578,11 +3022,12 @@
                     let name = cols[0] ? cols[0].trim() : "";
                     let officer = cols[1] ? cols[1].trim() : "";
                     let type = cols[2] ? cols[2].trim() : "Private Client";
+                    let category = cols[3] ? cols[3].trim() : "";
                     let pf = "";
                     let foundOff = officerRegistry.find(o => o.name === officer);
                     if (foundOff) pf = foundOff.pf;
                     if (name) {
-                        db.push({ pf: pf, name: name, officer: officer, type: type });
+                        db.push({ pf: pf, name: name, officer: officer, type: type, category: category });
                     }
                 }
             });
@@ -2594,7 +3039,7 @@
 
         function toggleSingleModal(show) {
             document.getElementById("singleModalOverlay").style.display = show ? "flex" : "none";
-            if(show) { autoFillPf(); } else { document.getElementById("formName").value = ""; }
+            if(show) { autoFillPf(); renderCategoryControls(); } else { document.getElementById("formName").value = ""; }
         }
 
         function autoFillPf() {
@@ -2608,10 +3053,11 @@
             let pf = document.getElementById("formPf").value;
             let name = document.getElementById("formName").value.trim();
             let type = document.getElementById("formType").value;
+            let category = document.getElementById("formCategory").value;
             if(!name) return showToast("Client name is required.", "danger");
             
             let db = getDatabase();
-            db.push({ pf: pf, name: name, type: type, officer: off });
+            db.push({ pf: pf, name: name, type: type, officer: off, category: category });
             saveDatabase(db);
             toggleSingleModal(false);
             showToast("Client \"" + name + "\" added successfully!", "success");
@@ -2708,6 +3154,8 @@
                 let ind = document.getElementById("exportIndustrySelect").value;
                 if(ind === "Government Client" || ind === "Private Client") {
                     filteredDb = db.filter(c => c.type === ind);
+                } else if (getClientCategories().some(c => c.toLowerCase() === ind.toLowerCase())) {
+                    filteredDb = db.filter(c => (c.category || "").toLowerCase() === ind.toLowerCase());
                 } else {
                     filteredDb = db.filter(c => (c.name || "").toLowerCase().includes(ind.toLowerCase()));
                 }
@@ -2722,12 +3170,12 @@
                 <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;">
                     <thead>
                         <tr>
-                            <td colspan="5" style="text-align: center; font-size: 26pt; font-weight: bold; background-color: #0f172a; color: #ffffff; padding: 20px;">
+                            <td colspan="6" style="text-align: center; font-size: 26pt; font-weight: bold; background-color: #0f172a; color: #ffffff; padding: 20px;">
                                 KALER KANTHO CRM REPORT
                             </td>
                         </tr>
                         <tr>
-                            <td colspan="5" style="text-align: center; font-size: 16pt; font-weight: bold; background-color: #3b82f6; color: #ffffff; padding: 12px;">
+                            <td colspan="6" style="text-align: center; font-size: 16pt; font-weight: bold; background-color: #3b82f6; color: #ffffff; padding: 12px;">
                                 ${subtitle}
                             </td>
                         </tr>
@@ -2735,6 +3183,7 @@
                             <th style="font-weight: bold; font-size: 14pt; background-color: #e2e8f0; text-align: center;">SL</th>
                             <th style="font-weight: bold; font-size: 14pt; background-color: #e2e8f0; text-align: left;">PF Number</th>
                             <th style="font-weight: bold; font-size: 14pt; background-color: #e2e8f0; text-align: left;">Client Name</th>
+                            <th style="font-weight: bold; font-size: 14pt; background-color: #e2e8f0; text-align: left;">Category</th>
                             <th style="font-weight: bold; font-size: 14pt; background-color: #e2e8f0; text-align: left;">Organisation Type</th>
                             <th style="font-weight: bold; font-size: 14pt; background-color: #e2e8f0; text-align: left;">Assigned Officer</th>
                         </tr>
@@ -2748,6 +3197,7 @@
                         <td style="text-align: center; font-size: 12pt;">${idx + 1}</td>
                         <td style="font-size: 12pt;">${item.pf || ''}</td>
                         <td style="font-size: 13pt; font-weight: bold;">${item.name || ''}</td>
+                        <td style="font-size: 12pt; font-weight: bold; color: #2563eb;">${item.category || 'Uncategorized'}</td>
                         <td style="font-size: 12pt;">${item.type || ''}</td>
                         <td style="font-size: 12pt; font-weight: bold; color: #2563eb;">${item.officer || ''}</td>
                     </tr>
@@ -2795,8 +3245,13 @@
             if (opt === "all") resetAllFilters();
             else if (opt === "officer") filterByOfficer(document.getElementById("printOfficerSelect").value);
             else if (opt === "industry") {
-                selectedKeywordFilter = document.getElementById("printIndustrySelect").value;
-                selectedOfficerFilter = null; selectedTypeFilter = null;
+                const ind = document.getElementById("printIndustrySelect").value;
+                selectedOfficerFilter = null; selectedTypeFilter = null; selectedCategoryFilter = null; selectedKeywordFilter = null;
+                if (getClientCategories().some(c => c.toLowerCase() === ind.toLowerCase())) {
+                    selectedCategoryFilter = ind;
+                } else {
+                    selectedKeywordFilter = ind;
+                }
                 renderTable();
             }
             
