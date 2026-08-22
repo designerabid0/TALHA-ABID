@@ -14,75 +14,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Firebase SDK (Realtime Database) -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
-
-    <script>
-        // Kaler Kantho CRM - Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyA1XZ9uUK4W39wiJgQQLSvQXU9hKCwY-o8",
-            authDomain: "kalerkantho-app-data.firebaseapp.com",
-            databaseURL: "https://kalerkantho-app-data-default-rtdb.firebaseio.com",
-            projectId: "kalerkantho-app-data",
-            storageBucket: "kalerkantho-app-data.firebasestorage.app",
-            messagingSenderId: "953359386725",
-            appId: "1:953359386725:web:a36eeecbeb48c161a55e8c"
-        };
-
-        firebase.initializeApp(firebaseConfig);
-        const firebaseDB = firebase.database();
-
-        // Firebase-backed in-memory caches. No localStorage/sessionStorage is used.
-        let firebaseUsersCache = null;
-        let firebaseClientsCache = null;
-        let firebaseRatesCache = null;
-        let firebaseReady = false;
-
-        async function initializeFirebaseApp() {
-            try {
-                const [usersSnap, clientsSnap, ratesSnap, categoriesSnap] = await Promise.all([
-                    firebaseDB.ref('crm/users').once('value'),
-                    firebaseDB.ref('crm/clients').once('value'),
-                    firebaseDB.ref('crm/rates').once('value'),
-                    firebaseDB.ref('crm/clientCategories').once('value')
-                ]);
-
-                firebaseUsersCache = usersSnap.val();
-                firebaseClientsCache = clientsSnap.val();
-                firebaseRatesCache = ratesSnap.val();
-                firebaseClientCategoriesCache = categoriesSnap.val();
-
-                if (!Array.isArray(firebaseUsersCache) || firebaseUsersCache.length === 0) {
-                    firebaseUsersCache = defaultUsersDB;
-                    await firebaseDB.ref('crm/users').set(firebaseUsersCache);
-                }
-                if (!Array.isArray(firebaseClientsCache)) {
-                    firebaseClientsCache = defaultClientsDB;
-                    await firebaseDB.ref('crm/clients').set(firebaseClientsCache);
-                }
-                if (!Array.isArray(firebaseRatesCache) || firebaseRatesCache.length === 0) {
-                    firebaseRatesCache = defaultRatesMaster;
-                    await firebaseDB.ref('crm/rates').set(firebaseRatesCache);
-                }
-                if (!Array.isArray(firebaseClientCategoriesCache) || firebaseClientCategoriesCache.length === 0) {
-                    firebaseClientCategoriesCache = [...DEFAULT_CLIENT_CATEGORIES];
-                    await firebaseDB.ref('crm/clientCategories').set(firebaseClientCategoriesCache);
-                }
-
-                firebaseReady = true;
-                checkAuthStatus();
-            } catch (error) {
-                console.error('Firebase initialization/read error:', error);
-                const errorBox = document.getElementById('loginErrorMsg');
-                if (errorBox) {
-                    errorBox.innerText = 'Firebase connection failed. Check your Realtime Database rules and internet connection.';
-                    errorBox.style.display = 'block';
-                }
-            }
-        }
-    </script>
-
     <!-- Third-Party Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -198,70 +129,12 @@
         body.dark-mode .login-box img { filter: brightness(0) invert(1); }
         .login-box h2 { margin-bottom: 5px; color: var(--text-main); font-size: 1.6rem; font-weight: 700; letter-spacing: -0.5px; }
         .login-box p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 28px; }
-        .login-input-wrap {
-            position: relative;
-            width: 100%;
-            margin-bottom: 14px;
-        }
-        .login-box input[type="text"], .login-box input[type="password"], .login-box input[type="text"].login-password-input {
-            width: 100%; padding: 13px 16px; margin-bottom: 0;
-            border: 1.5px solid var(--border-color); border-radius: 10px;
-            background: var(--bg-input); color: var(--text-main);
-            outline: none; font-size: 0.95rem;
+        .login-box input[type="text"], .login-box input[type="password"] { 
+            width: 100%; padding: 13px 16px; margin-bottom: 14px; 
+            border: 1.5px solid var(--border-color); border-radius: 10px; 
+            background: var(--bg-input); color: var(--text-main); 
+            outline: none; font-size: 0.95rem; 
             transition: var(--transition-fast);
-        }
-
-        /* Login field spacing: clear gap between Username and Password */
-        .login-box #loginUsername {
-            margin-bottom: 20px;
-        }
-        .login-box input.login-password-input {
-            padding-right: 48px;
-        }
-        .password-toggle-btn {
-            position: absolute;
-            right: 7px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 36px;
-            height: 36px;
-            border: 0;
-            border-radius: 8px;
-            background: transparent;
-            color: var(--text-muted);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition-fast);
-        }
-        .password-toggle-btn:hover {
-            background: var(--bg-hover);
-            color: var(--sidebar-active);
-        }
-        .login-options {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            margin: 2px 0 20px;
-        }
-        .login-box .checkbox-group {
-            display: flex; align-items: center; gap: 8px; margin: 0;
-            color: var(--text-main); font-size: 0.9rem; text-align: left; cursor: pointer;
-            user-select: none;
-        }
-        .login-box .checkbox-group input {
-            width: 16px;
-            height: 16px;
-            accent-color: var(--sidebar-active);
-            cursor: pointer;
-            flex-shrink: 0;
-        }
-        .remember-hint {
-            font-size: 0.72rem;
-            color: var(--text-muted);
-            white-space: nowrap;
         }
         .login-box input:focus { border-color: var(--sidebar-active); box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12); background: var(--bg-card); }
         .login-box .checkbox-group { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; color: var(--text-main); font-size: 0.9rem; text-align: left; cursor: pointer; }
@@ -589,7 +462,7 @@
         .action-buttons { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; }
         
         .table-responsive-wrapper { width: 100%; overflow-x: auto; border-radius: 8px; }
-        .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.875rem; min-width: 750px; }
+        .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.875rem; min-width: 900px; }
         .data-table th { 
             background-color: var(--bg-input); color: var(--text-muted); 
             padding: 12px 16px; font-weight: 700; 
@@ -937,6 +810,74 @@
         }
         .classified-info-pill i { font-size: 0.75rem; }
         
+
+        /* --- CLIENT CATEGORY / INDUSTRY MANAGEMENT --- */
+        .industry-toolbar {
+            display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+            margin-left:auto;
+        }
+        .industry-manage-btn {
+            padding:6px 12px !important; font-size:.78rem !important;
+            border-radius:20px !important;
+        }
+        .category-count {
+            display:inline-flex; align-items:center; gap:5px;
+            padding:5px 9px; border-radius:20px; font-size:.68rem;
+            font-weight:800; background:rgba(59,130,246,.10);
+            color:var(--sidebar-active); border:1px solid var(--badge-border);
+        }
+        .industry-chip-wrap { display:flex; gap:7px; flex-wrap:wrap; align-items:center; }
+        .industry-chip {
+            display:inline-flex; align-items:center; gap:6px;
+            background:var(--bg-input); color:var(--text-muted);
+            padding:6px 10px 6px 14px; border-radius:20px;
+            font-size:.8rem; font-weight:700; cursor:pointer;
+            border:1.5px solid var(--border-color); transition:var(--transition-fast);
+        }
+        .industry-chip:hover { background:var(--bg-hover); color:var(--sidebar-active); border-color:var(--badge-border); transform:translateY(-1px); }
+        .industry-chip.active { background:var(--sidebar-active); color:#fff; border-color:var(--sidebar-active); box-shadow:0 3px 8px rgba(37,99,235,.3); }
+        .industry-chip .chip-count {
+            min-width:18px; height:18px; padding:0 5px; display:inline-flex;
+            align-items:center; justify-content:center; border-radius:10px;
+            background:rgba(255,255,255,.65); color:var(--text-muted); font-size:.65rem;
+        }
+        .industry-chip.active .chip-count { background:rgba(255,255,255,.2); color:#fff; }
+        .industry-chip-edit {
+            width:19px; height:19px; display:inline-flex; align-items:center; justify-content:center;
+            border-radius:50%; border:0; background:transparent; color:inherit; cursor:pointer;
+            opacity:.7; padding:0;
+        }
+        .industry-chip-edit:hover { opacity:1; background:rgba(0,0,0,.10); }
+        .category-badge {
+            display:inline-flex; align-items:center; gap:5px;
+            padding:4px 9px; border-radius:12px; font-size:.72rem;
+            font-weight:800; background:var(--badge-bg); color:var(--sidebar-active);
+            border:1px solid var(--badge-border); white-space:nowrap;
+        }
+        body.dark-mode .category-badge { color:#93c5fd; }
+        .category-manage-list { display:flex; flex-direction:column; gap:8px; max-height:360px; overflow-y:auto; margin-top:12px; }
+        .category-manage-row {
+            display:flex; align-items:center; justify-content:space-between; gap:10px;
+            padding:10px 12px; background:var(--bg-input); border:1px solid var(--border-color);
+            border-radius:10px;
+        }
+        .category-manage-name { font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:8px; }
+        .category-manage-count { font-size:.72rem; color:var(--text-muted); font-weight:700; }
+        .category-manage-actions { display:flex; gap:5px; }
+        .category-manage-actions button { border:0; background:transparent; cursor:pointer; padding:6px; border-radius:6px; color:var(--text-muted); }
+        .category-manage-actions button:hover { background:var(--bg-hover); color:var(--sidebar-active); }
+        .category-manage-actions .danger:hover { color:var(--color-danger); background:rgba(239,68,68,.08); }
+        .category-help {
+            padding:10px 12px; border-radius:8px; background:var(--badge-bg);
+            border:1px solid var(--badge-border); color:var(--text-muted); font-size:.76rem;
+            line-height:1.5; margin-top:10px;
+        }
+        .category-inline-select { min-width:145px; }
+        @media (max-width:768px) {
+            .industry-toolbar { width:100%; margin-left:0; }
+            .industry-manage-btn { width:100%; justify-content:center; }
+        }
+
         /* --- RESPONSIVE BREAKPOINTS --- */
         @media (max-width: 1200px) {
             .charts-grid { grid-template-columns: 1fr 1fr; }
@@ -1033,127 +974,9 @@
             body.printing-quote #banglaPrintTarget { position: absolute !important; left: 0 !important; top: 0 !important; width: 210mm !important; height: 297mm !important; box-shadow: none !important; margin: 0 !important; }
             @page { size: A4 portrait; margin: 10mm !important; }
         }
-
-        /* --- CLIENT CATEGORY MANAGEMENT --- */
-        .category-toolbar {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 16px 18px;
-            box-shadow: var(--shadow-sm);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        .category-toolbar-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: .82rem;
-            font-weight: 800;
-            color: var(--text-main);
-            white-space: nowrap;
-        }
-        .category-filter-select {
-            min-width: 220px;
-            padding: 9px 12px;
-            border: 1.5px solid var(--border-color);
-            border-radius: 9px;
-            background: var(--bg-input);
-            color: var(--text-main);
-            outline: none;
-            font-size: .86rem;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .category-filter-select:focus {
-            border-color: var(--sidebar-active);
-            box-shadow: 0 0 0 3px rgba(37,99,235,.10);
-        }
-        .category-filter-count {
-            padding: 7px 11px;
-            border-radius: 18px;
-            background: var(--badge-bg);
-            border: 1px solid var(--badge-border);
-            color: var(--sidebar-active);
-            font-size: .76rem;
-            font-weight: 800;
-        }
-        .category-manage-btn {
-            margin-left: auto;
-        }
-        .category-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 4px 9px;
-            border-radius: 14px;
-            background: var(--badge-bg);
-            color: var(--sidebar-active);
-            border: 1px solid var(--badge-border);
-            font-size: .72rem;
-            font-weight: 800;
-            white-space: nowrap;
-        }
-        .category-empty {
-            color: var(--text-muted);
-            font-size: .75rem;
-            font-style: italic;
-        }
-        .category-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            max-height: 360px;
-            overflow-y: auto;
-            margin-top: 8px;
-        }
-        .category-list-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 9px;
-            background: var(--bg-input);
-        }
-        .category-list-item .category-name {
-            flex: 1;
-            font-weight: 700;
-            color: var(--text-main);
-        }
-        .category-list-item .category-count {
-            color: var(--text-muted);
-            font-size: .72rem;
-            font-weight: 700;
-        }
-        .category-action-btn {
-            width: 32px;
-            height: 32px;
-            border: 1px solid var(--border-color);
-            border-radius: 7px;
-            background: var(--bg-card);
-            color: var(--text-muted);
-            cursor: pointer;
-        }
-        .category-action-btn:hover {
-            color: var(--sidebar-active);
-            border-color: var(--badge-border);
-            background: var(--bg-hover);
-        }
-        .category-action-btn.danger:hover {
-            color: var(--color-danger);
-            border-color: rgba(239,68,68,.25);
-        }
-        @media (max-width: 720px) {
-            .category-filter-select { width: 100%; min-width: 0; }
-            .category-manage-btn { margin-left: 0; width: 100%; justify-content: center; }
-        }
-
     </style>
 </head>
-<body onload="initializeFirebaseApp()">
+<body onload="checkAuthStatus()">
 
     <!-- Login System Overlay -->
     <div class="login-overlay" id="loginOverlay">
@@ -1164,27 +987,14 @@
             
             <div id="loginErrorMsg" class="login-error">Invalid Username or Password!</div>
             
-            <input type="text" id="loginUsername" placeholder="Username" autocomplete="username" onkeypress="handleEnter(event)">
-            <div class="login-input-wrap">
-
-                
-                <input type="password" id="loginPassword" class="login-password-input" placeholder="Password" autocomplete="current-password" onkeypress="handleEnter(event)">
-                <button type="button" class="password-toggle-btn" id="loginPasswordToggle" onclick="toggleLoginPassword()" aria-label="Show password" title="Show password">
-                    <i class="fa-solid fa-eye"></i>
-                </button>
-            </div>
-
-            <div class="login-options">
-                <label class="checkbox-group">
-                    <input type="checkbox" id="loginRememberMe">
-                    <span>Remember my password</span>
-                </label>
-                <span class="remember-hint">Saved on this device</span>
-            </div>
-
-            <button class="btn btn-primary" onclick="processLogin()">
-                <i class="fa-solid fa-right-to-bracket"></i> Secure Login
-            </button>
+            <input type="text" id="loginUsername" placeholder="Username" onkeypress="handleEnter(event)">
+            <input type="password" id="loginPassword" placeholder="Password" onkeypress="handleEnter(event)">
+            
+            <label class="checkbox-group">
+                <input type="checkbox" id="loginRememberMe"> Remember my password
+            </label>
+            
+            <button class="btn btn-primary" onclick="processLogin()">Secure Login</button>
         </div>
     </div>
 
@@ -1308,31 +1118,16 @@
                 </section>
 
                 <section class="keyword-container" id="keywordContainerSection" style="margin-bottom: 10px;">
-                    <div class="keyword-label"><i class="fa-solid fa-tags"></i> Industries:</div>
-                    <div class="keyword-tags">
-                        <span class="tag" onclick="filterByKeyword(this, 'University')">University</span>
-                        <span class="tag" onclick="filterByKeyword(this, 'Bank')">Bank</span>
-                        <span class="tag" onclick="filterByKeyword(this, 'School')">School</span>
-                        <span class="tag" onclick="filterByKeyword(this, 'Mills')">Mills</span>
-                        <span class="tag" onclick="filterByKeyword(this, 'Hospital')">Hospital</span>
-                        <span class="tag" onclick="filterByKeyword(this, 'Group')">Group</span>
+                    <div class="keyword-label"><i class="fa-solid fa-layer-group"></i> Client Categories:</div>
+                    <div class="industry-chip-wrap" id="industryShortcutContainer"></div>
+                    <div class="industry-toolbar">
+                        <span class="category-count" id="categoryTotalBadge"><i class="fa-solid fa-folder-tree"></i> 0 Categories</span>
+                        <button class="btn btn-primary industry-manage-btn" onclick="openCategoryManager()">
+                            <i class="fa-solid fa-gear"></i> Manage Categories
+                        </button>
                     </div>
                 </section>
 
-
-                <section class="category-toolbar" id="clientCategoryToolbar" style="margin-bottom: 10px;">
-                    <div class="category-toolbar-title">
-                        <i class="fa-solid fa-layer-group" style="color:var(--sidebar-active);"></i>
-                        Categorize Client List
-                    </div>
-                    <select id="clientCategoryFilter" class="category-filter-select" onchange="filterByCategory(this.value)">
-                        <option value="">All Categories</option>
-                    </select>
-                    <span class="category-filter-count" id="categoryFilterCount">0 Clients</span>
-                    <button class="btn btn-primary category-manage-btn" onclick="openCategoryManager()">
-                        <i class="fa-solid fa-sliders"></i> Manage Categories
-                    </button>
-                </section>
                 <section class="table-card">
                     <div class="table-header">
                         <div class="table-title-group">
@@ -1588,7 +1383,7 @@
     <div class="modal-overlay" id="bulkModalOverlay">
         <div class="modal-box">
             <h3>Bulk Add from Excel</h3>
-            <p class="modal-desc">Column sequence: <b>Client Name</b> → <b>Officer Name</b> → <b>Type</b> → <b>Category</b></p>
+            <p class="modal-desc">Column sequence: <b>Client Name</b> → <b>Officer Name</b> → <b>Organisation Type</b> → <b>Category (optional)</b></p>
             <textarea class="bulk-textarea" id="bulkPasteInput" placeholder="Paste data here..."></textarea>
             <div class="modal-buttons">
                 <button class="btn btn-secondary" onclick="toggleBulkModal(false)">Cancel</button>
@@ -1604,7 +1399,7 @@
             <div class="form-group"><label>PF Number (Auto)</label><input type="text" id="formPf" readonly></div>
             <div class="form-group"><label>Client Name</label><input type="text" id="formName"></div>
             <div class="form-group">
-                <label>Client Category</label>
+                <label>Client Category / Industry</label>
                 <select id="formCategory"></select>
             </div>
             <div class="form-group">
@@ -1614,26 +1409,6 @@
             <div class="modal-buttons">
                 <button class="btn btn-secondary" onclick="toggleSingleModal(false)">Cancel</button>
                 <button class="btn btn-primary" onclick="addSingleClient()">Save Client</button>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- CLIENT CATEGORY MANAGER (ADMIN ONLY FOR CHANGES) -->
-    <div class="modal-overlay" id="categoryManagerOverlay">
-        <div class="modal-box">
-            <h3><i class="fa-solid fa-layer-group" style="color:var(--sidebar-active);"></i> Client Category Manager</h3>
-            <p class="modal-desc">Add a new category, rename an existing category, or remove a category. Existing clients are updated automatically when a category is renamed.</p>
-
-            <div style="display:flex; gap:8px; margin-bottom:14px;">
-                <input type="text" id="newCategoryInput" placeholder="Enter new category name..." style="flex:1;">
-                <button class="btn btn-primary" onclick="addClientCategory()"><i class="fa-solid fa-plus"></i> Add</button>
-            </div>
-
-            <div class="category-list" id="categoryManagerList"></div>
-
-            <div class="modal-buttons">
-                <button class="btn btn-secondary" onclick="closeCategoryManager()">Close</button>
             </div>
         </div>
     </div>
@@ -1699,6 +1474,33 @@
         </div>
     </div>
 
+    <!-- CLIENT CATEGORY / INDUSTRY MANAGER -->
+    <div class="modal-overlay" id="categoryManagerOverlay">
+        <div class="modal-box" style="max-width:560px;">
+            <h3><i class="fa-solid fa-layer-group" style="color:var(--sidebar-active);"></i> Client Categories / Industries</h3>
+            <p class="modal-desc">Add new categories, rename existing categories, or remove unused categories. Client assignments update automatically when a category is renamed.</p>
+
+            <div style="display:grid; grid-template-columns:1fr auto; gap:8px; align-items:end;">
+                <div class="form-group" style="margin-bottom:0;">
+                    <label>New Category Name</label>
+                    <input type="text" id="newCategoryName" placeholder="Example: Insurance">
+                </div>
+                <button class="btn btn-primary" onclick="addClientCategory()"><i class="fa-solid fa-plus"></i> Add</button>
+            </div>
+
+            <div class="category-help">
+                <i class="fa-solid fa-circle-info"></i>
+                Your requested default categories are already included: Bank, Electronics, Hospital, Ishpat, Pharmaceuticals, Supershop and University. You can add unlimited custom categories.
+            </div>
+
+            <div class="category-manage-list" id="categoryManageList"></div>
+
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeCategoryManager()">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- CONFIRMATION MODAL -->
     <div class="modal-overlay" id="confirmModalOverlay">
         <div class="modal-box" style="text-align: center;">
@@ -1722,7 +1524,7 @@
                 <select id="printOptionSelect" onchange="togglePrintSubOptions()">
                     <option value="all">All Clients</option>
                     <option value="officer">By Officer</option>
-                    <option value="industry">By Industry (University, Bank, etc.)</option>
+                    <option value="industry">By Category (Bank, Electronics, Hospital, etc.)</option>
                 </select>
             </div>
             <div class="form-group" id="printSubOptionOfficer" style="display:none;">
@@ -1730,25 +1532,8 @@
                 <select id="printOfficerSelect"></select>
             </div>
             <div class="form-group" id="printSubOptionIndustry" style="display:none;">
-                <label>Select Industry Keyword / Type</label>
-                <select id="printIndustrySelect">
-                    <option value="Government Client">Government Client</option>
-                    <option value="Private Client">Private Client</option>
-                    <option value="University">University</option>
-                    <option value="Bank">Bank</option>
-                    <option value="Electronics">Electronics</option>
-                    <option value="Ishpat">Ishpat</option>
-                    <option value="pharmacuticals">pharmacuticals</option>
-                    <option value="Sepershob">Sepershob</option>
-                    <option value="Electronics">Electronics</option>
-                    <option value="Ishpat">Ishpat</option>
-                    <option value="pharmacuticals">pharmacuticals</option>
-                    <option value="Sepershob">Sepershob</option>
-                    <option value="School">School</option>
-                    <option value="Mills">Mills</option>
-                    <option value="Hospital">Hospital</option>
-                    <option value="Group">Group</option>
-                </select>
+                <label>Select Client Category / Industry</label>
+                <select id="printIndustrySelect"></select>
             </div>
             <div class="modal-buttons">
                 <button class="btn btn-secondary" onclick="togglePrintModal(false)">Cancel</button>
@@ -1775,17 +1560,8 @@
                 <select id="exportOfficerSelect"></select>
             </div>
             <div class="form-group" id="exportSubOptionIndustry" style="display:none;">
-                <label>Select Industry / Client Category</label>
-                <select id="exportIndustrySelect">
-                    <option value="Government Client">Government Client</option>
-                    <option value="Private Client">Private Client</option>
-                    <option value="University">University</option>
-                    <option value="Bank">Bank</option>
-                    <option value="School">School</option>
-                    <option value="Mills">Mills</option>
-                    <option value="Hospital">Hospital</option>
-                    <option value="Group">Group</option>
-                </select>
+                <label>Select Client Category / Industry</label>
+                <select id="exportIndustrySelect"></select>
             </div>
             <div class="modal-buttons">
                 <button class="btn btn-secondary" onclick="toggleExportModal(false)">Cancel</button>
@@ -1815,141 +1591,102 @@
             { username: 'user', password: 'user123', role: 'user' }
         ];
 
-        const DEFAULT_CLIENT_CATEGORIES = [
+        const defaultClientsDB = [
+            // Add your clients here to make sure they load everywhere!
+            // { pf: "1234", name: "Example University", type: "Private Client", officer: "Md. Masud Alam", category: "University" }
+        ];
+
+        const defaultClientCategories = [
             "Bank",
             "Electronics",
             "Hospital",
             "Ishpat",
-            "pharmacuticals",
-            "Sepershob",
+            "Pharmaceuticals",
+            "Supershop",
             "University"
         ];
 
-        let firebaseClientCategoriesCache = null;
-        const defaultClientsDB = [
-            // Add your clients here to make sure they load everywhere!
-            // { pf: "1234", name: "Example University", category: "University", type: "Private Client", officer: "Md. Masud Alam" }
-        ];
+        function getClientCategories() {
+            let data = localStorage.getItem("kk_crm_client_categories");
+            if (!data) {
+                localStorage.setItem("kk_crm_client_categories", JSON.stringify(defaultClientCategories));
+                return [...defaultClientCategories];
+            }
+            try {
+                let categories = JSON.parse(data);
+                if (!Array.isArray(categories)) throw new Error("Invalid category data");
+                // Ensure required categories always exist.
+                const merged = [...categories];
+                defaultClientCategories.forEach(c => {
+                    if (!merged.some(x => String(x).toLowerCase() === c.toLowerCase())) merged.push(c);
+                });
+                localStorage.setItem("kk_crm_client_categories", JSON.stringify(merged));
+                return merged;
+            } catch (e) {
+                localStorage.setItem("kk_crm_client_categories", JSON.stringify(defaultClientCategories));
+                return [...defaultClientCategories];
+            }
+        }
+
+        function saveClientCategories(categories) {
+            const cleaned = [];
+            categories.forEach(c => {
+                const name = String(c || "").trim();
+                if (name && !cleaned.some(x => x.toLowerCase() === name.toLowerCase())) cleaned.push(name);
+            });
+            localStorage.setItem("kk_crm_client_categories", JSON.stringify(cleaned));
+        }
+
+        function ensureClientCategoriesInDatabase() {
+            const db = JSON.parse(localStorage.getItem("crm_desktop_db") || "[]");
+            let categories = getClientCategories();
+            let changed = false;
+            db.forEach(client => {
+                if (!client.category) {
+                    const name = String(client.name || "");
+                    const match = categories.find(cat => name.toLowerCase().includes(cat.toLowerCase()));
+                    client.category = match || "Uncategorized";
+                    if (client.category === "Uncategorized" && !categories.some(c => c.toLowerCase() === "uncategorized")) {
+                        categories.push("Uncategorized");
+                    }
+                    changed = true;
+                }
+            });
+            if (changed) localStorage.setItem("crm_desktop_db", JSON.stringify(db));
+            saveClientCategories(categories);
+        }
 
         // --- AUTHENTICATION & USER MANAGEMENT LOGIC ---
         
         let loggedInUser = null;
         
         function getUsersDB() {
-            return Array.isArray(firebaseUsersCache) ? firebaseUsersCache : defaultUsersDB;
+            let data = localStorage.getItem("kk_crm_users_db");
+            if (!data) { 
+                localStorage.setItem("kk_crm_users_db", JSON.stringify(defaultUsersDB));
+                return defaultUsersDB;
+            }
+            return JSON.parse(data);
         }
-
+        
         function saveUsersDB(db) {
-            firebaseUsersCache = Array.isArray(db) ? db : [];
-            firebaseDB.ref('crm/users').set(firebaseUsersCache).catch(err => {
-                console.error('Failed to save users to Firebase:', err);
-                showToast('Could not save users to Firebase.', 'danger');
-            });
-        }
-
-        /* --- LOGIN REMEMBER-ME & PASSWORD VISIBILITY --- */
-        const LOGIN_REMEMBER_KEY = 'kalerKanthoCRMRememberedLogin';
-
-        function getRememberedLogin() {
-            try {
-                const raw = localStorage.getItem(LOGIN_REMEMBER_KEY);
-                if (!raw) return null;
-                const saved = JSON.parse(raw);
-                if (!saved || typeof saved.username !== 'string' || typeof saved.password !== 'string') {
-                    localStorage.removeItem(LOGIN_REMEMBER_KEY);
-                    return null;
-                }
-                return saved;
-            } catch (error) {
-                console.warn('Could not read remembered login:', error);
-                return null;
-            }
-        }
-
-        function saveRememberedLogin(username, password) {
-            try {
-                localStorage.setItem(LOGIN_REMEMBER_KEY, JSON.stringify({
-                    username: username,
-                    password: password
-                }));
-            } catch (error) {
-                console.warn('Could not save remembered login:', error);
-            }
-        }
-
-        function clearRememberedLogin() {
-            try {
-                localStorage.removeItem(LOGIN_REMEMBER_KEY);
-            } catch (error) {
-                console.warn('Could not clear remembered login:', error);
-            }
-        }
-
-        function loadRememberedLogin() {
-            const usernameInput = document.getElementById('loginUsername');
-            const passwordInput = document.getElementById('loginPassword');
-            const rememberInput = document.getElementById('loginRememberMe');
-
-            if (!usernameInput || !passwordInput || !rememberInput) return;
-
-            const saved = getRememberedLogin();
-            if (saved) {
-                usernameInput.value = saved.username;
-                passwordInput.value = saved.password;
-                rememberInput.checked = true;
-            } else {
-                usernameInput.value = '';
-                passwordInput.value = '';
-                rememberInput.checked = false;
-            }
-        }
-
-        function toggleLoginPassword() {
-            const passwordInput = document.getElementById('loginPassword');
-            const toggleBtn = document.getElementById('loginPasswordToggle');
-            if (!passwordInput || !toggleBtn) return;
-
-            const icon = toggleBtn.querySelector('i');
-            const isHidden = passwordInput.type === 'password';
-
-            passwordInput.type = isHidden ? 'text' : 'password';
-            if (icon) {
-                icon.className = isHidden ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
-            }
-
-            toggleBtn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
-            toggleBtn.setAttribute('title', isHidden ? 'Hide password' : 'Show password');
-        }
-
-        function resetLoginPasswordVisibility() {
-            const passwordInput = document.getElementById('loginPassword');
-            const toggleBtn = document.getElementById('loginPasswordToggle');
-            if (!passwordInput || !toggleBtn) return;
-
-            passwordInput.type = 'password';
-            const icon = toggleBtn.querySelector('i');
-            if (icon) icon.className = 'fa-solid fa-eye';
-            toggleBtn.setAttribute('aria-label', 'Show password');
-            toggleBtn.setAttribute('title', 'Show password');
+            localStorage.setItem("kk_crm_users_db", JSON.stringify(db));
         }
 
         function checkAuthStatus() {
-            // Remember-me stores only the login form credentials on this browser.
-            // The CRM still requires a successful login after each page reload.
-            loggedInUser = null;
-            loadRememberedLogin();
-            const rememberInput = document.getElementById('loginRememberMe');
-            if (rememberInput && !rememberInput.dataset.listenerAttached) {
-                rememberInput.addEventListener('change', function() {
-                    if (!this.checked) {
-                        clearRememberedLogin();
-                    }
-                });
-                rememberInput.dataset.listenerAttached = 'true';
+            let sessionUser = sessionStorage.getItem("kk_crm_session");
+            let localUser = localStorage.getItem("kk_crm_remembered");
+            
+            if (sessionUser) {
+                loggedInUser = JSON.parse(sessionUser);
+                startApplication();
+            } else if (localUser) {
+                loggedInUser = JSON.parse(localUser);
+                startApplication();
+            } else {
+                document.getElementById('loginOverlay').style.display = 'flex';
+                document.getElementById('mainContentArea').style.display = 'none';
             }
-            resetLoginPasswordVisibility();
-            document.getElementById('loginOverlay').style.display = 'flex';
-            document.getElementById('mainContentArea').style.display = 'none';
         }
 
         function handleEnter(e) {
@@ -1960,54 +1697,36 @@
             let userVal = document.getElementById("loginUsername").value.trim();
             let passVal = document.getElementById("loginPassword").value.trim();
             let remVal = document.getElementById("loginRememberMe").checked;
-
-            const errorBox = document.getElementById('loginErrorMsg');
-
-            if (!userVal || !passVal) {
-                errorBox.innerText = 'Please enter username and password.';
-                errorBox.style.display = 'block';
-                return;
-            }
-
+            
             let users = getUsersDB();
             let foundUser = users.find(u => u.username === userVal && u.password === passVal);
-
+            
             if (foundUser) {
                 loggedInUser = { username: foundUser.username, role: foundUser.role };
-
+                
                 if (remVal) {
-                    saveRememberedLogin(foundUser.username, passVal);
+                    localStorage.setItem("kk_crm_remembered", JSON.stringify(loggedInUser));
                 } else {
-                    clearRememberedLogin();
+                    sessionStorage.setItem("kk_crm_session", JSON.stringify(loggedInUser));
                 }
-
-                errorBox.style.display = 'none';
+                
+                document.getElementById('loginErrorMsg').style.display = 'none';
                 startApplication();
             } else {
-                errorBox.innerText = 'Invalid Username or Password!';
-                errorBox.style.display = 'block';
+                document.getElementById('loginErrorMsg').style.display = 'block';
             }
         }
 
         function processLogout() {
+            localStorage.removeItem("kk_crm_remembered");
+            sessionStorage.removeItem("kk_crm_session");
             loggedInUser = null;
-
-            // Keep remembered credentials if the user selected "Remember my password".
-            const remembered = getRememberedLogin();
-            if (remembered) {
-                document.getElementById("loginUsername").value = remembered.username;
-                document.getElementById("loginPassword").value = remembered.password;
-                document.getElementById("loginRememberMe").checked = true;
-            } else {
-                document.getElementById("loginUsername").value = "";
-                document.getElementById("loginPassword").value = "";
-                document.getElementById("loginRememberMe").checked = false;
-            }
-
-            resetLoginPasswordVisibility();
+            
+            document.getElementById("loginUsername").value = "";
+            document.getElementById("loginPassword").value = "";
             document.getElementById('loginErrorMsg').style.display = 'none';
             closeUserPopover();
-
+            
             document.getElementById('loginOverlay').style.display = 'flex';
             document.getElementById('mainContentArea').style.display = 'none';
         }
@@ -2032,15 +1751,14 @@
             document.getElementById('actionButtonsArea').style.display = isAdmin ? 'flex' : 'none';
             document.getElementById('menuUsers').style.display = isAdmin ? 'block' : 'none';
             
+            ensureClientCategoriesInDatabase();
+            refreshCategoryUI();
             switchViewLayouts('dashboard');
             let select = document.getElementById("formOfficer");
             if (select) {
                 select.innerHTML = "";
                 officerList.forEach(off => { select.innerHTML += `<option value="${off}">${off}</option>`; });
             }
-            renderCategoryControls();
-            const categoryManagerBtn = document.querySelector(".category-manage-btn");
-            if (categoryManagerBtn) categoryManagerBtn.style.display = isAdmin ? "inline-flex" : "none";
         }
 
         /* --- USER PROFILE POPOVER LOGIC --- */
@@ -2123,12 +1841,6 @@
             
             currentUser.password = newP;
             saveUsersDB(db);
-
-            // Keep Remember My Password synchronized after a password change.
-            const rememberedLogin = getRememberedLogin();
-            if (rememberedLogin && rememberedLogin.username === loggedInUser.username) {
-                saveRememberedLogin(loggedInUser.username, newP);
-            }
             
             showToast("Password updated successfully!", "success");
             toggleChangePasswordModal(false);
@@ -2261,7 +1973,6 @@
         let selectedOfficerFilter = null;
         let selectedKeywordFilter = null;
         let selectedTypeFilter = null;
-        let selectedCategoryFilter = null;
         let globalSearchQuery = "";
         let donutChartInstance = null;
 
@@ -2278,13 +1989,20 @@
         const themeToggleBtn = document.getElementById('themeToggleBtn');
         const bodyElement = document.body;
 
+        if (localStorage.getItem('kk_crm_theme') === 'dark') {
+            bodyElement.classList.add('dark-mode');
+            themeToggleBtn.innerHTML = '<i class="fa-solid fa-sun"></i>';
+        }
+
         themeToggleBtn.addEventListener('click', () => {
             bodyElement.classList.toggle('dark-mode');
             const isDark = bodyElement.classList.contains('dark-mode');
             
             if (isDark) {
+                localStorage.setItem('kk_crm_theme', 'dark');
                 themeToggleBtn.innerHTML = '<i class="fa-solid fa-sun"></i>';
             } else {
+                localStorage.setItem('kk_crm_theme', 'light');
                 themeToggleBtn.innerHTML = '<i class="fa-solid fa-moon"></i>';
             }
             
@@ -2297,261 +2015,45 @@
 
         /* --- CORE ARCHITECTURE SYSTEMS --- */
         function getRatesDatabase() {
-            return Array.isArray(firebaseRatesCache) ? firebaseRatesCache : defaultRatesMaster;
+            let data = localStorage.getItem("crm_rates_db");
+            if (!data) { 
+                localStorage.setItem("crm_rates_db", JSON.stringify(defaultRatesMaster)); 
+                return defaultRatesMaster; 
+            }
+            return JSON.parse(data);
         }
-
-        function saveRatesDatabase(array) {
-            firebaseRatesCache = Array.isArray(array) ? array : [];
-            firebaseDB.ref('crm/rates').set(firebaseRatesCache).then(() => {
-                refreshUI();
-            }).catch(err => {
-                console.error('Failed to save rates to Firebase:', err);
-                showToast('Could not save rate data to Firebase.', 'danger');
-            });
-        }
+        function saveRatesDatabase(array) { localStorage.setItem("crm_rates_db", JSON.stringify(array)); refreshUI(); }
         
-        function getClientCategories() {
-            let categories = Array.isArray(firebaseClientCategoriesCache) ? firebaseClientCategoriesCache : DEFAULT_CLIENT_CATEGORIES;
-            return [...new Set(categories.map(c => String(c || "").trim()).filter(Boolean))]
-                .sort((a, b) => a.localeCompare(b));
-        }
-
-        function saveClientCategories(categories, afterSave) {
-            const cleaned = [...new Set((categories || []).map(c => String(c || "").trim()).filter(Boolean))];
-            firebaseClientCategoriesCache = cleaned;
-            firebaseDB.ref('crm/clientCategories').set(cleaned).then(() => {
-                if (typeof afterSave === "function") afterSave();
-            }).catch(err => {
-                console.error("Failed to save client categories:", err);
-                showToast("Could not save category data to Firebase.", "danger");
-            });
-        }
-
-        function normalizeClientCategories(db) {
-            const categories = getClientCategories();
-            let changed = false;
-            db.forEach(client => {
-                if (client.category === undefined || client.category === null) {
-                    client.category = "";
-                    changed = true;
-                }
-            });
-            return changed;
-        }
-
-        function renderCategoryControls() {
-            const filter = document.getElementById("clientCategoryFilter");
-            const formCategory = document.getElementById("formCategory");
-            const categories = getClientCategories();
-
-            if (filter) {
-                const current = selectedCategoryFilter || "";
-                filter.innerHTML = '<option value="">All Categories</option>' +
-                    categories.map(c => `<option value="${escapeHtmlAttr(c)}">${escapeHtml(c)}</option>`).join("");
-                filter.value = categories.includes(current) ? current : "";
-            }
-
-            if (formCategory) {
-                const current = formCategory.value;
-                formCategory.innerHTML = '<option value="">-- Select Category --</option>' +
-                    categories.map(c => `<option value="${escapeHtmlAttr(c)}">${escapeHtml(c)}</option>`).join("");
-                if (categories.includes(current)) formCategory.value = current;
-            }
-
-            updateCategoryFilterCount();
-        }
-
-        function updateCategoryFilterCount() {
-            const badge = document.getElementById("categoryFilterCount");
-            if (!badge) return;
-            const db = getDatabase();
-            let count = selectedCategoryFilter
-                ? db.filter(c => (c.category || "").toLowerCase() === selectedCategoryFilter.toLowerCase()).length
-                : db.length;
-            badge.innerText = count + " Client" + (count !== 1 ? "s" : "");
-        }
-
-        function filterByCategory(category) {
-            selectedCategoryFilter = (category || "").trim() || null;
-            selectedOfficerFilter = null;
-            selectedKeywordFilter = null;
-            selectedTypeFilter = null;
-            clearTagHighlights();
-            renderTable();
-        }
-
-        function openCategoryManager() {
-            renderCategoryManager();
-            document.getElementById("categoryManagerOverlay").style.display = "flex";
-            setTimeout(() => document.getElementById("newCategoryInput")?.focus(), 50);
-        }
-
-        function closeCategoryManager() {
-            document.getElementById("categoryManagerOverlay").style.display = "none";
-            const input = document.getElementById("newCategoryInput");
-            if (input) input.value = "";
-        }
-
-        function renderCategoryManager() {
-            const list = document.getElementById("categoryManagerList");
-            if (!list) return;
-            const categories = getClientCategories();
-            const db = getDatabase();
-
-            if (!categories.length) {
-                list.innerHTML = '<div class="category-empty">No categories available.</div>';
-                return;
-            }
-
-            list.innerHTML = categories.map((category, index) => {
-                const count = db.filter(c => (c.category || "").toLowerCase() === category.toLowerCase()).length;
-                const safe = escapeHtml(category);
-                return `<div class="category-list-item">
-                    <i class="fa-solid fa-tag" style="color:var(--sidebar-active);"></i>
-                    <span class="category-name">${safe}</span>
-                    <span class="category-count">${count} client${count !== 1 ? "s" : ""}</span>
-                    <button class="category-action-btn" title="Rename Category" onclick="renameClientCategory(${index})"><i class="fa-solid fa-pen"></i></button>
-                    <button class="category-action-btn danger" title="Delete Category" onclick="deleteClientCategory(${index})"><i class="fa-solid fa-trash"></i></button>
-                </div>`;
-            }).join("");
-        }
-
-        function addClientCategory() {
-            if (!loggedInUser || loggedInUser.role !== "admin") {
-                return showToast("Only administrators can manage client categories.", "danger");
-            }
-            const input = document.getElementById("newCategoryInput");
-            const name = input.value.trim();
-            if (!name) return showToast("Please enter a category name.", "danger");
-
-            const categories = getClientCategories();
-            if (categories.some(c => c.toLowerCase() === name.toLowerCase())) {
-                return showToast("This category already exists.", "danger");
-            }
-
-            categories.push(name);
-            saveClientCategories(categories, () => {
-                input.value = "";
-                renderCategoryControls();
-                renderCategoryManager();
-                showToast('Category "' + name + '" added successfully!', "success");
-            });
-        }
-
-        function renameClientCategory(index) {
-            if (!loggedInUser || loggedInUser.role !== "admin") {
-                return showToast("Only administrators can manage client categories.", "danger");
-            }
-            const categories = getClientCategories();
-            const oldName = categories[index];
-            if (!oldName) return;
-
-            const newName = prompt("Enter the new category name:", oldName);
-            if (newName === null) return;
-            const cleaned = newName.trim();
-            if (!cleaned) return showToast("Category name cannot be empty.", "danger");
-            if (cleaned.toLowerCase() !== oldName.toLowerCase() &&
-                categories.some(c => c.toLowerCase() === cleaned.toLowerCase())) {
-                return showToast("This category already exists.", "danger");
-            }
-
-            const db = getDatabase();
-            db.forEach(client => {
-                if ((client.category || "").toLowerCase() === oldName.toLowerCase()) {
-                    client.category = cleaned;
-                }
-            });
-
-            const categoryIndex = categories.findIndex(c => c === oldName);
-            if (categoryIndex >= 0) categories[categoryIndex] = cleaned;
-
-            if (selectedCategoryFilter && selectedCategoryFilter.toLowerCase() === oldName.toLowerCase()) {
-                selectedCategoryFilter = cleaned;
-            }
-
-            firebaseClientCategoriesCache = categories;
-            firebaseDB.ref("crm/clientCategories").set(categories).then(() => {
-                return firebaseDB.ref("crm/clients").set(db);
-            }).then(() => {
-                firebaseClientsCache = db;
-                renderCategoryControls();
-                renderCategoryManager();
-                refreshUI();
-                showToast('Category renamed to "' + cleaned + '".', "success");
-            }).catch(err => {
-                console.error(err);
-                showToast("Could not rename category.", "danger");
-            });
-        }
-
-        function deleteClientCategory(index) {
-            if (!loggedInUser || loggedInUser.role !== "admin") {
-                return showToast("Only administrators can manage client categories.", "danger");
-            }
-            const categories = getClientCategories();
-            const category = categories[index];
-            if (!category) return;
-
-            const usedCount = getDatabase().filter(c => (c.category || "").toLowerCase() === category.toLowerCase()).length;
-            const message = usedCount
-                ? `"${category}" is assigned to ${usedCount} client(s). Deleting it will remove the category from those clients. Continue?`
-                : `Delete category "${category}"?`;
-
-            showConfirmModal("Delete Client Category?", message, function() {
-                const db = getDatabase();
-                db.forEach(client => {
-                    if ((client.category || "").toLowerCase() === category.toLowerCase()) client.category = "";
-                });
-
-                const remaining = categories.filter((_, i) => i !== index);
-                if (selectedCategoryFilter && selectedCategoryFilter.toLowerCase() === category.toLowerCase()) {
-                    selectedCategoryFilter = null;
-                }
-
-                firebaseClientCategoriesCache = remaining;
-                Promise.all([
-                    firebaseDB.ref("crm/clientCategories").set(remaining),
-                    firebaseDB.ref("crm/clients").set(db)
-                ]).then(() => {
-                    firebaseClientsCache = db;
-                    renderCategoryControls();
-                    renderCategoryManager();
-                    refreshUI();
-                    showToast('Category "' + category + '" deleted.', "success");
-                }).catch(err => {
-                    console.error(err);
-                    showToast("Could not delete category.", "danger");
-                });
-            });
-        }
-
-        function escapeHtml(value) {
-            return String(value ?? "")
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
-
-        function escapeHtmlAttr(value) {
-            return escapeHtml(value);
-        }
-
         function getDatabase() {
-            let arr = Array.isArray(firebaseClientsCache) ? firebaseClientsCache : defaultClientsDB;
+            let data = localStorage.getItem("crm_desktop_db");
+            if (!data) {
+                localStorage.setItem("crm_desktop_db", JSON.stringify(defaultClientsDB));
+                ensureClientCategoriesInDatabase();
+                return [...defaultClientsDB];
+            }
+            ensureClientCategoriesInDatabase();
+            let arr = JSON.parse(localStorage.getItem("crm_desktop_db") || "[]");
             return arr.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
         }
         
         // This is only called when we WANT a full UI refresh.
         function saveDatabase(array) {
-            firebaseClientsCache = Array.isArray(array) ? array : [];
-            firebaseDB.ref('crm/clients').set(firebaseClientsCache).then(() => {
-                refreshUI();
-            }).catch(err => {
-                console.error('Failed to save clients to Firebase:', err);
-                showToast('Could not save client data to Firebase.', 'danger');
+            let categories = getClientCategories();
+            array.forEach(client => {
+                if (!client.category) {
+                    const name = String(client.name || "");
+                    const match = categories.find(cat => name.toLowerCase().includes(cat.toLowerCase()));
+                    client.category = match || "Uncategorized";
+                    if (client.category === "Uncategorized" && !categories.some(c => c.toLowerCase() === "uncategorized")) {
+                        categories.push("Uncategorized");
+                    }
+                } else if (!categories.some(c => c.toLowerCase() === String(client.category).toLowerCase())) {
+                    categories.push(String(client.category).trim());
+                }
             });
+            saveClientCategories(categories);
+            localStorage.setItem("crm_desktop_db", JSON.stringify(array));
+            refreshUI();
         }
 
         function refreshUI() { 
@@ -2568,6 +2070,210 @@
             const overlay = document.getElementById("sidebarOverlay");
             if(open) { sidebar.classList.add("active"); overlay.classList.add("active"); } 
             else { sidebar.classList.remove("active"); overlay.classList.remove("active"); }
+        }
+
+
+        /* --- CLIENT CATEGORY MANAGEMENT --- */
+        function populateCategorySelect(selectId, selectedValue = "") {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+            const categories = getClientCategories();
+            select.innerHTML = '<option value="">-- Select Category --</option>' +
+                categories.map(cat => `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`).join("");
+            if (selectedValue && categories.some(c => c.toLowerCase() === selectedValue.toLowerCase())) {
+                const exact = categories.find(c => c.toLowerCase() === selectedValue.toLowerCase());
+                select.value = exact;
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? "").replace(/[&<>"']/g, ch => ({
+                '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+            }[ch]));
+        }
+
+        function renderIndustryShortcuts() {
+            const container = document.getElementById("industryShortcutContainer");
+            if (!container) return;
+            const categories = getClientCategories();
+            const db = getDatabase();
+            const counts = {};
+            categories.forEach(c => counts[c] = 0);
+            db.forEach(client => {
+                const cat = client.category || "Uncategorized";
+                if (!Object.prototype.hasOwnProperty.call(counts, cat)) counts[cat] = 0;
+                counts[cat]++;
+            });
+            if (counts.Uncategorized === undefined && db.some(c => !c.category)) counts.Uncategorized = 0;
+
+            container.innerHTML = "";
+            const allBtn = document.createElement("button");
+            allBtn.type = "button";
+            allBtn.className = "industry-chip" + (!selectedKeywordFilter ? " active" : "");
+            allBtn.innerHTML = `<i class="fa-solid fa-layer-group"></i> All <span class="chip-count">${db.length}</span>`;
+            allBtn.onclick = () => { selectedKeywordFilter = null; clearTagHighlights(); renderTable(); };
+            container.appendChild(allBtn);
+
+            categories.forEach(category => {
+                const btn = document.createElement("button");
+                btn.type = "button";
+                btn.className = "industry-chip" + (selectedKeywordFilter === category ? " active" : "");
+                btn.title = "Filter clients by " + category;
+                btn.innerHTML = `<i class="fa-solid fa-folder"></i> ${escapeHtml(category)} <span class="chip-count">${counts[category] || 0}</span>`;
+                btn.onclick = () => {
+                    selectedKeywordFilter = selectedKeywordFilter === category ? null : category;
+                    selectedOfficerFilter = selectedTypeFilter = null;
+                    renderIndustryShortcuts();
+                    renderTable();
+                };
+                container.appendChild(btn);
+            });
+
+            if (counts.Uncategorized) {
+                const btn = document.createElement("button");
+                btn.type = "button";
+                btn.className = "industry-chip" + (selectedKeywordFilter === "Uncategorized" ? " active" : "");
+                btn.innerHTML = `<i class="fa-solid fa-folder-open"></i> Uncategorized <span class="chip-count">${counts.Uncategorized}</span>`;
+                btn.onclick = () => {
+                    selectedKeywordFilter = selectedKeywordFilter === "Uncategorized" ? null : "Uncategorized";
+                    selectedOfficerFilter = selectedTypeFilter = null;
+                    renderIndustryShortcuts(); renderTable();
+                };
+                container.appendChild(btn);
+            }
+            const badge = document.getElementById("categoryTotalBadge");
+            if (badge) badge.innerHTML = `<i class="fa-solid fa-folder-tree"></i> ${categories.length} Categories`;
+        }
+
+        function openCategoryManager() {
+            if (!loggedInUser || loggedInUser.role !== "admin") {
+                return showToast("Only Admin can manage client categories.", "danger");
+            }
+            document.getElementById("newCategoryName").value = "";
+            renderCategoryManager();
+            document.getElementById("categoryManagerOverlay").style.display = "flex";
+            setTimeout(() => {
+                const input = document.getElementById("newCategoryName");
+                input.focus();
+                input.onkeypress = (e) => { if (e.key === "Enter") addClientCategory(); };
+            }, 50);
+        }
+
+        function closeCategoryManager() {
+            document.getElementById("categoryManagerOverlay").style.display = "none";
+            document.getElementById("newCategoryName").value = "";
+        }
+
+        function renderCategoryManager() {
+            const list = document.getElementById("categoryManageList");
+            if (!list) return;
+            const categories = getClientCategories();
+            const db = getDatabase();
+            const counts = {};
+            categories.forEach(c => counts[c] = 0);
+            db.forEach(c => {
+                const cat = c.category || "Uncategorized";
+                if (counts[cat] === undefined) counts[cat] = 0;
+                counts[cat]++;
+            });
+
+            list.innerHTML = categories.map((category, index) => {
+                const isDefault = defaultClientCategories.some(d => d.toLowerCase() === category.toLowerCase());
+                return `<div class="category-manage-row">
+                    <div class="category-manage-name">
+                        <i class="fa-solid fa-folder" style="color:var(--sidebar-active);"></i>
+                        <span>${escapeHtml(category)}</span>
+                        <span class="category-manage-count">${counts[category] || 0} client(s)</span>
+                    </div>
+                    <div class="category-manage-actions">
+                        <button title="Rename category" onclick="renameClientCategory(${index})"><i class="fa-solid fa-pen"></i></button>
+                        ${isDefault ? '' : `<button class="danger" title="Delete category" onclick="deleteClientCategory(${index})"><i class="fa-solid fa-trash"></i></button>`}
+                    </div>
+                </div>`;
+            }).join("");
+
+            if (!categories.length) list.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-muted);">No categories found.</div>`;
+        }
+
+        function addClientCategory() {
+            const input = document.getElementById("newCategoryName");
+            const name = input.value.trim();
+            if (!name) return showToast("Enter a category name.", "danger");
+            const categories = getClientCategories();
+            if (categories.some(c => c.toLowerCase() === name.toLowerCase())) {
+                return showToast("This category already exists.", "danger");
+            }
+            categories.push(name);
+            saveClientCategories(categories);
+            input.value = "";
+            renderCategoryManager();
+            refreshCategoryUI();
+            showToast(`Category "${name}" added successfully.`, "success");
+        }
+
+        function renameClientCategory(index) {
+            const categories = getClientCategories();
+            const oldName = categories[index];
+            const newName = prompt(`Rename category "${oldName}" to:`, oldName);
+            if (newName === null) return;
+            const cleaned = newName.trim();
+            if (!cleaned) return showToast("Category name cannot be empty.", "danger");
+            if (categories.some((c, i) => i !== index && c.toLowerCase() === cleaned.toLowerCase())) {
+                return showToast("Another category already uses that name.", "danger");
+            }
+
+            const db = getDatabase();
+            db.forEach(client => {
+                if ((client.category || "").toLowerCase() === oldName.toLowerCase()) client.category = cleaned;
+            });
+            categories[index] = cleaned;
+            saveClientCategories(categories);
+            localStorage.setItem("crm_desktop_db", JSON.stringify(db));
+            if (selectedKeywordFilter && selectedKeywordFilter.toLowerCase() === oldName.toLowerCase()) {
+                selectedKeywordFilter = cleaned;
+            }
+            renderCategoryManager();
+            refreshCategoryUI();
+            showToast(`Category renamed to "${cleaned}".`, "success");
+        }
+
+        function deleteClientCategory(index) {
+            const categories = getClientCategories();
+            const name = categories[index];
+            if (defaultClientCategories.some(c => c.toLowerCase() === name.toLowerCase())) {
+                return showToast("Default categories cannot be deleted. You can rename them if needed.", "info");
+            }
+            const db = getDatabase();
+            const used = db.some(c => (c.category || "").toLowerCase() === name.toLowerCase());
+            const proceed = used
+                ? confirm(`"${name}" is assigned to ${db.filter(c => (c.category || "").toLowerCase() === name.toLowerCase()).length} client(s). Move those clients to "Uncategorized" and delete this category?`)
+                : confirm(`Delete category "${name}"?`);
+            if (!proceed) return;
+
+            if (used && !categories.some(c => c.toLowerCase() === "uncategorized")) categories.push("Uncategorized");
+            db.forEach(client => {
+                if ((client.category || "").toLowerCase() === name.toLowerCase()) client.category = "Uncategorized";
+            });
+            categories.splice(index, 1);
+            saveClientCategories(categories);
+            localStorage.setItem("crm_desktop_db", JSON.stringify(db));
+            if (selectedKeywordFilter && selectedKeywordFilter.toLowerCase() === name.toLowerCase()) selectedKeywordFilter = null;
+            renderCategoryManager();
+            refreshCategoryUI();
+            showToast(`Category "${name}" deleted.`, "success");
+        }
+
+        function refreshCategoryUI() {
+            populateCategorySelect("formCategory", document.getElementById("formCategory")?.value || "");
+            renderIndustryShortcuts();
+            if (currentView === "dashboard" || currentView === "clients") renderTable();
+        }
+
+        function filterByCategory(category) {
+            selectedKeywordFilter = category;
+            selectedOfficerFilter = selectedTypeFilter = null;
+            renderIndustryShortcuts();
+            renderTable();
         }
 
         /* --- NAVIGATION MANIPULATION --- */
@@ -2751,24 +2457,27 @@
 
         function filterByOfficer(officerName) {
             selectedOfficerFilter = (selectedOfficerFilter === officerName) ? null : officerName;
-            selectedKeywordFilter = selectedTypeFilter = selectedCategoryFilter = null; clearTagHighlights(); switchViewLayouts("dashboard");
+            selectedKeywordFilter = selectedTypeFilter = null; clearTagHighlights(); switchViewLayouts("dashboard");
         }
         function filterByType(type) {
             selectedTypeFilter = (selectedTypeFilter === type) ? null : type;
-            selectedOfficerFilter = selectedKeywordFilter = selectedCategoryFilter = null; clearTagHighlights(); switchViewLayouts("dashboard");
+            selectedOfficerFilter = selectedKeywordFilter = null; clearTagHighlights(); switchViewLayouts("dashboard");
         }
         function filterByKeyword(element, word) {
-            clearTagHighlights();
-            if (selectedKeywordFilter === word) { selectedKeywordFilter = null; } 
-            else { selectedKeywordFilter = word; element.classList.add("active"); }
-            selectedTypeFilter = selectedOfficerFilter = selectedCategoryFilter = null; renderTable();
+            selectedKeywordFilter = selectedKeywordFilter === word ? null : word;
+            selectedTypeFilter = selectedOfficerFilter = null;
+            renderIndustryShortcuts();
+            renderTable();
         }
-        function clearTagHighlights() { document.querySelectorAll(".keyword-tags .tag").forEach(t => t.classList.remove("active")); }
+        function clearTagHighlights() {
+            document.querySelectorAll(".keyword-tags .tag, .industry-chip").forEach(t => t.classList.remove("active"));
+        }
         function resetAllFilters() { 
-            selectedOfficerFilter = selectedKeywordFilter = selectedTypeFilter = selectedCategoryFilter = null; 
+            selectedOfficerFilter = selectedKeywordFilter = selectedTypeFilter = null; 
             globalSearchQuery = "";
-            clearTagHighlights(); 
-            document.querySelectorAll(".inline-table-search input, #searchInput").forEach(i => i.value = ""); 
+            clearTagHighlights();
+            document.querySelectorAll(".inline-table-search input, #searchInput").forEach(i => i.value = "");
+            renderIndustryShortcuts();
             renderTable(); 
         }
         function searchGlobalTable(val) {
@@ -2778,7 +2487,6 @@
 
         function renderTable() {
             let db = getDatabase(); let tbody = document.getElementById("tableBody"); if(!tbody) return; tbody.innerHTML = "";
-            renderCategoryControls();
             
             // Map original indexes so modifying logic retains accurate DB references
             let mappedDb = db.map((item, originalIndex) => ({ item, originalIndex }));
@@ -2792,16 +2500,19 @@
             let activeDataset = [...mappedDb];
             
             if(selectedOfficerFilter) activeDataset = activeDataset.filter(obj => obj.item.officer === selectedOfficerFilter);
-            if(selectedKeywordFilter) activeDataset = activeDataset.filter(obj => (obj.item.name || "").toLowerCase().includes(selectedKeywordFilter.toLowerCase()));
+            if(selectedKeywordFilter) activeDataset = activeDataset.filter(obj => (obj.item.category || "Uncategorized").toLowerCase() === selectedKeywordFilter.toLowerCase());
             if(selectedTypeFilter) activeDataset = activeDataset.filter(obj => obj.item.type === selectedTypeFilter);
-            if(selectedCategoryFilter) activeDataset = activeDataset.filter(obj => (obj.item.category || "").toLowerCase() === selectedCategoryFilter.toLowerCase());
-            if(globalSearchQuery) activeDataset = activeDataset.filter(obj => (obj.item.name || "").toLowerCase().includes(globalSearchQuery) || (obj.item.officer || "").toLowerCase().includes(globalSearchQuery) ||
-                    (obj.item.category || "").toLowerCase().includes(globalSearchQuery));
+            if(globalSearchQuery) activeDataset = activeDataset.filter(obj =>
+                (obj.item.name || "").toLowerCase().includes(globalSearchQuery) ||
+                (obj.item.officer || "").toLowerCase().includes(globalSearchQuery) ||
+                (obj.item.category || "").toLowerCase().includes(globalSearchQuery) ||
+                (obj.item.pf || "").toLowerCase().includes(globalSearchQuery)
+            );
 
             let chartGovt = 0, chartPvt = 0; activeDataset.forEach(obj => { if (obj.item.type === "Government Client") chartGovt++; else chartPvt++; });
             initCharts(chartGovt, chartPvt); renderWorkloadPanel(db); renderMiddleRates();
 
-            document.getElementById("activeFilterBadge").style.display = (selectedOfficerFilter || selectedKeywordFilter || selectedTypeFilter || selectedCategoryFilter || globalSearchQuery) ? "inline-flex" : "none";
+            document.getElementById("activeFilterBadge").style.display = (selectedOfficerFilter || selectedKeywordFilter || selectedTypeFilter || globalSearchQuery) ? "inline-flex" : "none";
             let nameCounts = {}; activeDataset.forEach(obj => { let name = (obj.item.name || "").trim().toLowerCase(); if (name) nameCounts[name] = (nameCounts[name] || 0) + 1; });
 
             activeDataset.forEach((obj, loopIndex) => {
@@ -2826,12 +2537,12 @@
                     <td class="col-sl">${loopIndex + 1}</td>
                     <td class="col-pf ${editableClass}" onclick="makeEditable(this, ${index}, 'pf')">${item.pf || 'N/A'}</td>
                     <td class="col-name ${editableClass}" ${isDuplicate ? 'style="color: var(--color-danger); font-weight: bold;"' : ''} onclick="makeEditable(this, ${index}, 'name')">
-                        ${item.name || 'N/A'} ${isDuplicate ? '<span style="font-size:10px; font-weight:normal; background:#ef4444; color:#fff; padding:2px 6px; border-radius:10px; margin-left:5px;">Duplicate</span>' : ''}
+                        ${escapeHtml(item.name || 'N/A')} ${isDuplicate ? '<span style="font-size:10px; font-weight:normal; background:#ef4444; color:#fff; padding:2px 6px; border-radius:10px; margin-left:5px;">Duplicate</span>' : ''}
                     </td>
                     <td class="${editableClass}" onclick="makeCategoryDropdownEditable(this, ${index}, 'category')">
-                        ${item.category ? `<span class="category-pill"><i class="fa-solid fa-tag"></i>${escapeHtml(item.category)}</span>` : '<span class="category-empty">Uncategorized</span>'}
+                        <span class="category-badge"><i class="fa-solid fa-folder"></i> ${escapeHtml(item.category || 'Uncategorized')}</span>
                     </td>
-                    <td class="col-type ${editableClass}" onclick="makeDropdownEditable(this, ${index}, 'type')">${item.type || 'Private Client'}</td>
+                    <td class="col-type ${editableClass}" onclick="makeDropdownEditable(this, ${index}, 'type')">${escapeHtml(item.type || 'Private Client')}</td>
                     <td class="${editableClass}" onclick="makeOfficerDropdownEditable(this, ${index}, 'officer')"><span class="assigned-officer"><i class="fa-solid fa-user-tie"></i> ${item.officer || 'N/A'}</span></td>
                     <td><span class="status-badge" ${isDuplicate ? 'style="background:rgba(239, 68, 68, 0.15); color:var(--color-danger);"' : ''}>${isDuplicate ? 'Duplicate' : 'Active'}</span></td>
                     ${actionCell}`;
@@ -2839,7 +2550,7 @@
             });
         }
 
-        function filterByOfficerFromMatrix(officerName) { selectedOfficerFilter = officerName; selectedKeywordFilter = selectedTypeFilter = selectedCategoryFilter = null; clearTagHighlights(); switchViewLayouts("dashboard"); }
+        function filterByOfficerFromMatrix(officerName) { selectedOfficerFilter = officerName; selectedKeywordFilter = selectedTypeFilter = null; clearTagHighlights(); switchViewLayouts("dashboard"); }
         
         function renderOfficersTable() {
             let db = getDatabase(); let container = document.getElementById("dynamicTableContainer");
@@ -2903,7 +2614,7 @@
                 let val = input.value.trim();
                 if(val) { 
                     db[index][key] = val; 
-                    saveDatabase(db);
+                    localStorage.setItem("crm_desktop_db", JSON.stringify(db));
                     element.innerHTML = val;
                 } else { 
                     element.innerHTML = originalVal;
@@ -2923,34 +2634,36 @@
             select.focus(); 
             select.addEventListener("blur", function() { 
                 db[index][key] = select.value; 
-                saveDatabase(db);
+                localStorage.setItem("crm_desktop_db", JSON.stringify(db));
                 element.innerHTML = select.value; 
             });
         }
         
+
         function makeCategoryDropdownEditable(element, index, key) {
             if (!loggedInUser || loggedInUser.role !== 'admin') return;
             if (element.querySelector('select')) return;
-            let db = getDatabase();
-            let current = db[index][key] || "";
-            let select = document.createElement("select");
-            select.className = "inline-edit-select";
-            select.innerHTML = '<option value="">Uncategorized</option>' +
-                getClientCategories().map(c => `<option value="${escapeHtmlAttr(c)}" ${current === c ? 'selected' : ''}>${escapeHtml(c)}</option>`).join("");
+            const db = getDatabase();
+            const current = db[index][key] || "Uncategorized";
+            const categories = getClientCategories();
+            if (!categories.some(c => c.toLowerCase() === current.toLowerCase()) && current) categories.push(current);
+            const select = document.createElement("select");
+            select.className = "inline-edit-select category-inline-select";
+            select.innerHTML = categories.map(cat => `<option value="${escapeHtml(cat)}" ${cat.toLowerCase() === current.toLowerCase() ? "selected" : ""}>${escapeHtml(cat)}</option>`).join("");
             element.innerHTML = "";
             element.appendChild(select);
             select.focus();
-
-            const saveCategory = function() {
+            let saved = false;
+            const save = function() {
+                if (saved) return;
+                saved = true;
                 db[index][key] = select.value;
-                saveDatabase(db);
-                element.innerHTML = select.value
-                    ? `<span class="category-pill"><i class="fa-solid fa-tag"></i>${escapeHtml(select.value)}</span>`
-                    : '<span class="category-empty">Uncategorized</span>';
-                updateCategoryFilterCount();
+                localStorage.setItem("crm_desktop_db", JSON.stringify(db));
+                element.innerHTML = `<span class="category-badge"><i class="fa-solid fa-folder"></i> ${escapeHtml(select.value)}</span>`;
+                refreshCategoryUI();
             };
-            select.addEventListener("change", saveCategory);
-            select.addEventListener("blur", saveCategory, { once: true });
+            select.addEventListener("change", save);
+            select.addEventListener("blur", save);
         }
 
         function makeOfficerDropdownEditable(element, index, key) {
@@ -2967,7 +2680,7 @@
                 db[index][key] = select.value; 
                 let found = officerRegistry.find(o => o.name === select.value); 
                 if(found) db[index]['pf'] = found.pf; 
-                saveDatabase(db);
+                localStorage.setItem("crm_desktop_db", JSON.stringify(db));
                 element.innerHTML = `<span class="assigned-officer"><i class="fa-solid fa-user-tie"></i> ${select.value}</span>`;
                 
                 let tr = element.closest('tr');
@@ -2993,7 +2706,7 @@
                 let val = input.value.trim();
                 if(val) { 
                     rates[index][key] = val; 
-                    saveRatesDatabase(rates);
+                    localStorage.setItem("crm_rates_db", JSON.stringify(rates));
                     element.innerHTML = val;
                 } else { 
                     element.innerHTML = originalVal;
@@ -3023,6 +2736,14 @@
                     let officer = cols[1] ? cols[1].trim() : "";
                     let type = cols[2] ? cols[2].trim() : "Private Client";
                     let category = cols[3] ? cols[3].trim() : "";
+                    let categories = getClientCategories();
+                    if (!category) {
+                        const match = categories.find(cat => name.toLowerCase().includes(cat.toLowerCase()));
+                        category = match || "Uncategorized";
+                    } else if (!categories.some(cat => cat.toLowerCase() === category.toLowerCase())) {
+                        categories.push(category);
+                        saveClientCategories(categories);
+                    }
                     let pf = "";
                     let foundOff = officerRegistry.find(o => o.name === officer);
                     if (foundOff) pf = foundOff.pf;
@@ -3039,7 +2760,13 @@
 
         function toggleSingleModal(show) {
             document.getElementById("singleModalOverlay").style.display = show ? "flex" : "none";
-            if(show) { autoFillPf(); renderCategoryControls(); } else { document.getElementById("formName").value = ""; }
+            if(show) {
+                autoFillPf();
+                populateCategorySelect("formCategory");
+            } else {
+                document.getElementById("formName").value = "";
+                document.getElementById("formCategory").value = "";
+            }
         }
 
         function autoFillPf() {
@@ -3053,11 +2780,10 @@
             let pf = document.getElementById("formPf").value;
             let name = document.getElementById("formName").value.trim();
             let type = document.getElementById("formType").value;
-            let category = document.getElementById("formCategory").value;
             if(!name) return showToast("Client name is required.", "danger");
             
             let db = getDatabase();
-            db.push({ pf: pf, name: name, type: type, officer: off, category: category });
+            db.push({ pf: pf, name: name, type: type, officer: off });
             saveDatabase(db);
             toggleSingleModal(false);
             showToast("Client \"" + name + "\" added successfully!", "success");
@@ -3122,10 +2848,24 @@
 
         /* --- FULLY CUSTOMIZED EXPORT (EXCEL/XLS) ARCHITECTURE --- */
         
+
+        function populateCategoryFilterSelect(selectId) {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+            const categories = getClientCategories();
+            const current = select.value;
+            select.innerHTML =
+                '<option value="Government Client">Government Client (Organisation Type)</option>' +
+                '<option value="Private Client">Private Client (Organisation Type)</option>' +
+                categories.map(cat => `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`).join("");
+            if (current) select.value = current;
+        }
+
         function openExportModal() {
             let offSelect = document.getElementById("exportOfficerSelect");
             offSelect.innerHTML = "";
-            officerList.forEach(off => { offSelect.innerHTML += `<option value="${off}">${off}</option>`; });
+            officerList.forEach(off => { offSelect.innerHTML += `<option value="${escapeHtml(off)}">${escapeHtml(off)}</option>`; });
+            populateCategoryFilterSelect("exportIndustrySelect");
             toggleExportSubOptions();
             toggleExportModal(true);
         }
@@ -3154,10 +2894,8 @@
                 let ind = document.getElementById("exportIndustrySelect").value;
                 if(ind === "Government Client" || ind === "Private Client") {
                     filteredDb = db.filter(c => c.type === ind);
-                } else if (getClientCategories().some(c => c.toLowerCase() === ind.toLowerCase())) {
-                    filteredDb = db.filter(c => (c.category || "").toLowerCase() === ind.toLowerCase());
                 } else {
-                    filteredDb = db.filter(c => (c.name || "").toLowerCase().includes(ind.toLowerCase()));
+                    filteredDb = db.filter(c => (c.category || "Uncategorized").toLowerCase() === ind.toLowerCase());
                 }
                 subtitle = "Filtered By Industry Keyword: " + ind;
             }
@@ -3197,7 +2935,6 @@
                         <td style="text-align: center; font-size: 12pt;">${idx + 1}</td>
                         <td style="font-size: 12pt;">${item.pf || ''}</td>
                         <td style="font-size: 13pt; font-weight: bold;">${item.name || ''}</td>
-                        <td style="font-size: 12pt; font-weight: bold; color: #2563eb;">${item.category || 'Uncategorized'}</td>
                         <td style="font-size: 12pt;">${item.type || ''}</td>
                         <td style="font-size: 12pt; font-weight: bold; color: #2563eb;">${item.officer || ''}</td>
                     </tr>
@@ -3223,7 +2960,8 @@
         function openPrintModal() {
             let offSelect = document.getElementById("printOfficerSelect");
             offSelect.innerHTML = "";
-            officerList.forEach(off => { offSelect.innerHTML += `<option value="${off}">${off}</option>`; });
+            officerList.forEach(off => { offSelect.innerHTML += `<option value="${escapeHtml(off)}">${escapeHtml(off)}</option>`; });
+            populateCategoryFilterSelect("printIndustrySelect");
             togglePrintSubOptions();
             togglePrintModal(true);
         }
@@ -3245,13 +2983,16 @@
             if (opt === "all") resetAllFilters();
             else if (opt === "officer") filterByOfficer(document.getElementById("printOfficerSelect").value);
             else if (opt === "industry") {
-                const ind = document.getElementById("printIndustrySelect").value;
-                selectedOfficerFilter = null; selectedTypeFilter = null; selectedCategoryFilter = null; selectedKeywordFilter = null;
-                if (getClientCategories().some(c => c.toLowerCase() === ind.toLowerCase())) {
-                    selectedCategoryFilter = ind;
+                const selected = document.getElementById("printIndustrySelect").value;
+                selectedOfficerFilter = null;
+                if (selected === "Government Client" || selected === "Private Client") {
+                    selectedTypeFilter = selected;
+                    selectedKeywordFilter = null;
                 } else {
-                    selectedKeywordFilter = ind;
+                    selectedKeywordFilter = selected;
+                    selectedTypeFilter = null;
                 }
+                renderIndustryShortcuts();
                 renderTable();
             }
             
