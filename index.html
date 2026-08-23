@@ -1390,10 +1390,16 @@
             }
 
             .client-selector-bar {
-                display:block !important;
+                display:none !important;
                 padding:12px !important;
                 border-radius:16px !important;
                 margin-bottom:12px;
+            }
+
+            /* Client-rate selector is shown ONLY on the Client Rate screen.
+               It must never appear inside Client Directory / Dashboard / Clients. */
+            #clientRateSelectorBar.rate-selector-visible {
+                display:block !important;
             }
 
             .selector-group {
@@ -1935,6 +1941,11 @@
         .mobile-search-panel {
             max-height: calc(100dvh - var(--mobile-search-panel-top, 124px) - 10px) !important;
         }
+    }
+
+    /* HARD MOBILE RULE: keep Client Rate selector out of Client Directory. */
+    #clientRateSelectorBar:not(.rate-selector-visible) {
+        display:none !important;
     }
 
     /* Avoid two competing visual search fields on the Client Rate selector. */
@@ -3518,7 +3529,7 @@
                     document.getElementById("statsGridSection").style.display = "grid";
                     document.getElementById("keywordContainerSection").style.display = "flex";
                     document.getElementById("actionButtonsArea").style.display = isAdmin ? "flex" : "none";
-                    document.getElementById("clientRateSelectorBar").style.display = "none";
+                    document.getElementById("clientRateSelectorBar").classList.remove("rate-selector-visible");
                     resetTableHTMLStructure(); renderTable();
                 } else if (targetView === "clients") {
                     setActiveMenuItem("menuClients");
@@ -3528,7 +3539,7 @@
                     document.getElementById("statsGridSection").style.display = "none";
                     document.getElementById("keywordContainerSection").style.display = "none";
                     document.getElementById("actionButtonsArea").style.display = isAdmin ? "flex" : "none";
-                    document.getElementById("clientRateSelectorBar").style.display = "none";
+                    document.getElementById("clientRateSelectorBar").classList.remove("rate-selector-visible");
                     resetTableHTMLStructure(); renderTable();
                 } else if (targetView === "officers") {
                     setActiveMenuItem("menuOfficers");
@@ -3538,7 +3549,7 @@
                     document.getElementById("statsGridSection").style.display = "none";
                     document.getElementById("keywordContainerSection").style.display = "none";
                     document.getElementById("actionButtonsArea").style.display = "none";
-                    document.getElementById("clientRateSelectorBar").style.display = "none";
+                    document.getElementById("clientRateSelectorBar").classList.remove("rate-selector-visible");
                     renderOfficersTable();
                 } else if (targetView === "ratechart") {
                     setActiveMenuItem("menuRateChart");
@@ -3548,7 +3559,7 @@
                     document.getElementById("statsGridSection").style.display = "none";
                     document.getElementById("keywordContainerSection").style.display = "none";
                     document.getElementById("actionButtonsArea").style.display = "none";
-                    document.getElementById("clientRateSelectorBar").style.display = "none";
+                    document.getElementById("clientRateSelectorBar").classList.remove("rate-selector-visible");
                     renderRateChartTable();
                 } else if (targetView === "clientrate") {
                     setActiveMenuItem("menuClientRate");
@@ -3558,13 +3569,15 @@
                     document.getElementById("statsGridSection").style.display = "none";
                     document.getElementById("keywordContainerSection").style.display = "none";
                     document.getElementById("actionButtonsArea").style.display = "none";
-                    document.getElementById("clientRateSelectorBar").style.display = "flex";
+                    document.getElementById("clientRateSelectorBar").classList.add("rate-selector-visible");
                     setupClientRateDropdown(); renderClientSpecificRateView();
                 }
             }
         }
 
         function setActiveMenuItem(id) { document.getElementById(id).classList.add("active"); }
+        // Safety: Client Rate multi-select is never shown on Client Directory.
+        document.getElementById("clientRateSelectorBar")?.classList.remove("rate-selector-visible");
         function resetTableHTMLStructure() { 
             let isAdmin = loggedInUser && loggedInUser.role === 'admin';
             let actionTh = isAdmin ? `<th id="thActionCol" style="width: 50px;">Action</th>` : '';
