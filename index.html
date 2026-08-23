@@ -1058,15 +1058,26 @@
                 --mobile-page-pad: 12px;
             }
 
-            html, body {
+            html {
                 width:100%;
                 max-width:100%;
-                overflow-x:hidden;
+                min-height:100%;
+                overflow-x:hidden !important;
+                overflow-y:auto !important;
                 overscroll-behavior-x:none;
+                overscroll-behavior-y:auto;
+                -webkit-text-size-adjust:100%;
             }
 
             body {
+                width:100%;
+                max-width:100%;
                 min-height:100dvh;
+                height:auto !important;
+                overflow-x:hidden !important;
+                overflow-y:auto !important;
+                overscroll-behavior-x:none;
+                overscroll-behavior-y:auto;
                 padding-bottom:var(--mobile-bottom-nav);
             }
 
@@ -1108,9 +1119,34 @@
             .main-content {
                 width:100%;
                 min-height:100dvh;
-                overflow-x:hidden;
-                overflow-y:visible;
-                padding-bottom:var(--mobile-bottom-nav);
+                height:auto !important;
+                flex:1 1 auto;
+                overflow-x:hidden !important;
+                overflow-y:visible !important;
+                padding-bottom:calc(var(--mobile-bottom-nav) + 24px);
+            }
+
+            .content-container {
+                width:100%;
+                min-height:0;
+                padding-bottom:24px;
+            }
+
+            .table-card {
+                width:100%;
+                min-width:0;
+                overflow:visible !important;
+            }
+
+            #dynamicTableContainer {
+                width:100%;
+                min-width:0;
+                overflow:visible !important;
+            }
+
+            #clientTable {
+                width:100% !important;
+                min-width:0 !important;
             }
 
             .top-header {
@@ -1957,6 +1993,88 @@
 @media (min-width: 769px) {
     .mobile-search-panel {
         display: none !important;
+    }
+}
+
+/* =========================================================
+   ANDROID CLIENT DIRECTORY FINAL SCROLL + NAVIGATION FIX
+   ========================================================= */
+@media (max-width: 768px) {
+    html, body {
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        height: auto !important;
+        min-height: 100% !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    body {
+        display: flex !important;
+        flex-direction: column !important;
+        position: relative !important;
+    }
+
+    .main-content {
+        display: flex !important;
+        flex-direction: column !important;
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        min-height: calc(100dvh - 1px) !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    #crmStandardStandardViews {
+        width: 100% !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+    }
+
+    .content-container {
+        width: 100% !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+        padding-bottom: 30px !important;
+    }
+
+    .table-card {
+        width: 100% !important;
+        min-width: 0 !important;
+        overflow: visible !important;
+    }
+
+    .table-responsive-wrapper {
+        width: 100% !important;
+        min-width: 0 !important;
+        overflow: visible !important;
+    }
+
+    #clientTable {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    #clientTable tbody {
+        width: 100% !important;
+        min-height: 0 !important;
+        display: grid !important;
+    }
+
+    #clientTable tbody tr {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: 0 !important;
+    }
+
+    #clientTable tbody tr:last-child {
+        margin-bottom: 18px !important;
+    }
+
+    #linkClients, #linkDashboard, #linkOfficers, #linkRateChart, #linkClientRate,
+    #linkQuotation, #linkCommercial, #linkClassifiedRate, #linkUsers {
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
     }
 }
 </style>
@@ -3540,7 +3658,13 @@
                     document.getElementById("keywordContainerSection").style.display = "none";
                     document.getElementById("actionButtonsArea").style.display = isAdmin ? "flex" : "none";
                     document.getElementById("clientRateSelectorBar").classList.remove("rate-selector-visible");
-                    resetTableHTMLStructure(); renderTable();
+                    resetTableHTMLStructure();
+                    renderTable();
+                    requestAnimationFrame(() => {
+                        window.scrollTo(0, 0);
+                        const main = document.getElementById("mainContentArea");
+                        if (main && typeof main.scrollTo === "function") main.scrollTo(0, 0);
+                    });
                 } else if (targetView === "officers") {
                     setActiveMenuItem("menuOfficers");
                     document.getElementById("mainPageTitle").innerText = "Officers Matrix";
@@ -3584,15 +3708,26 @@
             document.getElementById("dynamicTableContainer").innerHTML = `<table class="data-table" id="clientTable"><thead><tr><th>SL</th><th>PF Number</th><th>Client Name</th><th>Organisation Type</th><th>Industry / Category</th><th>Officer</th><th>Status</th>${actionTh}</tr></thead><tbody id="tableBody"></tbody></table>`; 
         }
 
-        document.getElementById("linkDashboard").addEventListener("click", () => switchViewLayouts("dashboard"));
-        document.getElementById("linkQuotation").addEventListener("click", () => switchViewLayouts("quotation"));
-        document.getElementById("linkClients").addEventListener("click", () => switchViewLayouts("clients"));
-        document.getElementById("linkOfficers").addEventListener("click", () => switchViewLayouts("officers"));
-        document.getElementById("linkRateChart").addEventListener("click", () => switchViewLayouts("ratechart"));
-        document.getElementById("linkClientRate").addEventListener("click", () => switchViewLayouts("clientrate"));
-        document.getElementById("linkUsers").addEventListener("click", () => switchViewLayouts("users"));
-        document.getElementById("linkCommercial").addEventListener("click", () => switchViewLayouts("commercial"));
-        document.getElementById("linkClassifiedRate").addEventListener("click", () => switchViewLayouts("classified"));
+        function bindNavigationLink(id, targetView) {
+            const link = document.getElementById(id);
+            if (!link || link.dataset.navigationBound === "true") return;
+            link.dataset.navigationBound = "true";
+            link.addEventListener("click", function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+                switchViewLayouts(targetView);
+            }, { passive: false });
+        }
+
+        bindNavigationLink("linkDashboard", "dashboard");
+        bindNavigationLink("linkQuotation", "quotation");
+        bindNavigationLink("linkClients", "clients");
+        bindNavigationLink("linkOfficers", "officers");
+        bindNavigationLink("linkRateChart", "ratechart");
+        bindNavigationLink("linkClientRate", "clientrate");
+        bindNavigationLink("linkUsers", "users");
+        bindNavigationLink("linkCommercial", "commercial");
+        bindNavigationLink("linkClassifiedRate", "classified");
 
         /* --- CRM DASHBOARD ARCHITECTURE SCRIPTS --- */
         function initCharts(govtCount, pvtCount) {
