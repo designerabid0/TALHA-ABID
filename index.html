@@ -1003,6 +1003,13 @@
         }
         .classified-info-pill i { font-size: 0.75rem; }
         
+        .officer-mobile-list { display:none; }
+        .officer-desktop-table { display:block; }
+        .officer-name-cell { font-weight:600; color:var(--sidebar-active); }
+        .officer-name-cell i { margin-right:4px; }
+        .officer-count-cell { font-weight:700; }
+        .officer-view-badge { background:var(--badge-bg); color:#0369a1; }
+
         /* --- RESPONSIVE BREAKPOINTS --- */
         @media (max-width: 1200px) {
             .charts-grid { grid-template-columns: 1fr 1fr; }
@@ -1129,7 +1136,7 @@
             .content-container {
                 width:100%;
                 min-height:0;
-                padding-bottom:24px;
+                padding-bottom:calc(var(--mobile-bottom-nav) + 34px) !important;
             }
 
             .table-card {
@@ -1720,6 +1727,122 @@
                 width:100%;
                 min-width:0 !important;
                 max-width:none !important;
+            }
+
+            /* Officers matrix: never use the desktop 620px table on Android.
+               Use full-width touch cards so every field is visible without
+               horizontal scrolling. */
+            .officer-desktop-table {
+                display:none !important;
+            }
+
+            .officer-mobile-list {
+                display:flex !important;
+                flex-direction:column;
+                gap:8px;
+                width:100%;
+                padding:0;
+            }
+
+            .officer-mobile-card {
+                width:100%;
+                min-height:70px;
+                display:flex;
+                align-items:center;
+                gap:11px;
+                padding:11px 12px;
+                border:1px solid var(--border-color);
+                border-radius:15px;
+                background:var(--bg-card);
+                color:var(--text-main);
+                box-shadow:0 2px 8px rgba(15,23,42,.045);
+                text-align:left;
+                cursor:pointer;
+                touch-action:manipulation;
+                -webkit-tap-highlight-color:transparent;
+                box-sizing:border-box;
+            }
+
+            .officer-mobile-card:active {
+                background:var(--bg-hover);
+                transform:scale(.995);
+            }
+
+            .officer-mobile-sl {
+                width:34px;
+                height:34px;
+                border-radius:10px;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                flex:0 0 34px;
+                background:var(--bg-input);
+                color:var(--text-main);
+                font-weight:800;
+                font-size:.78rem;
+            }
+
+            .officer-mobile-main {
+                min-width:0;
+                flex:1;
+                display:flex;
+                flex-direction:column;
+                gap:4px;
+            }
+
+            .officer-mobile-name {
+                min-width:0;
+                overflow:hidden;
+                text-overflow:ellipsis;
+                white-space:nowrap;
+                color:var(--sidebar-active);
+                font-weight:750;
+                font-size:.9rem;
+                line-height:1.25;
+            }
+
+            .officer-mobile-name i {
+                width:18px;
+                margin-right:4px;
+            }
+
+            .officer-mobile-meta {
+                color:var(--text-muted);
+                font-size:.72rem;
+                font-weight:650;
+            }
+
+            .officer-mobile-meta strong {
+                color:var(--text-main);
+                font-size:.78rem;
+            }
+
+            .officer-mobile-arrow {
+                flex:0 0 28px;
+                width:28px;
+                height:28px;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                border-radius:9px;
+                background:var(--badge-bg);
+                color:var(--sidebar-active);
+                font-size:.7rem;
+            }
+
+            .officer-mobile-list {
+                padding-bottom:calc(var(--mobile-bottom-nav) + 28px);
+            }
+
+            /* Keep the Officers screen comfortably above the fixed bottom nav. */
+            #dynamicTableContainer:has(.officer-mobile-list) {
+                padding-bottom:calc(var(--mobile-bottom-nav) + 24px);
+            }
+
+            /* Disable costly transform/animation while a large list is being
+               painted on a low-end Android device. */
+            .officer-mobile-card, #clientTable tbody tr {
+                will-change:auto;
             }
 
             /* Android bottom navigation */
@@ -3581,8 +3704,11 @@
 
         /* --- NAVIGATION MANIPULATION --- */
         function switchViewLayouts(targetView) {
+            // Navigation must feel instant on Android: close overlays first,
+            // update the active tab, then render only the requested view.
             currentView = targetView;
             toggleMobileSidebar(false);
+            closeMobileSearchPanel();
             updateMobileBottomNav(targetView);
             if (targetView !== "clientrate") {
                 selectedClientRateIds.clear();
@@ -4053,56 +4179,109 @@
             if(selectedTypeFilter) activeDataset = activeDataset.filter(obj => obj.item.type === selectedTypeFilter);
             if(globalSearchQuery) activeDataset = activeDataset.filter(obj => (obj.item.name || "").toLowerCase().includes(globalSearchQuery) || (obj.item.officer || "").toLowerCase().includes(globalSearchQuery));
 
-            let chartGovt = 0, chartPvt = 0; activeDataset.forEach(obj => { if (obj.item.type === "Government Client") chartGovt++; else chartPvt++; });
-            initCharts(chartGovt, chartPvt); renderWorkloadPanel(db); renderMiddleRates();
+            // Dashboard-only widgets are expensive on mobile. Do not recreate
+            // Chart.js / workload panels while the user is simply viewing Clients.
+            if (currentView === "dashboard") {
+                let chartGovt = 0, chartPvt = 0;
+                for (let i = 0; i < activeDataset.length; i++) {
+                    if (activeDataset[i].item.type === "Government Client") chartGovt++; else chartPvt++;
+                }
+                initCharts(chartGovt, chartPvt);
+                renderWorkloadPanel(db);
+                renderMiddleRates();
+            }
 
-            document.getElementById("activeFilterBadge").style.display = (selectedOfficerFilter || selectedKeywordFilter || selectedTypeFilter || globalSearchQuery) ? "inline-flex" : "none";
-            let nameCounts = {}; activeDataset.forEach(obj => { let name = (obj.item.name || "").trim().toLowerCase(); if (name) nameCounts[name] = (nameCounts[name] || 0) + 1; });
+            const activeFilterBadge = document.getElementById("activeFilterBadge");
+            if (activeFilterBadge) activeFilterBadge.style.display = (selectedOfficerFilter || selectedKeywordFilter || selectedTypeFilter || globalSearchQuery) ? "inline-flex" : "none";
+            let nameCounts = Object.create(null);
+            for (let i = 0; i < activeDataset.length; i++) {
+                let name = (activeDataset[i].item.name || "").trim().toLowerCase();
+                if (name) nameCounts[name] = (nameCounts[name] || 0) + 1;
+            }
 
+            // Build the entire table as one DOM operation. Appending hundreds
+            // of rows one-by-one was a major source of Android lag.
+            let rowsHtml = '';
             activeDataset.forEach((obj, loopIndex) => {
                 let item = obj.item;
                 let index = obj.originalIndex;
 
-                let row = document.createElement("tr");
                 let clientNameLower = (item.name || "").trim().toLowerCase();
                 let isDuplicate = nameCounts[clientNameLower] > 1;
-                
-                if(isDuplicate && document.body.classList.contains('dark-mode')) {
-                    row.style.backgroundColor = "rgba(239, 68, 68, 0.1)";
-                } else if (isDuplicate) {
-                    row.style.backgroundColor = "#fff5f5";
-                }
-
                 let editableClass = isAdmin ? "editable-cell" : "";
-                
                 let actionCell = isAdmin ? `<td><button class="delete-row-btn" onclick="deleteClient(${index})"><i class="fa-solid fa-trash"></i></button></td>` : '';
+                let duplicateStyle = isDuplicate ? (document.body.classList.contains('dark-mode') ? 'background-color:rgba(239,68,68,.1);' : 'background-color:#fff5f5;') : '';
+                let duplicateNameStyle = isDuplicate ? 'color:var(--color-danger);font-weight:bold;' : '';
+                let duplicateStatusStyle = isDuplicate ? 'background:rgba(239,68,68,.15);color:var(--color-danger);' : '';
 
-                row.dataset.clientIndex = String(index);
-                row.innerHTML = `
+                rowsHtml += `<tr data-client-index="${index}" style="${duplicateStyle}">
                     <td class="col-sl" data-label="SL">${loopIndex + 1}</td>
                     <td class="col-pf ${editableClass}" data-label="PF Number" onclick="makeEditable(this, ${index}, 'pf')">${item.pf || 'N/A'}</td>
-                    <td class="col-name ${editableClass}" data-label="Client Name" ${isDuplicate ? 'style="color: var(--color-danger); font-weight: bold;"' : ''} onclick="makeEditable(this, ${index}, 'name')">
-                        ${item.name || 'N/A'} ${isDuplicate ? '<span style="font-size:10px; font-weight:normal; background:#ef4444; color:#fff; padding:2px 6px; border-radius:10px; margin-left:5px;">Duplicate</span>' : ''}
+                    <td class="col-name ${editableClass}" data-label="Client Name" style="${duplicateNameStyle}" onclick="makeEditable(this, ${index}, 'name')">
+                        ${item.name || 'N/A'} ${isDuplicate ? '<span style="font-size:10px;font-weight:normal;background:#ef4444;color:#fff;padding:2px 6px;border-radius:10px;margin-left:5px;">Duplicate</span>' : ''}
                     </td>
                     <td class="col-type ${editableClass}" data-label="Type" onclick="makeDropdownEditable(this, ${index}, 'type')">${item.type || 'Private Client'}</td>
-                    <td data-label="Industry" class="${editableClass}" onclick="makeIndustryDropdownEditable(this, ${index})"><span class="status-badge" style="background:var(--badge-bg); color:var(--sidebar-active);">${getIndustryDisplay(item)}</span></td>
+                    <td data-label="Industry" class="${editableClass}" onclick="makeIndustryDropdownEditable(this, ${index})"><span class="status-badge" style="background:var(--badge-bg);color:var(--sidebar-active);">${getIndustryDisplay(item)}</span></td>
                     <td data-label="Officer" class="${editableClass}" onclick="makeOfficerDropdownEditable(this, ${index}, 'officer')"><span class="assigned-officer"><i class="fa-solid fa-user-tie"></i> ${item.officer || 'N/A'}</span></td>
-                    <td data-label="Status"><span class="status-badge" ${isDuplicate ? 'style="background:rgba(239, 68, 68, 0.15); color:var(--color-danger);"' : ''}>${isDuplicate ? 'Duplicate' : 'Active'}</span></td>
-                    ${actionCell}`;
-                tbody.appendChild(row);
+                    <td data-label="Status"><span class="status-badge" style="${duplicateStatusStyle}">${isDuplicate ? 'Duplicate' : 'Active'}</span></td>
+                    ${actionCell}
+                </tr>`;
             });
+            tbody.innerHTML = rowsHtml;
         }
 
         function filterByOfficerFromMatrix(officerName) { selectedOfficerFilter = officerName; selectedKeywordFilter = selectedTypeFilter = null; clearTagHighlights(); switchViewLayouts("dashboard"); }
         
         function renderOfficersTable() {
-            let db = getDatabase(); let container = document.getElementById("dynamicTableContainer");
-            let counts = {}; officerList.forEach(off => counts[off] = 0); db.forEach(item => { if (counts.hasOwnProperty(item.officer)) counts[item.officer]++; });
-            let html = `<div class="table-responsive-wrapper"><table class="data-table"><thead><tr><th>SL</th><th>Officer Name</th><th>Clients Count</th><th>Status</th></tr></thead><tbody>`;
-            officerList.forEach((officer, index) => {
-                html += `<tr class="clickable-row" style="cursor:pointer;" onclick="filterByOfficerFromMatrix('${officer}')"><td class="col-sl">${index + 1}</td><td style="font-weight:600;color:var(--sidebar-active)"><i class="fa-solid fa-user-tie"></i> ${officer}</td><td style="font-weight:700;">${counts[officer]} Clients</td><td><span class="status-badge" style="background:var(--badge-bg);color:#0369a1">View Portfolio &rarr;</span></td></tr>`;
-            });
-            container.innerHTML = html + `</tbody></table></div>`;
+            const db = getDatabase();
+            const container = document.getElementById("dynamicTableContainer");
+            if (!container) return;
+
+            // Count in one pass. This is considerably faster on Android than
+            // filtering the complete client array once for every officer.
+            const counts = Object.create(null);
+            for (let i = 0; i < officerList.length; i++) counts[officerList[i]] = 0;
+            for (let i = 0; i < db.length; i++) {
+                const officer = String(db[i].officer || '').trim();
+                if (Object.prototype.hasOwnProperty.call(counts, officer)) counts[officer]++;
+            }
+
+            // Desktop/table layout + a dedicated mobile layout.
+            // The old table had a 620px minimum width, so Android showed only
+            // the left side and clipped the Clients/Status columns.
+            let tableRows = '';
+            let mobileCards = '';
+
+            for (let index = 0; index < officerList.length; index++) {
+                const officer = officerList[index];
+                const count = counts[officer] || 0;
+                const safeOfficer = String(officer).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+
+                tableRows += `<tr class="clickable-row officer-matrix-row" data-officer-index="${index}" onclick="filterByOfficerFromMatrix('${safeOfficer}')">
+                    <td class="col-sl">${index + 1}</td>
+                    <td class="officer-name-cell"><i class="fa-solid fa-user-tie"></i> ${officer}</td>
+                    <td class="officer-count-cell">${count} Clients</td>
+                    <td><span class="status-badge officer-view-badge">View Portfolio &rarr;</span></td>
+                </tr>`;
+
+                mobileCards += `<button type="button" class="officer-mobile-card" onclick="filterByOfficerFromMatrix('${safeOfficer}')">
+                    <span class="officer-mobile-sl">${index + 1}</span>
+                    <span class="officer-mobile-main">
+                        <span class="officer-mobile-name"><i class="fa-solid fa-user-tie"></i> ${officer}</span>
+                        <span class="officer-mobile-meta"><strong>${count}</strong> Client${count === 1 ? '' : 's'}</span>
+                    </span>
+                    <span class="officer-mobile-arrow"><i class="fa-solid fa-chevron-right"></i></span>
+                </button>`;
+            }
+
+            container.innerHTML = `
+                <div class="officer-desktop-table table-responsive-wrapper">
+                    <table class="data-table officer-matrix-table">
+                        <thead><tr><th>SL</th><th>Officer Name</th><th>Clients Count</th><th>Status</th></tr></thead>
+                        <tbody>${tableRows}</tbody>
+                    </table>
+                </div>
+                <div class="officer-mobile-list" aria-label="Officers list">${mobileCards}</div>`;
         }
 
         function renderRateChartTable() {
