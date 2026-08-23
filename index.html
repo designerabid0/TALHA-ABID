@@ -1881,8 +1881,61 @@
             document.getElementById('actionButtonsArea').style.display = isAdmin ? 'flex' : 'none';
             document.getElementById('menuUsers').style.display = isAdmin ? 'block' : 'none';
             
+            /*
+             * Keep all legacy automatic categories available.
+             * This is especially important if the Firebase industries list
+             * was manually edited and one of the old categories disappeared.
+             */
+            const requiredAutoCategories = [
+                "Bank",
+                "Hospital",
+                "Electronics",
+                "University",
+                "School",
+                "Mills",
+                "Pharmaceuticals",
+                "Supershop",
+                "Ishpat",
+                "Group"
+            ];
+
+            const currentIndustries = getIndustriesDatabase();
+            const missingAutoCategories = requiredAutoCategories.filter(required =>
+                !currentIndustries.some(existing =>
+                    normalizeCategoryText(existing) === normalizeCategoryText(required)
+                )
+            );
+
+            if (missingAutoCategories.length) {
+                saveIndustriesDatabase([
+                    ...currentIndustries,
+                    ...missingAutoCategories
+                ]);
+            }
+
             renderIndustryShortcuts();
             populateIndustrySelects();
+
+            // Restore automatic categorization for existing clients that have
+            // no saved category yet. Existing/manual categories are preserved.
+            autoCategorizeExistingClients();
+
+            // Live category suggestion while typing a new client name.
+            const formNameInput = document.getElementById("formName");
+            if (formNameInput && !formNameInput.dataset.autoCategoryListener) {
+                formNameInput.addEventListener("input", updateCategoryPreviewFromClientName);
+                formNameInput.dataset.autoCategoryListener = "true";
+            }
+
+            const formIndustrySelect = document.getElementById("formIndustry");
+            if (formIndustrySelect && !formIndustrySelect.dataset.manualCategoryListener) {
+                formIndustrySelect.addEventListener("change", function() {
+                    this.dataset.autoAssigned = "false";
+                    this.dataset.manualSelection = this.value || "";
+                });
+                formIndustrySelect.dataset.manualCategoryListener = "true";
+            }
+
             switchViewLayouts('dashboard');
             let select = document.getElementById("formOfficer");
             if (select) {
@@ -2115,7 +2168,8 @@
             "Electronics",
             "Ishpat",
             "Pharmaceuticals",
-            "Supershop"
+            "Supershop",
+            "Group"
         ];
 
         const officerList = officerRegistry.map(o => o.name);
@@ -2267,10 +2321,22 @@
             container.innerHTML = '';
 
             const industries = getIndustriesDatabase();
+            const clients = getDatabase();
+
             industries.forEach((industry, index) => {
                 const option = document.createElement('option');
                 option.value = String(index);
-                option.textContent = industry;
+
+                // Show the number of clients assigned to each category.
+                // Support both the current Firebase `industry` field and the
+                // legacy `category` field so old records are counted too.
+                const amount = clients.filter(client => {
+                    const clientCategory = String(client.industry || client.category || '').trim();
+                    return clientCategory.toLowerCase() === String(industry).trim().toLowerCase();
+                }).length;
+
+                option.textContent = `${industry} (${amount})`;
+                option.title = `${industry} — ${amount} client${amount === 1 ? '' : 's'}`;
                 container.appendChild(option);
             });
 
@@ -2726,8 +2792,19 @@
             input.focus();
             input.addEventListener("blur", function() { 
                 let val = input.value.trim();
-                if(val) { 
-                    db[index][key] = val; 
+                if(val) {
+                    db[index][key] = val;
+
+                    // If the client name changes, re-detect its category from
+                    // the new name automatically.
+                    if (key === "name") {
+                        const inferredIndustry = inferIndustryFromClientName(val);
+                        if (inferredIndustry) {
+                            db[index].industry = inferredIndustry;
+                            delete db[index].category;
+                        }
+                    }
+
                     saveDatabase(db);
                     element.innerHTML = val;
                 } else { 
@@ -2839,40 +2916,114 @@
         
         /* RESTORED AND COMPLETED JAVASCRIPT FUNCTIONS */
         function saveBulkData() {
-            let data = document.getElementById("bulkPasteInput").value.trim(); 
-            if(!data) return toggleBulkModal(false);
-            
-            let rows = data.split("\n"); 
-            let db = getDatabase();
-            
-            rows.forEach(r => {
-                let cols = r.split("\t");
-                if (cols.length >= 2) {
-                    let name = cols[0] ? cols[0].trim() : "";
-                    let officer = cols[1] ? cols[1].trim() : "";
-                    let type = cols[2] ? cols[2].trim() : "Private Client";
-                    let industry = cols[3] ? cols[3].trim() : "";
-                    let pf = "";
-                    let foundOff = officerRegistry.find(o => o.name === officer);
-                    if (foundOff) pf = foundOff.pf;
-                    if (name) {
-                        db.push({ pf: pf, name: name, officer: officer, type: type, industry: industry });
-                    }
+            const data = document.getElementById("bulkPasteInput").value.trim();
+
+            if (!data) {
+                return toggleBulkModal(false);
+            }
+
+            const rows = data.split(/\r?\n/);
+            const db = getDatabase();
+
+            let addedCount = 0;
+            let autoCategoryCount = 0;
+            let manualCategoryCount = 0;
+
+            rows.forEach(row => {
+                const cols = row.split("\t");
+
+                if (cols.length < 2) return;
+
+                const name = cols[0] ? cols[0].trim() : "";
+                const officer = cols[1] ? cols[1].trim() : "";
+                const type = cols[2] ? cols[2].trim() : "Private Client";
+                const pastedIndustry = cols[3] ? cols[3].trim() : "";
+
+                if (!name) return;
+
+                let pf = "";
+                const foundOff = officerRegistry.find(o => o.name === officer);
+
+                if (foundOff) {
+                    pf = foundOff.pf;
                 }
+
+                /*
+                 * NAME HAS PRIORITY.
+                 *
+                 * If the Excel/Paste row contains:
+                 *   ABC Group Ltd    | Officer | Private Client | Hospital
+                 *
+                 * the saved category will still be:
+                 *   Group
+                 *
+                 * The pasted category is used only when the name has no
+                 * recognized automatic category.
+                 */
+                const inferredRaw = inferIndustryFromClientName(name);
+
+                let industry = "";
+
+                if (inferredRaw) {
+                    industry = ensureAutoCategoryExists(inferredRaw);
+                    autoCategoryCount++;
+                } else if (pastedIndustry) {
+                    industry = pastedIndustry;
+                    manualCategoryCount++;
+                }
+
+                db.push({
+                    pf: pf,
+                    name: name,
+                    officer: officer,
+                    type: type,
+                    industry: industry
+                });
+
+                addedCount++;
             });
-            let addedCount = rows.filter(r => r.split("\t").length >= 2 && r.split("\t")[0].trim()).length;
+
             saveDatabase(db);
             toggleBulkModal(false);
-            showToast(addedCount + " client records added from bulk paste!", "success");
+
+            showToast(
+                addedCount +
+                " client records added. Auto-categorized: " +
+                autoCategoryCount +
+                (manualCategoryCount ? " | Manual category: " + manualCategoryCount : ""),
+                "success"
+            );
         }
 
         function toggleSingleModal(show) {
             document.getElementById("singleModalOverlay").style.display = show ? "flex" : "none";
-            if(show) {
+
+            if (show) {
                 populateIndustrySelects();
                 autoFillPf();
+
+                const nameInput = document.getElementById("formName");
+                const categorySelect = document.getElementById("formIndustry");
+
+                if (nameInput) {
+                    nameInput.value = "";
+                    nameInput.dataset.autoCategoryListener = "true";
+                }
+
+                if (categorySelect) {
+                    categorySelect.dataset.autoAssigned = "false";
+                    categorySelect.dataset.autoCategory = "";
+                }
             } else {
-                document.getElementById("formName").value = "";
+                const nameInput = document.getElementById("formName");
+                const categorySelect = document.getElementById("formIndustry");
+
+                if (nameInput) nameInput.value = "";
+
+                if (categorySelect) {
+                    categorySelect.dataset.autoAssigned = "false";
+                    categorySelect.dataset.autoCategory = "";
+                }
             }
         }
 
@@ -2882,18 +3033,372 @@
             document.getElementById("formPf").value = found ? found.pf : "";
         }
 
+        /*
+         * AUTOMATIC CLIENT CATEGORY SYSTEM
+         * ---------------------------------
+         * The CRM automatically detects a category from the client name.
+         * Example: "Bank Asia Limited" -> Bank, "Square Hospital Ltd." -> Hospital.
+         * The longest matching category wins when more than one category matches.
+         */
+        /*
+         * AUTOMATIC CLIENT CATEGORY SYSTEM
+         * ---------------------------------
+         * Category is ALWAYS derived from the Client Name when a known
+         * business/category keyword exists.
+         *
+         * Examples:
+         *   ABC Group Ltd          -> Group
+         *   XYZ Bank Ltd          -> Bank
+         *   Square Hospital       -> Hospital
+         *   ABC Electronics       -> Electronics
+         *   XYZ Pharmaceuticals   -> Pharmaceuticals
+         *   XYZ Pharma            -> Pharmaceuticals
+         *   ABC University        -> University
+         *   ABC School            -> School
+         *   ABC Mills             -> Mills
+         *   ABC Supershop         -> Supershop
+         *   Super Shop XYZ        -> Supershop
+         *   ABC Steel             -> Ishpat
+         *
+         * IMPORTANT:
+         * 1. Name-based detection has priority over the dropdown.
+         * 2. Typing/pasting the name updates the dropdown immediately.
+         * 3. Saving checks the name AGAIN, so a wrong dropdown value cannot
+         *    override a detected category.
+         * 4. Existing manual categories are preserved.
+         * 5. Existing uncategorized clients are automatically detected.
+         */
+
+        function normalizeCategoryText(value) {
+            return String(value || "")
+                .toLowerCase()
+                .replace(/&/g, " and ")
+                .replace(/[.,/\\()\[\]{}:_\-]+/g, " ")
+                .replace(/\s+/g, " ")
+                .trim();
+        }
+
+        function categoryWordsMatch(clientName, categoryName) {
+            const name = normalizeCategoryText(clientName);
+            const category = normalizeCategoryText(categoryName);
+
+            if (!name || !category) return false;
+
+            // Exact category phrase.
+            // Example: "Square Hospital" -> "hospital"
+            // Example: "ABC Super Shop" -> "super shop"
+            const escaped = category.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            const phraseRegex = new RegExp("(^|\\s)" + escaped + "(?=\\s|$)", "i");
+            if (phraseRegex.test(name)) return true;
+
+            // Singular/plural support.
+            const singular = category.replace(/s$/i, "");
+            if (singular && singular !== category) {
+                const singularEscaped = singular.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+                const singularRegex = new RegExp("(^|\\s)" + singularEscaped + "(?=\\s|$)", "i");
+                if (singularRegex.test(name)) return true;
+            }
+
+            return false;
+        }
+
+        function inferIndustryFromClientName(clientName) {
+            const name = normalizeCategoryText(clientName);
+            if (!name) return "";
+
+            const industries = getIndustriesDatabase()
+                .map(v => String(v || "").trim())
+                .filter(Boolean);
+
+            /*
+             * Fixed legacy aliases.
+             * These are intentionally checked even if the Firebase category
+             * list has been edited/renamed, so the old automatic behaviour
+             * does not disappear.
+             */
+            const aliasMap = [
+                {
+                    aliases: ["bank", "banks"],
+                    canonical: "Bank"
+                },
+                {
+                    aliases: ["hospital", "hospitals"],
+                    canonical: "Hospital"
+                },
+                {
+                    aliases: ["electronics", "electronic"],
+                    canonical: "Electronics"
+                },
+                {
+                    aliases: ["university", "universities"],
+                    canonical: "University"
+                },
+                {
+                    aliases: ["school", "schools"],
+                    canonical: "School"
+                },
+                {
+                    aliases: ["mills", "mill", "textile mill", "textile mills"],
+                    canonical: "Mills"
+                },
+                {
+                    aliases: ["pharmaceuticals", "pharmaceutical", "pharma"],
+                    canonical: "Pharmaceuticals"
+                },
+                {
+                    aliases: ["supershop", "super shop", "super-shop", "supershops"],
+                    canonical: "Supershop"
+                },
+                {
+                    aliases: ["ishpat", "steel", "steels"],
+                    canonical: "Ishpat"
+                },
+                {
+                    aliases: ["group", "groups"],
+                    canonical: "Group"
+                }
+            ];
+
+            /*
+             * FIRST PRIORITY:
+             * Match the actual Firebase category names.
+             *
+             * This keeps custom categories working automatically.
+             * Longest matching category wins.
+             */
+            const directMatches = industries
+                .map(category => ({
+                    category,
+                    matched: categoryWordsMatch(name, category),
+                    length: normalizeCategoryText(category).length
+                }))
+                .filter(item => item.matched)
+                .sort((a, b) => b.length - a.length);
+
+            if (directMatches.length) {
+                return directMatches[0].category;
+            }
+
+            /*
+             * SECOND PRIORITY:
+             * Match the built-in aliases.
+             *
+             * IMPORTANT:
+             * "XYZ Pharma" therefore becomes "Pharmaceuticals".
+             * "ABC Steel" therefore becomes "Ishpat".
+             * "ABC Group Ltd" therefore becomes "Group".
+             */
+            for (const entry of aliasMap) {
+                const matched = entry.aliases.some(alias => {
+                    const normalizedAlias = normalizeCategoryText(alias);
+                    const escapedAlias = normalizedAlias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+                    const aliasRegex = new RegExp(
+                        "(^|\\s)" + escapedAlias + "(?=\\s|$)",
+                        "i"
+                    );
+                    return aliasRegex.test(name);
+                });
+
+                if (!matched) continue;
+
+                // If Firebase already contains the canonical category,
+                // use the exact Firebase spelling.
+                const existing = industries.find(category =>
+                    normalizeCategoryText(category) === normalizeCategoryText(entry.canonical)
+                );
+
+                if (existing) return existing;
+
+                // Otherwise return the canonical legacy category.
+                // ensureAutoCategoryExists() will add it to Firebase.
+                return entry.canonical;
+            }
+
+            return "";
+        }
+
+        function ensureAutoCategoryExists(category) {
+            if (!category) return "";
+
+            const industries = getIndustriesDatabase();
+
+            const existing = industries.find(value =>
+                normalizeCategoryText(value) === normalizeCategoryText(category)
+            );
+
+            if (existing) return existing;
+
+            /*
+             * These are the only categories the automatic engine may create.
+             * Custom categories must still be created manually by admin.
+             */
+            const legacyAutoCategories = [
+                "Bank",
+                "Hospital",
+                "Electronics",
+                "University",
+                "School",
+                "Mills",
+                "Pharmaceuticals",
+                "Supershop",
+                "Ishpat",
+                "Group"
+            ];
+
+            const isLegacy = legacyAutoCategories.some(value =>
+                normalizeCategoryText(value) === normalizeCategoryText(category)
+            );
+
+            if (isLegacy) {
+                const updated = [...industries, category];
+                saveIndustriesDatabase(updated);
+            }
+
+            return category;
+        }
+
+        function autoAssignClientCategory(client) {
+            if (!client || !client.name) return "";
+
+            const inferred = inferIndustryFromClientName(client.name);
+
+            if (inferred) {
+                client.industry = ensureAutoCategoryExists(inferred);
+
+                // Keep one source of truth.
+                // Older records sometimes used "category".
+                delete client.category;
+            }
+
+            return inferred;
+        }
+
+        function autoCategorizeExistingClients(options = {}) {
+            const db = getDatabase();
+            let changed = false;
+            let count = 0;
+
+            db.forEach(client => {
+                const current = getClientIndustry(client);
+
+                /*
+                 * NEVER overwrite an existing/manual category.
+                 * Only fill an empty category.
+                 */
+                if (!current) {
+                    const inferred = autoAssignClientCategory(client);
+
+                    if (inferred) {
+                        client.industry = ensureAutoCategoryExists(inferred);
+                        changed = true;
+                        count++;
+                    }
+                }
+            });
+
+            if (changed && options.save !== false) {
+                saveDatabase(db);
+            }
+
+            return count;
+        }
+
+        function updateCategoryPreviewFromClientName() {
+            const nameInput = document.getElementById("formName");
+            const categorySelect = document.getElementById("formIndustry");
+
+            if (!nameInput || !categorySelect) return;
+
+            const typedName = nameInput.value.trim();
+            const inferredRaw = inferIndustryFromClientName(typedName);
+
+            if (inferredRaw) {
+                /*
+                 * FIX:
+                 * The previous version used "const inferred" and then tried
+                 * to reassign it. That throws "Assignment to constant variable"
+                 * and stops the input listener.
+                 */
+                const inferred = ensureAutoCategoryExists(inferredRaw);
+
+                /*
+                 * Rebuild the dropdown so a newly auto-created legacy
+                 * category appears immediately.
+                 */
+                populateIndustrySelects();
+
+                categorySelect.value = inferred;
+                categorySelect.dataset.autoAssigned = "true";
+                categorySelect.dataset.autoCategory = inferred;
+            } else {
+                /*
+                 * No recognized keyword:
+                 * do not force a category.
+                 *
+                 * The user can still choose a category manually.
+                 */
+                categorySelect.dataset.autoAssigned = "false";
+                categorySelect.dataset.autoCategory = "";
+            }
+        }
+
         function addSingleClient() {
-            let off = document.getElementById("formOfficer").value;
-            let pf = document.getElementById("formPf").value;
-            let name = document.getElementById("formName").value.trim();
-            let type = document.getElementById("formType").value;
-            if(!name) return showToast("Client name is required.", "danger");
-            
-            let db = getDatabase();
-            db.push({ pf: pf, name: name, type: type, officer: off });
+            const off = document.getElementById("formOfficer").value;
+            const pf = document.getElementById("formPf").value;
+            const name = document.getElementById("formName").value.trim();
+            const type = document.getElementById("formType").value;
+
+            if (!name) {
+                return showToast("Client name is required.", "danger");
+            }
+
+            const db = getDatabase();
+
+            /*
+             * FINAL SAVE-TIME CHECK.
+             *
+             * The dropdown is NOT trusted when the name contains a known
+             * category keyword.
+             *
+             * Example:
+             * Client Name = "ABC Group Ltd"
+             * Dropdown    = "Hospital"
+             * Saved value  = "Group"
+             */
+            const inferredRaw = inferIndustryFromClientName(name);
+
+            let industry = "";
+
+            if (inferredRaw) {
+                industry = ensureAutoCategoryExists(inferredRaw);
+            } else {
+                /*
+                 * No automatic match.
+                 * In this case only, respect the user's intentional
+                 * dropdown selection.
+                 */
+                industry = document.getElementById("formIndustry").value.trim();
+            }
+
+            db.push({
+                pf: pf,
+                name: name,
+                type: type,
+                officer: off,
+                industry: industry
+            });
+
             saveDatabase(db);
             toggleSingleModal(false);
-            showToast("Client \"" + name + "\" added successfully!", "success");
+
+            const categoryMessage = industry
+                ? " Category: " + industry + "."
+                : " No category assigned.";
+
+            showToast(
+                "Client \"" + name + "\" added successfully!" + categoryMessage,
+                "success"
+            );
         }
 
         function deleteClient(index) {
