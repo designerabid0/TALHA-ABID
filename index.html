@@ -648,6 +648,70 @@
             box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
         }
 
+        /* --- CLIENT RATE MULTI-SELECT --- */
+        .client-multiselect-group { max-width: 430px; position: relative; }
+        .client-multiselect { position: relative; width: 100%; }
+        .client-multiselect-trigger {
+            width: 100%; min-height: 42px; padding: 10px 13px; border-radius: 8px;
+            border: 1.5px solid var(--border-color); background: var(--bg-input);
+            color: var(--text-main); font-size: 0.92rem; font-weight: 500; cursor: pointer;
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+            text-align: left; transition: var(--transition-fast);
+        }
+        .client-multiselect-trigger:hover, .client-multiselect.open .client-multiselect-trigger {
+            border-color: var(--sidebar-active); background: var(--bg-card);
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+        }
+        .client-multiselect-trigger i { color: var(--text-muted); transition: transform .18s ease; }
+        .client-multiselect.open .client-multiselect-trigger i { transform: rotate(180deg); color: var(--sidebar-active); }
+        .client-multiselect-menu {
+            display: none; position: absolute; left: 0; right: 0; top: calc(100% + 7px);
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;
+            box-shadow: var(--shadow-lg); z-index: 5000; overflow: hidden;
+        }
+        .client-multiselect.open .client-multiselect-menu { display: block; animation: popoverIn .16s ease both; }
+        .client-multiselect-search-wrap { position: relative; padding: 10px; border-bottom: 1px solid var(--border-color); }
+        .client-multiselect-search-wrap i { position: absolute; left: 21px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: .8rem; }
+        .client-multiselect-search-wrap input {
+            width: 100%; padding: 9px 10px 9px 32px; border: 1px solid var(--border-color);
+            border-radius: 8px; background: var(--bg-input); color: var(--text-main); outline: none;
+        }
+        .client-multiselect-search-wrap input:focus { border-color: var(--sidebar-active); }
+        .client-multiselect-actions { display: flex; gap: 7px; padding: 8px 10px; border-bottom: 1px solid var(--border-color); background: var(--bg-input); }
+        .client-multiselect-actions button {
+            border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main);
+            border-radius: 7px; padding: 6px 9px; cursor: pointer; font-size: .75rem; font-weight: 600;
+        }
+        .client-multiselect-actions button:hover { border-color: var(--sidebar-active); color: var(--sidebar-active); }
+        .client-multiselect-options { max-height: 310px; overflow-y: auto; padding: 6px; }
+        .client-multiselect-option {
+            display: flex; align-items: center; gap: 9px; padding: 8px 9px; border-radius: 7px;
+            cursor: pointer; color: var(--text-main); font-size: .82rem; user-select: none;
+        }
+        .client-multiselect-option:hover { background: var(--bg-hover); }
+        .client-multiselect-option input { width: 16px; height: 16px; accent-color: var(--sidebar-active); flex-shrink: 0; cursor: pointer; }
+        .client-multiselect-option-text { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+        .client-multiselect-option-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .client-multiselect-option-meta { font-size: .68rem; color: var(--text-muted); }
+        .client-multiselect-empty { padding: 18px 10px; text-align: center; color: var(--text-muted); font-size: .8rem; }
+        .client-rate-selected-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+        .client-rate-selected-chip {
+            display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 16px;
+            background: var(--badge-bg); border: 1px solid var(--badge-border); color: var(--sidebar-active);
+            font-size: .75rem; font-weight: 700; max-width: 100%;
+        }
+        .client-rate-selected-chip button { border: 0; background: transparent; color: inherit; cursor: pointer; padding: 0 1px; }
+        .client-rate-profile-card {
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;
+            overflow: hidden; margin-bottom: 14px; box-shadow: var(--shadow-sm);
+        }
+        .client-rate-profile-header {
+            padding: 11px 14px; background: var(--bg-input); border-bottom: 1px solid var(--border-color);
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+        }
+        .client-rate-profile-title { font-weight: 700; color: var(--text-main); font-size: .9rem; }
+        .client-rate-profile-meta { font-size: .72rem; color: var(--text-muted); }
+
         .modal-overlay { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(8, 16, 36, 0.65); backdrop-filter: blur(6px); 
@@ -972,6 +1036,734 @@
             .dynamic-item-row { grid-template-columns: 1fr; gap: 8px; }
         }
 
+
+        /* =========================================================
+           ANDROID / MOBILE-FIRST UX REDESIGN
+           ========================================================= */
+        html { scroll-behavior: smooth; }
+        body { -webkit-tap-highlight-color: transparent; }
+        .mobile-search-clear { display:none; }
+
+        .mobile-search-panel {
+            display:none;
+        }
+
+        .android-bottom-nav {
+            display:none;
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --mobile-bottom-nav: 70px;
+                --mobile-page-pad: 12px;
+            }
+
+            html, body {
+                width:100%;
+                max-width:100%;
+                overflow-x:hidden;
+                overscroll-behavior-x:none;
+            }
+
+            body {
+                min-height:100dvh;
+                padding-bottom:var(--mobile-bottom-nav);
+            }
+
+            .sidebar {
+                width:min(86vw, 340px) !important;
+                left:calc(-1 * min(86vw, 340px)) !important;
+                border-radius:0 20px 20px 0;
+                z-index:10001;
+            }
+
+            .sidebar.active { left:0 !important; }
+
+            .sidebar-brand {
+                min-height:84px;
+                padding:18px 16px;
+                display:flex;
+                flex-direction:column;
+                align-items:flex-start;
+                justify-content:center;
+            }
+
+            .sidebar-menu {
+                padding:10px 10px 30px;
+            }
+
+            .sidebar-item a {
+                min-height:50px;
+                padding:13px 15px;
+                border-radius:12px;
+                font-size:.94rem;
+            }
+
+            .sidebar-overlay {
+                z-index:10000 !important;
+                backdrop-filter:blur(2px);
+                -webkit-backdrop-filter:blur(2px);
+            }
+
+            .main-content {
+                width:100%;
+                min-height:100dvh;
+                overflow-x:hidden;
+                overflow-y:visible;
+                padding-bottom:var(--mobile-bottom-nav);
+            }
+
+            .top-header {
+                position:sticky;
+                top:0;
+                z-index:900;
+                display:grid !important;
+                grid-template-columns:1fr auto;
+                grid-template-areas:
+                    "left actions"
+                    "search search";
+                gap:10px;
+                padding:10px 12px 12px !important;
+                min-height:0;
+                background:color-mix(in srgb, var(--bg-card) 94%, transparent);
+                border-bottom:1px solid var(--border-color);
+                box-shadow:0 3px 16px rgba(15,23,42,.06);
+                backdrop-filter:blur(14px);
+                -webkit-backdrop-filter:blur(14px);
+            }
+
+            .header-left {
+                grid-area:left;
+                min-width:0;
+                gap:9px;
+            }
+
+            .menu-toggle-btn {
+                width:42px !important;
+                height:42px !important;
+                border-radius:12px !important;
+                flex-shrink:0;
+            }
+
+            .page-title {
+                font-size:1.02rem !important;
+                line-height:1.2;
+                white-space:nowrap;
+                overflow:hidden;
+                text-overflow:ellipsis;
+            }
+
+            .header-actions {
+                grid-area:actions;
+                gap:6px !important;
+            }
+
+            .theme-toggle {
+                width:40px !important;
+                height:40px !important;
+                border-radius:12px !important;
+            }
+
+            .user-profile {
+                padding:4px !important;
+                border-radius:12px;
+            }
+
+            .user-profile > span,
+            .user-profile > .fa-chevron-down {
+                display:none !important;
+            }
+
+            .user-avatar {
+                width:38px !important;
+                height:38px !important;
+            }
+
+            .header-search {
+                grid-area:search;
+                width:100% !important;
+                height:48px;
+                margin:0 !important;
+            }
+
+            .header-search input {
+                height:48px !important;
+                padding:0 42px 0 44px !important;
+                border-radius:15px !important;
+                font-size:16px !important; /* prevents Android zoom */
+                background:var(--bg-hover);
+            }
+
+            .header-search i {
+                left:16px !important;
+                font-size:.9rem !important;
+            }
+
+            .mobile-search-clear {
+                display:none;
+                position:absolute;
+                right:8px;
+                top:7px;
+                width:34px;
+                height:34px;
+                border:0;
+                border-radius:50%;
+                background:var(--border-color);
+                color:var(--text-muted);
+                z-index:2;
+            }
+
+            .header-search.has-value .mobile-search-clear {
+                display:block;
+            }
+
+            /* Search results are a fixed, keyboard-safe sheet.
+               It appears immediately under the search bar, so the user
+               never has to hide the Android keyboard just to see results. */
+            .mobile-search-panel {
+                position:fixed;
+                display:flex;
+                flex-direction:column;
+                left:8px;
+                right:8px;
+                top:112px;
+                max-height:calc(100dvh - 122px);
+                background:var(--bg-card);
+                border:1px solid var(--border-color);
+                border-radius:18px;
+                box-shadow:0 18px 45px rgba(15,23,42,.18);
+                overflow:hidden;
+                z-index:9500;
+                opacity:0;
+                visibility:hidden;
+                transform:translateY(-7px);
+                transition:opacity .16s ease, transform .16s ease, visibility .16s ease;
+                pointer-events:none;
+            }
+
+            .mobile-search-panel.open {
+                opacity:1;
+                visibility:visible;
+                transform:translateY(0);
+                pointer-events:auto;
+            }
+
+            .mobile-search-panel-head {
+                min-height:52px;
+                padding:10px 12px;
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                gap:10px;
+                border-bottom:1px solid var(--border-color);
+                background:var(--bg-card);
+                flex-shrink:0;
+            }
+
+            .mobile-search-panel-head > div {
+                display:flex;
+                align-items:baseline;
+                gap:8px;
+                min-width:0;
+            }
+
+            .mobile-search-panel-head strong {
+                font-size:.9rem;
+                color:var(--text-main);
+            }
+
+            .mobile-search-panel-head strong i {
+                color:var(--sidebar-active);
+            }
+
+            .mobile-search-panel-head span {
+                color:var(--text-muted);
+                font-size:.75rem;
+                font-weight:600;
+            }
+
+            .mobile-search-panel-head > button {
+                width:36px;
+                height:36px;
+                border:0;
+                border-radius:10px;
+                background:var(--bg-hover);
+                color:var(--text-main);
+                flex-shrink:0;
+            }
+
+            .mobile-search-results {
+                overflow-y:auto;
+                -webkit-overflow-scrolling:touch;
+                overscroll-behavior:contain;
+                padding:8px;
+            }
+
+            .mobile-search-empty {
+                padding:34px 18px;
+                text-align:center;
+                color:var(--text-muted);
+                font-size:.86rem;
+            }
+
+            .mobile-search-result {
+                width:100%;
+                display:flex;
+                align-items:center;
+                gap:11px;
+                padding:12px 10px;
+                margin:0 0 5px;
+                border:0;
+                border-radius:13px;
+                background:transparent;
+                color:var(--text-main);
+                text-align:left;
+                cursor:pointer;
+            }
+
+            .mobile-search-result:active {
+                background:var(--bg-hover);
+                transform:scale(.99);
+            }
+
+            .mobile-result-avatar {
+                width:42px;
+                height:42px;
+                border-radius:12px;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                background:var(--badge-bg);
+                color:var(--sidebar-active);
+                font-weight:800;
+                flex-shrink:0;
+            }
+
+            .mobile-result-main {
+                min-width:0;
+                flex:1;
+            }
+
+            .mobile-result-name {
+                font-size:.91rem;
+                font-weight:750;
+                line-height:1.25;
+                overflow:hidden;
+                text-overflow:ellipsis;
+                white-space:nowrap;
+            }
+
+            .mobile-result-meta {
+                display:flex;
+                flex-wrap:wrap;
+                gap:5px;
+                margin-top:5px;
+            }
+
+            .mobile-result-chip {
+                display:inline-flex;
+                align-items:center;
+                max-width:100%;
+                padding:3px 7px;
+                border-radius:999px;
+                background:var(--bg-hover);
+                color:var(--text-muted);
+                font-size:.67rem;
+                font-weight:650;
+                white-space:nowrap;
+                overflow:hidden;
+                text-overflow:ellipsis;
+            }
+
+            .mobile-result-arrow {
+                color:var(--text-muted);
+                font-size:.75rem;
+                flex-shrink:0;
+            }
+
+            /* Full mobile page layout */
+            .content-container {
+                padding:12px !important;
+                gap:12px !important;
+                width:100%;
+                max-width:100%;
+            }
+
+            .client-selector-bar {
+                display:block !important;
+                padding:12px !important;
+                border-radius:16px !important;
+                margin-bottom:12px;
+            }
+
+            .selector-group {
+                width:100% !important;
+            }
+
+            .selector-group label {
+                font-size:.76rem !important;
+                margin-bottom:7px !important;
+            }
+
+            .client-multiselect-trigger {
+                min-height:50px !important;
+                padding:0 12px !important;
+                border-radius:13px !important;
+                font-size:.86rem !important;
+            }
+
+            .client-multiselect-menu {
+                position:fixed !important;
+                left:10px !important;
+                right:10px !important;
+                top:50% !important;
+                transform:translateY(-50%);
+                width:auto !important;
+                max-height:min(72dvh,560px) !important;
+                border-radius:18px !important;
+                z-index:9600 !important;
+                box-shadow:0 24px 60px rgba(15,23,42,.28) !important;
+            }
+
+            .client-multiselect.open .client-multiselect-menu {
+                display:flex;
+            }
+
+            .client-multiselect-search-wrap input {
+                height:44px !important;
+                font-size:16px !important;
+            }
+
+            .client-multiselect-option {
+                min-height:54px !important;
+                padding:10px !important;
+            }
+
+            .stats-grid {
+                grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+                gap:9px !important;
+            }
+
+            .stat-card {
+                min-width:0;
+                padding:13px !important;
+                border-radius:15px !important;
+            }
+
+            .stat-value {
+                font-size:1.25rem !important;
+            }
+
+            .stat-label {
+                font-size:.68rem !important;
+            }
+
+            .stat-icon {
+                width:34px !important;
+                height:34px !important;
+                border-radius:10px !important;
+            }
+
+            .charts-grid {
+                grid-template-columns:1fr !important;
+                gap:12px !important;
+            }
+
+            .chart-card,
+            .table-card {
+                border-radius:16px !important;
+                padding:12px !important;
+            }
+
+            .table-header {
+                flex-direction:column !important;
+                align-items:stretch !important;
+                gap:9px !important;
+            }
+
+            .table-title {
+                font-size:.94rem !important;
+            }
+
+            .action-buttons {
+                width:100% !important;
+                display:grid !important;
+                grid-template-columns:repeat(2,minmax(0,1fr));
+                gap:7px !important;
+            }
+
+            .action-buttons .btn {
+                min-height:42px;
+                width:100%;
+                padding:9px 8px !important;
+                font-size:.76rem !important;
+            }
+
+            .inline-table-search {
+                width:100% !important;
+            }
+
+            .inline-table-search input {
+                height:44px !important;
+                font-size:16px !important;
+                border-radius:12px !important;
+            }
+
+            /* Client table becomes compact mobile cards */
+            #clientTable {
+                border-collapse:separate !important;
+                border-spacing:0 !important;
+            }
+
+            #clientTable thead {
+                display:none !important;
+            }
+
+            #clientTable tbody {
+                display:grid !important;
+                gap:9px !important;
+            }
+
+            #clientTable tbody tr {
+                display:grid !important;
+                grid-template-columns:1fr auto !important;
+                gap:0 !important;
+                padding:10px 11px !important;
+                border:1px solid var(--border-color) !important;
+                border-radius:15px !important;
+                background:var(--bg-card) !important;
+                box-shadow:0 2px 8px rgba(15,23,42,.04);
+                overflow:hidden;
+            }
+
+            #clientTable tbody td {
+                display:flex !important;
+                align-items:center;
+                min-width:0;
+                border:0 !important;
+                padding:6px 3px !important;
+                font-size:.78rem !important;
+                text-align:left !important;
+            }
+
+            #clientTable tbody td::before {
+                content:attr(data-label);
+                min-width:86px;
+                margin-right:8px;
+                color:var(--text-muted);
+                font-size:.66rem;
+                font-weight:700;
+                text-transform:uppercase;
+                letter-spacing:.2px;
+            }
+
+            #clientTable tbody td.col-sl {
+                display:none !important;
+            }
+
+            #clientTable tbody td.col-name {
+                grid-column:1 / -1;
+                order:-10;
+                padding:4px 3px 8px !important;
+                font-size:.93rem !important;
+                font-weight:750;
+            }
+
+            #clientTable tbody td.col-name::before {
+                content:"";
+                min-width:0;
+                margin:0;
+            }
+
+            #clientTable tbody td.col-pf {
+                grid-column:1 / -1;
+            }
+
+            #clientTable tbody td.col-type,
+            #clientTable tbody td:nth-child(5),
+            #clientTable tbody td:nth-child(6),
+            #clientTable tbody td:nth-child(7) {
+                grid-column:1 / -1;
+            }
+
+            #clientTable tbody td:last-child {
+                grid-column:2;
+                grid-row:1;
+                justify-content:flex-end;
+            }
+
+            #clientTable tbody td:last-child::before {
+                display:none;
+            }
+
+            #clientTable tbody .delete-row-btn {
+                width:36px;
+                height:36px;
+                border-radius:10px;
+            }
+
+            /* All other dynamic tables: readable horizontal cards */
+            .table-responsive-wrapper {
+                width:100%;
+                overflow-x:auto;
+                -webkit-overflow-scrolling:touch;
+                border-radius:12px;
+            }
+
+            .data-table:not(#clientTable) {
+                min-width:620px;
+            }
+
+            .officer-panel-list {
+                grid-template-columns:1fr !important;
+                max-height:none !important;
+                gap:7px !important;
+            }
+
+            .officer-panel-item {
+                min-height:54px;
+                padding:9px !important;
+                border-radius:13px !important;
+            }
+
+            .keyword-container {
+                gap:6px !important;
+                overflow-x:auto;
+                flex-wrap:nowrap !important;
+                padding-bottom:3px;
+                -webkit-overflow-scrolling:touch;
+            }
+
+            .tag {
+                flex:0 0 auto;
+                min-height:38px;
+                padding:8px 11px !important;
+                font-size:.72rem !important;
+            }
+
+            .commercial-search-bar,
+            .classified-search-bar {
+                flex-direction:column !important;
+                align-items:stretch !important;
+                gap:8px !important;
+            }
+
+            .commercial-search-bar input,
+            .classified-search-bar input {
+                height:46px !important;
+                font-size:16px !important;
+            }
+
+            .modal-overlay {
+                padding:10px !important;
+                align-items:flex-end !important;
+            }
+
+            .modal-box {
+                width:100% !important;
+                max-width:100% !important;
+                max-height:88dvh !important;
+                overflow-y:auto !important;
+                border-radius:20px 20px 12px 12px !important;
+                padding:17px !important;
+            }
+
+            .toast-container {
+                left:10px !important;
+                right:10px !important;
+                bottom:calc(var(--mobile-bottom-nav) + 10px) !important;
+            }
+
+            .toast {
+                width:100%;
+                min-width:0 !important;
+                max-width:none !important;
+            }
+
+            /* Android bottom navigation */
+            .android-bottom-nav {
+                position:fixed;
+                display:grid;
+                grid-template-columns:repeat(5,1fr);
+                left:0;
+                right:0;
+                bottom:0;
+                height:var(--mobile-bottom-nav);
+                padding:6px 7px calc(6px + env(safe-area-inset-bottom));
+                background:color-mix(in srgb, var(--bg-card) 96%, transparent);
+                border-top:1px solid var(--border-color);
+                box-shadow:0 -7px 25px rgba(15,23,42,.09);
+                backdrop-filter:blur(16px);
+                -webkit-backdrop-filter:blur(16px);
+                z-index:9998;
+            }
+
+            .mobile-nav-item {
+                border:0;
+                background:transparent;
+                color:var(--text-muted);
+                border-radius:13px;
+                display:flex;
+                flex-direction:column;
+                align-items:center;
+                justify-content:center;
+                gap:3px;
+                font-size:.63rem;
+                font-weight:700;
+                min-width:0;
+                touch-action:manipulation;
+            }
+
+            .mobile-nav-item i {
+                font-size:1.05rem;
+            }
+
+            .mobile-nav-item.active {
+                color:var(--sidebar-active);
+                background:var(--badge-bg);
+            }
+
+            /* Prevent the fixed search sheet from being hidden behind Android keyboard */
+            @supports (height: 100dvh) {
+                .mobile-search-panel {
+                    max-height:calc(100dvh - 122px);
+                }
+            }
+        }
+
+        @media (max-width: 380px) {
+            .stats-grid {
+                grid-template-columns:1fr 1fr !important;
+            }
+
+            .stat-card {
+                padding:10px !important;
+            }
+
+            .stat-icon {
+                display:none !important;
+            }
+
+            .page-title {
+                font-size:.94rem !important;
+            }
+
+            .action-buttons {
+                grid-template-columns:1fr !important;
+            }
+        }
+
+        .mobile-search-focus {
+            animation: mobileSearchFocus 1.8s ease both;
+            outline:2px solid var(--sidebar-active) !important;
+            outline-offset:-2px;
+        }
+
+        @keyframes mobileSearchFocus {
+            0%, 100% { box-shadow:0 0 0 0 rgba(37,99,235,0); }
+            25%, 70% { box-shadow:0 0 0 5px rgba(37,99,235,.16); }
+        }
+
         /* --- TOAST NOTIFICATIONS --- */
         .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 99999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
         .toast { 
@@ -1115,7 +1907,14 @@
             </div>
             <div class="header-search" id="globalHeaderSearch">
                 <i class="fa-solid fa-search"></i>
-                <input type="text" id="searchInput" placeholder="Global system lookup..." onkeyup="searchGlobalTable(this.value)">
+                <input type="search" id="searchInput" autocomplete="off" enterkeyhint="search"
+                       placeholder="Search client, PF, officer or industry..."
+                       onfocus="openMobileSearchPanel()"
+                       oninput="searchGlobalTable(this.value)">
+                <button type="button" class="mobile-search-clear" id="mobileSearchClear"
+                        aria-label="Clear search" onclick="clearGlobalSearch(event)">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
             <div class="header-actions">
                 <button id="themeToggleBtn" class="theme-toggle" title="Toggle Dark Mode">
@@ -1146,18 +1945,47 @@
             </div>
         </header>
 
+        <!-- ANDROID / MOBILE INSTANT SEARCH PANEL -->
+        <section class="mobile-search-panel" id="mobileSearchPanel" aria-hidden="true">
+            <div class="mobile-search-panel-head">
+                <div>
+                    <strong><i class="fa-solid fa-bolt"></i> Instant Results</strong>
+                    <span id="mobileSearchResultCount">0 results</span>
+                </div>
+                <button type="button" onclick="closeMobileSearchPanel()" aria-label="Close search">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="mobile-search-results" id="mobileSearchResults"></div>
+        </section>
+
         <div class="content-container">
             
             <!-- SECTION 1: CRM STANDARD VIEWS -->
             <div id="crmStandardStandardViews">
                 <section class="client-selector-bar" id="clientRateSelectorBar">
-                    <div class="selector-group">
-                        <label>Select Individual Client to Check Rate</label>
-                        <select class="client-dropdown" id="clientRateDropdown" onchange="onClientRateSelected()">
-                        </select>
+                    <div class="selector-group client-multiselect-group">
+                        <label>Select Client(s) to Check Rate</label>
+                        <div class="client-multiselect" id="clientRateMultiSelect">
+                            <button type="button" class="client-multiselect-trigger" id="clientMultiSelectTrigger" onclick="toggleClientMultiSelect(event)" aria-haspopup="listbox" aria-expanded="false">
+                                <span id="clientMultiSelectLabel">-- Choose/Search Client(s) --</span>
+                                <i class="fa-solid fa-chevron-down"></i>
+                            </button>
+                            <div class="client-multiselect-menu" id="clientMultiSelectMenu" role="listbox" aria-multiselectable="true">
+                                <div class="client-multiselect-search-wrap">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                    <input type="text" id="clientMultiSelectSearch" placeholder="Search client..." autocomplete="off" oninput="filterClientMultiSelectOptions()" onclick="event.stopPropagation()">
+                                </div>
+                                <div class="client-multiselect-actions">
+                                    <button type="button" onclick="selectAllClientRateOptions(event)"><i class="fa-solid fa-check-double"></i> Select All</button>
+                                    <button type="button" onclick="clearAllClientRateOptions(event)"><i class="fa-solid fa-xmark"></i> Clear</button>
+                                </div>
+                                <div id="clientMultiSelectOptions" class="client-multiselect-options"></div>
+                            </div>
+                        </div>
                     </div>
                     <div class="client-info-badge" id="clientTypeDisplayBadge">
-                        <i class="fa-solid fa-circle-info"></i> Select a client to load type profile
+                        <i class="fa-solid fa-circle-info"></i> Select one or more clients to load rate profile(s)
                     </div>
                 </section>
 
@@ -1445,6 +2273,25 @@
             </div>
 
         </div>
+
+        <!-- ANDROID BOTTOM NAVIGATION -->
+        <nav class="android-bottom-nav" id="androidBottomNav" aria-label="Mobile navigation">
+            <button type="button" data-mobile-view="dashboard" class="mobile-nav-item active" onclick="mobileQuickNav('dashboard')">
+                <i class="fa-solid fa-house"></i><span>Home</span>
+            </button>
+            <button type="button" data-mobile-view="clients" class="mobile-nav-item" onclick="mobileQuickNav('clients')">
+                <i class="fa-solid fa-users"></i><span>Clients</span>
+            </button>
+            <button type="button" data-mobile-view="clientrate" class="mobile-nav-item" onclick="mobileQuickNav('clientrate')">
+                <i class="fa-solid fa-address-card"></i><span>Rates</span>
+            </button>
+            <button type="button" data-mobile-view="officers" class="mobile-nav-item" onclick="mobileQuickNav('officers')">
+                <i class="fa-solid fa-user-tie"></i><span>Officers</span>
+            </button>
+            <button type="button" class="mobile-nav-item" onclick="toggleMobileSidebar(true)">
+                <i class="fa-solid fa-ellipsis"></i><span>More</span>
+            </button>
+        </nav>
     </main>
 
     <!-- Modals -->
@@ -2257,11 +3104,18 @@
             // the row wraps on smaller screens.
             container.innerHTML = '';
 
+            const clients = getDatabase();
+
             getIndustriesDatabase().forEach(industry => {
+                const amount = clients.filter(client => {
+                    const clientIndustry = getClientIndustry(client);
+                    return clientIndustry.toLowerCase() === String(industry).trim().toLowerCase();
+                }).length;
+
                 const span = document.createElement('span');
                 span.className = 'tag' + (selectedKeywordFilter === industry ? ' active' : '');
-                span.textContent = industry;
-                span.title = 'Filter clients by ' + industry;
+                span.textContent = `${industry} ${amount}`;
+                span.title = `${industry}: ${amount} client${amount === 1 ? '' : 's'}`;
                 span.onclick = function() { filterByKeyword(this, industry); };
                 container.appendChild(span);
             });
@@ -2289,10 +3143,16 @@
                 if (!select) return;
                 const current = select.value;
                 select.innerHTML = '';
+                const clients = getDatabase();
                 industries.forEach(industry => {
+                    const amount = clients.filter(client => {
+                        const clientIndustry = getClientIndustry(client);
+                        return clientIndustry.toLowerCase() === String(industry).trim().toLowerCase();
+                    }).length;
                     const option = document.createElement('option');
                     option.value = industry;
-                    option.textContent = industry;
+                    option.textContent = `${industry} ${amount}`;
+                    option.title = `${industry}: ${amount} client${amount === 1 ? '' : 's'}`;
                     select.appendChild(option);
                 });
                 if (current && industries.includes(current)) select.value = current;
@@ -2335,7 +3195,7 @@
                     return clientCategory.toLowerCase() === String(industry).trim().toLowerCase();
                 }).length;
 
-                option.textContent = `${industry} (${amount})`;
+                option.textContent = `${industry} ${amount}`;
                 option.title = `${industry} — ${amount} client${amount === 1 ? '' : 's'}`;
                 container.appendChild(option);
             });
@@ -2437,14 +3297,17 @@
             return arr.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
         }
         
-        // This is only called when we WANT a full UI refresh.
-        function saveDatabase(array) {
+        // Save client data without forcing a visible page/table rebuild unless requested.
+        // This prevents inline editing from looking like the page is refreshing.
+        function saveDatabase(array, refreshAfterSave = true) {
             firebaseClientsCache = Array.isArray(array) ? array : [];
-            firebaseDB.ref('crm/clients').set(firebaseClientsCache).then(() => {
-                refreshUI();
+            return firebaseDB.ref('crm/clients').set(firebaseClientsCache).then(() => {
+                if (refreshAfterSave) refreshUI();
+                return true;
             }).catch(err => {
                 console.error('Failed to save clients to Firebase:', err);
                 showToast('Could not save client data to Firebase.', 'danger');
+                return false;
             });
         }
 
@@ -2470,6 +3333,11 @@
         function switchViewLayouts(targetView) {
             currentView = targetView;
             toggleMobileSidebar(false);
+            updateMobileBottomNav(targetView);
+            if (targetView !== "clientrate") {
+                selectedClientRateIds.clear();
+                closeClientMultiSelect();
+            }
             
             const standardLayout = document.getElementById("crmStandardStandardViews");
             const quotationLayout = document.getElementById("quotationStudioSection");
@@ -2667,10 +3535,209 @@
             document.querySelectorAll(".inline-table-search input, #searchInput").forEach(i => i.value = ""); 
             renderTable(); 
         }
+        function isMobileLayout() {
+            return window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+        }
+
+        function openMobileSearchPanel() {
+            if (!isMobileLayout()) return;
+            const panel = document.getElementById('mobileSearchPanel');
+            const input = document.getElementById('searchInput');
+            if (!panel || !input) return;
+            if (input.value.trim()) {
+                renderMobileSearchResults();
+                panel.classList.add('open');
+                panel.setAttribute('aria-hidden', 'false');
+            }
+        }
+
+        function closeMobileSearchPanel() {
+            const panel = document.getElementById('mobileSearchPanel');
+            if (!panel) return;
+            panel.classList.remove('open');
+            panel.setAttribute('aria-hidden', 'true');
+        }
+
+        function clearGlobalSearch(event) {
+            if (event) event.stopPropagation();
+            const input = document.getElementById('searchInput');
+            if (input) input.value = '';
+            globalSearchQuery = '';
+            const headerSearch = document.getElementById('globalHeaderSearch');
+            if (headerSearch) headerSearch.classList.remove('has-value');
+            renderTable();
+            closeMobileSearchPanel();
+            if (isMobileLayout() && input) input.focus();
+        }
+
         function searchGlobalTable(val) {
-            globalSearchQuery = val.trim().toLowerCase();
+            globalSearchQuery = String(val || '').trim().toLowerCase();
+
+            const headerSearch = document.getElementById('globalHeaderSearch');
+            if (headerSearch) headerSearch.classList.toggle('has-value', !!globalSearchQuery);
+
+            if (isMobileLayout()) {
+                renderMobileSearchResults();
+                const panel = document.getElementById('mobileSearchPanel');
+                if (panel) {
+                    if (globalSearchQuery) {
+                        panel.classList.add('open');
+                        panel.setAttribute('aria-hidden', 'false');
+                    } else {
+                        closeMobileSearchPanel();
+                    }
+                }
+            }
+
             renderTable();
         }
+
+        function renderMobileSearchResults() {
+            const panel = document.getElementById('mobileSearchPanel');
+            const results = document.getElementById('mobileSearchResults');
+            const countEl = document.getElementById('mobileSearchResultCount');
+            const query = (globalSearchQuery || '').trim().toLowerCase();
+
+            if (!panel || !results || !countEl) return;
+
+            if (!query) {
+                results.innerHTML = '<div class="mobile-search-empty"><i class="fa-solid fa-magnifying-glass"></i><br>Type a client name, PF, officer or industry.</div>';
+                countEl.textContent = '0 results';
+                return;
+            }
+
+            const db = getDatabase();
+            const matches = db.map((client, index) => ({client, index})).filter(({client}) => {
+                const haystack = [
+                    client.name,
+                    client.pf,
+                    client.officer,
+                    client.type,
+                    client.industry,
+                    client.category
+                ].map(v => String(v || '').toLowerCase()).join(' ');
+                return haystack.includes(query);
+            });
+
+            countEl.textContent = `${matches.length} result${matches.length === 1 ? '' : 's'}`;
+
+            if (!matches.length) {
+                results.innerHTML = `
+                    <div class="mobile-search-empty">
+                        <i class="fa-regular fa-face-frown" style="font-size:1.5rem;"></i>
+                        <div style="margin-top:8px;font-weight:700;color:var(--text-main);">No client found</div>
+                        <div style="margin-top:4px;">Try name, PF number, officer or industry.</div>
+                    </div>`;
+                return;
+            }
+
+            const visibleMatches = matches.slice(0, 40);
+
+            results.innerHTML = visibleMatches.map(({client, index}) => {
+                const name = escapeHtml(client.name || 'Unnamed Client');
+                const pf = escapeHtml(client.pf || 'No PF');
+                const officer = escapeHtml(client.officer || 'No officer');
+                const industry = escapeHtml(getIndustryDisplay(client));
+                const type = escapeHtml(client.type || 'Private Client');
+                const initial = escapeHtml((client.name || 'C').trim().charAt(0).toUpperCase());
+
+                return `
+                    <button type="button" class="mobile-search-result" onclick="openMobileSearchClient(${index})">
+                        <span class="mobile-result-avatar">${initial}</span>
+                        <span class="mobile-result-main">
+                            <span class="mobile-result-name">${name}</span>
+                            <span class="mobile-result-meta">
+                                <span class="mobile-result-chip">PF ${pf}</span>
+                                <span class="mobile-result-chip">${industry}</span>
+                                <span class="mobile-result-chip">${officer}</span>
+                                <span class="mobile-result-chip">${type}</span>
+                            </span>
+                        </span>
+                        <span class="mobile-result-arrow"><i class="fa-solid fa-chevron-right"></i></span>
+                    </button>`;
+            }).join('');
+
+            if (matches.length > visibleMatches.length) {
+                results.insertAdjacentHTML('beforeend',
+                    `<div class="mobile-search-empty" style="padding:12px;">Showing first ${visibleMatches.length} of ${matches.length} results.</div>`);
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function openMobileSearchClient(index) {
+            const db = getDatabase();
+            const client = db[index];
+            if (!client) return;
+
+            const input = document.getElementById('searchInput');
+            if (input) input.value = '';
+
+            globalSearchQuery = '';
+            const headerSearch = document.getElementById('globalHeaderSearch');
+            if (headerSearch) headerSearch.classList.remove('has-value');
+
+            closeMobileSearchPanel();
+
+            selectedOfficerFilter = null;
+            selectedKeywordFilter = null;
+            selectedTypeFilter = null;
+            clearTagHighlights();
+
+            switchViewLayouts('clients');
+            renderTable();
+
+            requestAnimationFrame(() => {
+                const row = document.querySelector(`#clientTable tbody tr[data-client-index="${CSS.escape(String(index))}"]`);
+                if (row) {
+                    row.classList.add('mobile-search-focus');
+                    row.scrollIntoView({behavior:'smooth', block:'center'});
+                    setTimeout(() => row.classList.remove('mobile-search-focus'), 1800);
+                }
+            });
+        }
+
+        function mobileQuickNav(targetView) {
+            closeMobileSearchPanel();
+            switchViewLayouts(targetView);
+        }
+
+        function updateMobileBottomNav(targetView) {
+            document.querySelectorAll('.mobile-nav-item[data-mobile-view]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mobileView === targetView);
+            });
+        }
+
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeMobileSearchPanel();
+                if (document.activeElement && document.activeElement.id === 'searchInput') {
+                    document.activeElement.blur();
+                }
+            }
+        });
+
+        document.addEventListener('click', function(event) {
+            if (!isMobileLayout()) return;
+            const panel = document.getElementById('mobileSearchPanel');
+            const header = document.getElementById('globalHeaderSearch');
+            if (!panel || !header) return;
+            if (!panel.contains(event.target) && !header.contains(event.target)) {
+                closeMobileSearchPanel();
+            }
+        });
+
+        window.addEventListener('resize', function() {
+            if (!isMobileLayout()) closeMobileSearchPanel();
+        });
 
         function renderTable() {
             let db = getDatabase(); let tbody = document.getElementById("tableBody"); if(!tbody) return; tbody.innerHTML = "";
@@ -2715,16 +3782,17 @@
                 
                 let actionCell = isAdmin ? `<td><button class="delete-row-btn" onclick="deleteClient(${index})"><i class="fa-solid fa-trash"></i></button></td>` : '';
 
+                row.dataset.clientIndex = String(index);
                 row.innerHTML = `
-                    <td class="col-sl">${loopIndex + 1}</td>
-                    <td class="col-pf ${editableClass}" onclick="makeEditable(this, ${index}, 'pf')">${item.pf || 'N/A'}</td>
-                    <td class="col-name ${editableClass}" ${isDuplicate ? 'style="color: var(--color-danger); font-weight: bold;"' : ''} onclick="makeEditable(this, ${index}, 'name')">
+                    <td class="col-sl" data-label="SL">${loopIndex + 1}</td>
+                    <td class="col-pf ${editableClass}" data-label="PF Number" onclick="makeEditable(this, ${index}, 'pf')">${item.pf || 'N/A'}</td>
+                    <td class="col-name ${editableClass}" data-label="Client Name" ${isDuplicate ? 'style="color: var(--color-danger); font-weight: bold;"' : ''} onclick="makeEditable(this, ${index}, 'name')">
                         ${item.name || 'N/A'} ${isDuplicate ? '<span style="font-size:10px; font-weight:normal; background:#ef4444; color:#fff; padding:2px 6px; border-radius:10px; margin-left:5px;">Duplicate</span>' : ''}
                     </td>
-                    <td class="col-type ${editableClass}" onclick="makeDropdownEditable(this, ${index}, 'type')">${item.type || 'Private Client'}</td>
-                    <td class="${editableClass}" onclick="makeIndustryDropdownEditable(this, ${index})"><span class="status-badge" style="background:var(--badge-bg); color:var(--sidebar-active);">${getIndustryDisplay(item)}</span></td>
-                    <td class="${editableClass}" onclick="makeOfficerDropdownEditable(this, ${index}, 'officer')"><span class="assigned-officer"><i class="fa-solid fa-user-tie"></i> ${item.officer || 'N/A'}</span></td>
-                    <td><span class="status-badge" ${isDuplicate ? 'style="background:rgba(239, 68, 68, 0.15); color:var(--color-danger);"' : ''}>${isDuplicate ? 'Duplicate' : 'Active'}</span></td>
+                    <td class="col-type ${editableClass}" data-label="Type" onclick="makeDropdownEditable(this, ${index}, 'type')">${item.type || 'Private Client'}</td>
+                    <td data-label="Industry" class="${editableClass}" onclick="makeIndustryDropdownEditable(this, ${index})"><span class="status-badge" style="background:var(--badge-bg); color:var(--sidebar-active);">${getIndustryDisplay(item)}</span></td>
+                    <td data-label="Officer" class="${editableClass}" onclick="makeOfficerDropdownEditable(this, ${index}, 'officer')"><span class="assigned-officer"><i class="fa-solid fa-user-tie"></i> ${item.officer || 'N/A'}</span></td>
+                    <td data-label="Status"><span class="status-badge" ${isDuplicate ? 'style="background:rgba(239, 68, 68, 0.15); color:var(--color-danger);"' : ''}>${isDuplicate ? 'Duplicate' : 'Active'}</span></td>
                     ${actionCell}`;
                 tbody.appendChild(row);
             });
@@ -2754,36 +3822,230 @@
             container.innerHTML = html + `</tbody></table></div>`;
         }
 
-        function setupClientRateDropdown() {
-            let dropdown = document.getElementById("clientRateDropdown"); let db = getDatabase();
-            dropdown.innerHTML = '<option value="">-- Choose/Search Client --</option>';
-            db.forEach((client, idx) => { dropdown.innerHTML += `<option value="${idx}">${client.name} (${client.type === 'Government Client' ? 'Govt' : 'Pvt'})</option>`; });
+        // --- CLIENT RATE MULTI-SELECT SYSTEM ---
+        let selectedClientRateIds = new Set();
+
+        function getClientRateStableId(client) {
+            if (!client) return '';
+            if (!client.__crmClientRateId) {
+                if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+                    client.__crmClientRateId = window.crypto.randomUUID();
+                } else {
+                    client.__crmClientRateId = 'crm-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+                }
+            }
+            return String(client.__crmClientRateId);
         }
-        function onClientRateSelected() { renderClientSpecificRateView(); }
+
+        function setupClientRateDropdown() {
+            const optionsContainer = document.getElementById('clientMultiSelectOptions');
+            if (!optionsContainer) return;
+            const db = getDatabase();
+            const validIds = new Set(db.map(getClientRateStableId));
+
+            // Keep already-selected clients only if they still exist.
+            selectedClientRateIds = new Set([...selectedClientRateIds].filter(id => validIds.has(id)));
+            renderClientRateMultiSelectOptions();
+            updateClientMultiSelectLabel();
+        }
+
+        function renderClientRateMultiSelectOptions() {
+            const container = document.getElementById('clientMultiSelectOptions');
+            if (!container) return;
+            const searchInput = document.getElementById('clientMultiSelectSearch');
+            const query = (searchInput ? searchInput.value : '').trim().toLowerCase();
+            const db = getDatabase();
+            container.innerHTML = '';
+
+            const filtered = db.map((client, index) => ({ client, index, id: getClientRateStableId(client) }))
+                .filter(row => {
+                    if (!query) return true;
+                    const haystack = [row.client.name, row.client.pf, row.client.type, row.client.officer]
+                        .map(v => String(v || '').toLowerCase()).join(' ');
+                    return haystack.includes(query);
+                });
+
+            if (!filtered.length) {
+                container.innerHTML = '<div class="client-multiselect-empty">No client found.</div>';
+                return;
+            }
+
+            filtered.forEach(({ client, id }) => {
+                const label = document.createElement('label');
+                label.className = 'client-multiselect-option';
+                label.dataset.clientId = id;
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = selectedClientRateIds.has(id);
+                checkbox.addEventListener('change', function(event) {
+                    event.stopPropagation();
+                    if (this.checked) selectedClientRateIds.add(id);
+                    else selectedClientRateIds.delete(id);
+                    updateClientMultiSelectLabel();
+                    renderClientRateMultiSelectOptions();
+                    renderClientSpecificRateView();
+                });
+
+                const textWrap = document.createElement('span');
+                textWrap.className = 'client-multiselect-option-text';
+                const name = document.createElement('span');
+                name.className = 'client-multiselect-option-name';
+                name.textContent = client.name || 'Unnamed Client';
+                const meta = document.createElement('span');
+                meta.className = 'client-multiselect-option-meta';
+                meta.textContent = `${client.type === 'Government Client' ? 'Govt' : 'Pvt'}${client.pf ? ' • PF ' + client.pf : ''}`;
+                textWrap.appendChild(name);
+                textWrap.appendChild(meta);
+                label.appendChild(checkbox);
+                label.appendChild(textWrap);
+                container.appendChild(label);
+            });
+        }
+
+        function updateClientMultiSelectLabel() {
+            const label = document.getElementById('clientMultiSelectLabel');
+            if (!label) return;
+            const db = getDatabase();
+            const selected = db.filter(client => selectedClientRateIds.has(getClientRateStableId(client)));
+            if (!selected.length) {
+                label.textContent = '-- Choose/Search Client(s) --';
+                return;
+            }
+            if (selected.length === 1) {
+                label.textContent = selected[0].name || '1 client selected';
+                return;
+            }
+            label.textContent = `${selected.length} clients selected`;
+        }
+
+        function toggleClientMultiSelect(event) {
+            if (event) event.stopPropagation();
+            const root = document.getElementById('clientRateMultiSelect');
+            if (!root) return;
+            const willOpen = !root.classList.contains('open');
+            root.classList.toggle('open', willOpen);
+            const trigger = document.getElementById('clientMultiSelectTrigger');
+            if (trigger) trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+            if (willOpen) {
+                renderClientRateMultiSelectOptions();
+                setTimeout(() => {
+                    const search = document.getElementById('clientMultiSelectSearch');
+                    if (search) search.focus();
+                }, 0);
+            }
+        }
+
+        function closeClientMultiSelect() {
+            const root = document.getElementById('clientRateMultiSelect');
+            if (!root) return;
+            root.classList.remove('open');
+            const trigger = document.getElementById('clientMultiSelectTrigger');
+            if (trigger) trigger.setAttribute('aria-expanded', 'false');
+        }
+
+        function filterClientMultiSelectOptions() {
+            renderClientRateMultiSelectOptions();
+        }
+
+        function selectAllClientRateOptions(event) {
+            if (event) event.stopPropagation();
+            getDatabase().forEach(client => selectedClientRateIds.add(getClientRateStableId(client)));
+            updateClientMultiSelectLabel();
+            renderClientRateMultiSelectOptions();
+            renderClientSpecificRateView();
+        }
+
+        function clearAllClientRateOptions(event) {
+            if (event) event.stopPropagation();
+            selectedClientRateIds.clear();
+            updateClientMultiSelectLabel();
+            renderClientRateMultiSelectOptions();
+            renderClientSpecificRateView();
+        }
+
+        function removeClientRateSelection(id, event) {
+            if (event) event.stopPropagation();
+            selectedClientRateIds.delete(String(id));
+            updateClientMultiSelectLabel();
+            renderClientRateMultiSelectOptions();
+            renderClientSpecificRateView();
+        }
+
+        function onClientRateSelected() {
+            // Kept for backward compatibility with older cached DOM/scripts.
+            renderClientSpecificRateView();
+        }
 
         function renderClientSpecificRateView() {
-            let isAdmin = loggedInUser && loggedInUser.role === 'admin';
-            let idx = document.getElementById("clientRateDropdown").value; let container = document.getElementById("dynamicTableContainer");
-            let badge = document.getElementById("clientTypeDisplayBadge");
-            if(!idx) { badge.innerHTML = `<i class="fa-solid fa-circle-info"></i> Select a client to load type profile`; container.innerHTML = `<div style="padding:40px; text-align:center; color:var(--text-muted); font-weight:500;">Please select an individual client from the top dropdown bar above to view optimized rates.</div>`; return; }
-            let client = getDatabase()[idx];
-            badge.innerHTML = `<i class="fa-solid fa-briefcase"></i> Profile: <b>Commercial / Private Rates</b> Assigned`;
-            let rates = getRatesDatabase(); let html = `<div class="table-responsive-wrapper"><table class="data-table"><thead><tr><th>SL</th><th>Applicable Formats for [ ${client.name} ]</th><th>Type</th><th>Tariff Rate</th></tr></thead><tbody>`;
-            let slCounter = 1;
-            rates.forEach((item, masterIndex) => {
-                let badgeClass = "rate-badge-color";
-                let editableClass = isAdmin ? "editable-cell" : "";
-                html += `<tr><td class="col-sl">${slCounter++}</td><td class="col-name ${editableClass}" onclick="makeClientViewRateEditable(this, ${masterIndex}, 'category')">${item.category}</td><td class="col-type ${editableClass}" style="text-align:center;"><span class="${badgeClass}">${item.type}</span></td><td style="font-weight:700; color:var(--color-success);" class="${editableClass}" onclick="makeClientViewRateEditable(this, ${masterIndex}, 'rate')">${item.rate}</td></tr>`;
+            const isAdmin = loggedInUser && loggedInUser.role === 'admin';
+            const container = document.getElementById('dynamicTableContainer');
+            const badge = document.getElementById('clientTypeDisplayBadge');
+            if (!container || !badge) return;
+
+            const db = getDatabase();
+            const selectedClients = db.filter(client => selectedClientRateIds.has(getClientRateStableId(client)));
+
+            updateClientMultiSelectLabel();
+
+            if (!selectedClients.length) {
+                badge.innerHTML = '<i class="fa-solid fa-circle-info"></i> Select one or more clients to load rate profile(s)';
+                container.innerHTML = '<div style="padding:40px; text-align:center; color:var(--text-muted); font-weight:500;">Please select one or more clients from the multi-select above to view optimized rates.</div>';
+                return;
+            }
+
+            const govtCount = selectedClients.filter(client => client.type === 'Government Client').length;
+            const pvtCount = selectedClients.length - govtCount;
+            badge.innerHTML = `<i class="fa-solid fa-users"></i> <b>${selectedClients.length}</b> client${selectedClients.length === 1 ? '' : 's'} selected — Govt: <b>${govtCount}</b> • Pvt: <b>${pvtCount}</b>`;
+
+            const chips = selectedClients.map(client => {
+                const id = getClientRateStableId(client);
+                const safeName = String(client.name || 'Unnamed Client').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                return `<span class="client-rate-selected-chip"><span>${safeName}</span><button type="button" title="Remove" onclick="removeClientRateSelection('${id}', event)"><i class="fa-solid fa-xmark"></i></button></span>`;
+            }).join('');
+
+            const rates = getRatesDatabase();
+            let html = `<div class="client-rate-selected-list">${chips}</div>`;
+
+            selectedClients.forEach(client => {
+                const safeName = String(client.name || 'Unnamed Client').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const safeType = String(client.type || 'Private Client').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const safeOfficer = String(client.officer || 'N/A').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                html += `<div class="client-rate-profile-card">
+                    <div class="client-rate-profile-header">
+                        <div><div class="client-rate-profile-title"><i class="fa-solid fa-building"></i> ${safeName}</div><div class="client-rate-profile-meta">${safeType} • Officer: ${safeOfficer}${client.pf ? ' • PF: ' + String(client.pf).replace(/</g, '&lt;').replace(/>/g, '&gt;') : ''}</div></div>
+                        <span class="status-badge">${rates.length} Rates</span>
+                    </div>
+                    <div class="table-responsive-wrapper"><table class="data-table"><thead><tr><th>SL</th><th>Applicable Formats</th><th>Type</th><th>Tariff Rate</th></tr></thead><tbody>`;
+
+                rates.forEach((item, masterIndex) => {
+                    const badgeClass = 'rate-badge-color';
+                    const editableClass = isAdmin ? 'editable-cell' : '';
+                    const category = String(item.category || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const type = String(item.type || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const rate = String(item.rate || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    html += `<tr><td class="col-sl">${masterIndex + 1}</td><td class="col-name ${editableClass}" onclick="makeClientViewRateEditable(this, ${masterIndex}, 'category')">${category}</td><td class="col-type ${editableClass}" style="text-align:center;"><span class="${badgeClass}">${type}</span></td><td style="font-weight:700; color:var(--color-success);" class="${editableClass}" onclick="makeClientViewRateEditable(this, ${masterIndex}, 'rate')">${rate}</td></tr>`;
+                });
+
+                html += '</tbody></table></div></div>';
             });
-            container.innerHTML = html + `</tbody></table></div>`;
+
+            container.innerHTML = html;
         }
+
+        document.addEventListener('click', function(event) {
+            const root = document.getElementById('clientRateMultiSelect');
+            if (root && !root.contains(event.target)) closeClientMultiSelect();
+        });
 
         /* Inline Editing Systems (Updated to NOT refresh full UI on blur) */
         function makeEditable(element, index, key) {
             if (!loggedInUser || loggedInUser.role !== 'admin') return;
             if (element.querySelector('input')) return; 
             let db = getDatabase(); 
-            let originalVal = db[index][key] || "";
+            let clientRecord = db[index];
+            if (!clientRecord) return;
+            let originalVal = clientRecord[key] || "";
             let input = document.createElement("input");
             input.className = "inline-edit-input"; 
             input.value = originalVal; 
@@ -2793,19 +4055,19 @@
             input.addEventListener("blur", function() { 
                 let val = input.value.trim();
                 if(val) {
-                    db[index][key] = val;
+                    clientRecord[key] = val;
 
                     // If the client name changes, re-detect its category from
                     // the new name automatically.
                     if (key === "name") {
                         const inferredIndustry = inferIndustryFromClientName(val);
                         if (inferredIndustry) {
-                            db[index].industry = inferredIndustry;
-                            delete db[index].category;
+                            clientRecord.industry = inferredIndustry;
+                            delete clientRecord.category;
                         }
                     }
 
-                    saveDatabase(db);
+                    saveDatabase(db, false);
                     element.innerHTML = val;
                 } else { 
                     element.innerHTML = originalVal;
@@ -2817,15 +4079,17 @@
             if (!loggedInUser || loggedInUser.role !== 'admin') return;
             if (element.querySelector('select')) return; 
             let db = getDatabase(); 
+            let clientRecord = db[index];
+            if (!clientRecord) return;
             let select = document.createElement("select"); 
             select.className = "inline-edit-select";
-            select.innerHTML = `<option value="Private Client" ${db[index][key]==='Private Client'?'selected':''}>Private Client</option><option value="Government Client" ${db[index][key]==='Government Client'?'selected':''}>Government Client</option>`;
+            select.innerHTML = `<option value="Private Client" ${clientRecord[key]==='Private Client'?'selected':''}>Private Client</option><option value="Government Client" ${clientRecord[key]==='Government Client'?'selected':''}>Government Client</option>`;
             element.innerHTML = ""; 
             element.appendChild(select); 
             select.focus(); 
             select.addEventListener("blur", function() { 
                 db[index][key] = select.value; 
-                saveDatabase(db);
+                saveDatabase(db, false);
                 element.innerHTML = select.value; 
             });
         }
@@ -2834,7 +4098,9 @@
             if (!loggedInUser || loggedInUser.role !== 'admin') return;
             if (element.querySelector('select')) return;
             let db = getDatabase();
-            let current = getClientIndustry(db[index]);
+            let clientRecord = db[index];
+            if (!clientRecord) return;
+            let current = getClientIndustry(clientRecord);
             let select = document.createElement("select");
             select.className = "inline-edit-select";
             const industries = getIndustriesDatabase();
@@ -2848,9 +4114,9 @@
 
             const saveIndustry = function() {
                 const value = select.value.trim();
-                db[index].industry = value;
-                delete db[index].category;
-                saveDatabase(db);
+                clientRecord.industry = value;
+                delete clientRecord.category;
+                saveDatabase(db, false);
                 element.innerHTML = `<span class="status-badge" style="background:var(--badge-bg); color:var(--sidebar-active);">${value || 'Uncategorized'}</span>`;
             };
             select.addEventListener("change", saveIndustry);
@@ -2863,17 +4129,19 @@
             if (!loggedInUser || loggedInUser.role !== 'admin') return;
             if (element.querySelector('select')) return; 
             let db = getDatabase(); 
+            let clientRecord = db[index];
+            if (!clientRecord) return;
             let select = document.createElement("select"); 
             select.className = "inline-edit-select";
-            officerList.forEach(off => { select.innerHTML += `<option value="${off}" ${db[index][key]===off?'selected':''}>${off}</option>`; });
+            officerList.forEach(off => { select.innerHTML += `<option value="${off}" ${clientRecord[key]===off?'selected':''}>${off}</option>`; });
             element.innerHTML = ""; 
             element.appendChild(select); 
             select.focus();
             select.addEventListener("blur", function() { 
-                db[index][key] = select.value; 
+                clientRecord[key] = select.value; 
                 let found = officerRegistry.find(o => o.name === select.value); 
-                if(found) db[index]['pf'] = found.pf; 
-                saveDatabase(db);
+                if(found) clientRecord['pf'] = found.pf; 
+                saveDatabase(db, false);
                 element.innerHTML = `<span class="assigned-officer"><i class="fa-solid fa-user-tie"></i> ${select.value}</span>`;
                 
                 let tr = element.closest('tr');
