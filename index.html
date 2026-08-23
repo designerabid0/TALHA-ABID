@@ -1827,7 +1827,128 @@
             body.printing-quote #banglaPrintTarget { position: absolute !important; left: 0 !important; top: 0 !important; width: 210mm !important; height: 297mm !important; box-shadow: none !important; margin: 0 !important; }
             @page { size: A4 portrait; margin: 10mm !important; }
         }
-    </style>
+    
+
+/* =========================================================
+   MOBILE SEARCH / HEADER ALIGNMENT FIX v2
+   Prevents Client Directory search from covering the
+   "Select Client(s) to Check Rate" area on Android.
+   ========================================================= */
+@media (max-width: 768px) {
+    html, body {
+        overflow-x: hidden !important;
+    }
+
+    .main-content {
+        position: relative !important;
+        overflow: visible !important;
+    }
+
+    /* Keep the mobile header in normal document flow.
+       This is the key fix: content can no longer slide underneath it. */
+    .top-header {
+        position: relative !important;
+        top: auto !important;
+        z-index: 900 !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        grid-template-areas:
+            "left actions"
+            "search search" !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+        padding: 10px 12px 12px !important;
+        gap: 10px !important;
+        min-height: 122px !important;
+        height: auto !important;
+        background: var(--bg-card) !important;
+        border-bottom: 1px solid var(--border-color) !important;
+        box-shadow: 0 3px 16px rgba(15,23,42,.07) !important;
+    }
+
+    .header-search {
+        grid-area: search !important;
+        position: relative !important;
+        width: 100% !important;
+        height: 48px !important;
+        margin: 0 !important;
+        z-index: 910 !important;
+    }
+
+    .header-search input {
+        display: block !important;
+        width: 100% !important;
+        height: 48px !important;
+        box-sizing: border-box !important;
+        font-size: 16px !important;
+        line-height: 48px !important;
+        padding: 0 46px 0 44px !important;
+        border-radius: 15px !important;
+    }
+
+    /* The client-rate selector now starts AFTER the header, never behind it. */
+    .content-container {
+        position: relative !important;
+        z-index: 1 !important;
+        padding: 12px !important;
+        margin: 0 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .client-selector-bar {
+        position: relative !important;
+        z-index: 2 !important;
+        margin-top: 0 !important;
+        clear: both !important;
+    }
+
+    .selector-group label {
+        display: block !important;
+        position: relative !important;
+        z-index: 3 !important;
+        color: var(--text-muted) !important;
+        background: transparent !important;
+    }
+
+    /* Search results begin below the actual header, not at a hard-coded
+       112px value that can collide with Android browser/header geometry. */
+    .mobile-search-panel {
+        position: fixed !important;
+        left: 10px !important;
+        right: 10px !important;
+        top: var(--mobile-search-panel-top, 124px) !important;
+        max-height: var(--mobile-search-panel-max-height, calc(100dvh - 136px)) !important;
+        width: auto !important;
+        z-index: 9500 !important;
+        border-radius: 18px !important;
+    }
+
+    .mobile-search-results {
+        overscroll-behavior: contain !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    /* When the keyboard is open, make the result sheet use the visible area. */
+    @supports (height: 100dvh) {
+        .mobile-search-panel {
+            max-height: calc(100dvh - var(--mobile-search-panel-top, 124px) - 10px) !important;
+        }
+    }
+
+    /* Avoid two competing visual search fields on the Client Rate selector. */
+    #clientRateSelectorBar .client-multiselect-search-wrap input {
+        font-size: 16px !important;
+    }
+}
+
+@media (min-width: 769px) {
+    .mobile-search-panel {
+        display: none !important;
+    }
+}
+</style>
 </head>
 <body onload="initializeFirebaseApp()">
 
@@ -3539,12 +3660,23 @@
             return window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
         }
 
+        function positionMobileSearchPanel() {
+            if (!isMobileLayout()) return;
+            const header = document.querySelector('.top-header');
+            if (!header) return;
+            const rect = header.getBoundingClientRect();
+            const top = Math.max(8, Math.round(rect.bottom + 6));
+            document.documentElement.style.setProperty('--mobile-search-panel-top', top + 'px');
+            document.documentElement.style.setProperty('--mobile-search-panel-max-height', Math.max(180, Math.round(window.innerHeight - top - 10)) + 'px');
+        }
+
         function openMobileSearchPanel() {
             if (!isMobileLayout()) return;
             const panel = document.getElementById('mobileSearchPanel');
             const input = document.getElementById('searchInput');
             if (!panel || !input) return;
             if (input.value.trim()) {
+                positionMobileSearchPanel();
                 renderMobileSearchResults();
                 panel.classList.add('open');
                 panel.setAttribute('aria-hidden', 'false');
@@ -3581,6 +3713,7 @@
                 const panel = document.getElementById('mobileSearchPanel');
                 if (panel) {
                     if (globalSearchQuery) {
+                        positionMobileSearchPanel();
                         panel.classList.add('open');
                         panel.setAttribute('aria-hidden', 'false');
                     } else {
@@ -3591,6 +3724,20 @@
 
             renderTable();
         }
+
+        window.addEventListener('resize', () => {
+            if (isMobileLayout()) positionMobileSearchPanel();
+        }, {passive:true});
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => { if (isMobileLayout()) positionMobileSearchPanel(); }, 120);
+        }, {passive:true});
+
+        window.addEventListener('resize', () => {
+            if (isMobileLayout()) positionMobileSearchPanel();
+        }, {passive:true});
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => { if (isMobileLayout()) positionMobileSearchPanel(); }, 120);
+        }, {passive:true});
 
         function renderMobileSearchResults() {
             const panel = document.getElementById('mobileSearchPanel');
