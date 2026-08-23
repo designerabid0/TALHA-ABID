@@ -37,19 +37,22 @@
         let firebaseUsersCache = null;
         let firebaseClientsCache = null;
         let firebaseRatesCache = null;
+        let firebaseIndustriesCache = null;
         let firebaseReady = false;
 
         async function initializeFirebaseApp() {
             try {
-                const [usersSnap, clientsSnap, ratesSnap] = await Promise.all([
+                const [usersSnap, clientsSnap, ratesSnap, industriesSnap] = await Promise.all([
                     firebaseDB.ref('crm/users').once('value'),
                     firebaseDB.ref('crm/clients').once('value'),
-                    firebaseDB.ref('crm/rates').once('value')
+                    firebaseDB.ref('crm/rates').once('value'),
+                    firebaseDB.ref('crm/industries').once('value')
                 ]);
 
                 firebaseUsersCache = usersSnap.val();
                 firebaseClientsCache = clientsSnap.val();
                 firebaseRatesCache = ratesSnap.val();
+                firebaseIndustriesCache = industriesSnap.val();
 
                 if (!Array.isArray(firebaseUsersCache) || firebaseUsersCache.length === 0) {
                     firebaseUsersCache = defaultUsersDB;
@@ -62,6 +65,10 @@
                 if (!Array.isArray(firebaseRatesCache) || firebaseRatesCache.length === 0) {
                     firebaseRatesCache = defaultRatesMaster;
                     await firebaseDB.ref('crm/rates').set(firebaseRatesCache);
+                }
+                if (!Array.isArray(firebaseIndustriesCache) || firebaseIndustriesCache.length === 0) {
+                    firebaseIndustriesCache = defaultIndustriesDB;
+                    await firebaseDB.ref('crm/industries').set(firebaseIndustriesCache);
                 }
 
                 firebaseReady = true;
@@ -535,7 +542,8 @@
             transition: var(--transition-med); 
         }
         .keyword-label { font-size: 0.76rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
-        .keyword-tags { display: flex; gap: 7px; flex-wrap: wrap; }
+        .keyword-tags { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; flex: 1 1 auto; min-width: 0; }
+        .keyword-tags #manageIndustriesBtn { flex: 0 0 auto; margin-left: 0; }
         .tag { 
             background: var(--bg-input); color: var(--text-muted); 
             padding: 6px 14px; border-radius: 20px; 
@@ -1185,14 +1193,7 @@
 
                 <section class="keyword-container" id="keywordContainerSection" style="margin-bottom: 10px;">
                     <div class="keyword-label"><i class="fa-solid fa-tags"></i> Industries:</div>
-                    <div class="keyword-tags">
-                        <span class="tag" onclick="filterByKeyword(this, 'University')">University</span>
-                        <span class="tag" onclick="filterByKeyword(this, 'Bank')">Bank</span>
-                        <span class="tag" onclick="filterByKeyword(this, 'School')">School</span>
-                        <span class="tag" onclick="filterByKeyword(this, 'Mills')">Mills</span>
-                        <span class="tag" onclick="filterByKeyword(this, 'Hospital')">Hospital</span>
-                        <span class="tag" onclick="filterByKeyword(this, 'Group')">Group</span>
-                    </div>
+                    <div class="keyword-tags" id="industryShortcutTags"></div>
                 </section>
 
                 <section class="table-card">
@@ -1220,7 +1221,7 @@
                         <table class="data-table" id="clientTable">
                             <thead id="tableHead">
                                 <tr>
-                                    <th>SL</th><th>PF Number</th><th>Client Name</th><th>Organisation Type</th><th>Officer</th><th>Status</th><th id="thActionCol" style="width: 50px;">Action</th>
+                                    <th>SL</th><th>PF Number</th><th>Client Name</th><th>Organisation Type</th><th>Industry / Category</th><th>Officer</th><th>Status</th><th id="thActionCol" style="width: 50px;">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="tableBody"></tbody>
@@ -1450,7 +1451,7 @@
     <div class="modal-overlay" id="bulkModalOverlay">
         <div class="modal-box">
             <h3>Bulk Add from Excel</h3>
-            <p class="modal-desc">কলাম সিকোয়েন্স: <b>Client Name</b> &rarr; <b>Officers Name</b> &rarr; <b>Type</b></p>
+            <p class="modal-desc">কলাম সিকোয়েন্স: <b>Client Name</b> &rarr; <b>Officers Name</b> &rarr; <b>Type</b> &rarr; <b>Industry / Category (Optional)</b></p>
             <textarea class="bulk-textarea" id="bulkPasteInput" placeholder="Paste data here..."></textarea>
             <div class="modal-buttons">
                 <button class="btn btn-secondary" onclick="toggleBulkModal(false)">Cancel</button>
@@ -1469,9 +1470,38 @@
                 <label>Organisation Type</label>
                 <select id="formType"><option value="Private Client">Private Client</option><option value="Government Client">Government Client</option></select>
             </div>
+            <div class="form-group">
+                <label>Industry / Category</label>
+                <select id="formIndustry"></select>
+            </div>
             <div class="modal-buttons">
                 <button class="btn btn-secondary" onclick="toggleSingleModal(false)">Cancel</button>
                 <button class="btn btn-primary" onclick="addSingleClient()">Save Client</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- INDUSTRY / CATEGORY MANAGER (ADMIN ONLY) -->
+    <div class="modal-overlay" id="industriesModalOverlay">
+        <div class="modal-box" style="max-width:620px;">
+            <h3><i class="fa-solid fa-tags" style="color:var(--sidebar-active); margin-right:7px;"></i>Manage Industries / Client Categories</h3>
+            <p class="modal-desc">Add new categories, rename existing categories, or remove categories from the shortcut list. Changes are stored in Firebase.</p>
+            <div style="display:flex; gap:8px; margin-bottom:15px;">
+                <input type="text" id="newIndustryInput" placeholder="Enter new industry / category name..." style="flex:1; padding:10px 12px; border:1.5px solid var(--border-color); border-radius:8px; background:var(--bg-input); color:var(--text-main); outline:none;">
+                <button class="btn btn-primary" onclick="addIndustryCategory()"><i class="fa-solid fa-plus"></i> Add Category</button>
+            </div>
+            <div style="margin-bottom:10px;">
+                <label style="display:block; font-weight:700; margin-bottom:6px;">Category List</label>
+                <select id="industryManagerList" size="10" style="width:100%; height:250px; min-height:250px; padding:7px; border:1.5px solid var(--border-color); border-radius:8px; background:var(--bg-input); color:var(--text-main); outline:none; font-size:0.92rem; overflow-y:auto;">
+                </select>
+                <div style="font-size:0.76rem; color:var(--text-muted); margin-top:6px;">Select a category from the list to edit or delete it.</div>
+            </div>
+            <div class="modal-buttons" style="display:flex; gap:8px; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+                <div style="display:flex; gap:8px;">
+                    <button class="btn btn-secondary" onclick="editSelectedIndustryCategory()"><i class="fa-solid fa-pen-to-square"></i> Edit Selected</button>
+                    <button class="btn btn-danger" onclick="deleteSelectedIndustryCategory()"><i class="fa-solid fa-trash"></i> Delete Selected</button>
+                </div>
+                <button class="btn btn-secondary" onclick="toggleIndustriesModal(false)">Close</button>
             </div>
         </div>
     </div>
@@ -1851,6 +1881,8 @@
             document.getElementById('actionButtonsArea').style.display = isAdmin ? 'flex' : 'none';
             document.getElementById('menuUsers').style.display = isAdmin ? 'block' : 'none';
             
+            renderIndustryShortcuts();
+            populateIndustrySelects();
             switchViewLayouts('dashboard');
             let select = document.getElementById("formOfficer");
             if (select) {
@@ -2072,6 +2104,20 @@
             { category: "জ্যাকেট/বিশেষ আয়োজন - ভেতরের পৃষ্ঠা", type: "রঙিন", rate: "৳৫,৫০০" }
         ];
 
+        // Client Industry / Category master list. This list is stored separately in Firebase
+        // so categories can be added or renamed without changing the existing CRM records.
+        const defaultIndustriesDB = [
+            "University",
+            "Bank",
+            "School",
+            "Mills",
+            "Hospital",
+            "Electronics",
+            "Ishpat",
+            "Pharmaceuticals",
+            "Supershop"
+        ];
+
         const officerList = officerRegistry.map(o => o.name);
         let currentView = "dashboard";
         let selectedOfficerFilter = null;
@@ -2125,6 +2171,201 @@
             });
         }
         
+        function getIndustriesDatabase() {
+            return Array.isArray(firebaseIndustriesCache) ? firebaseIndustriesCache : defaultIndustriesDB;
+        }
+
+        function saveIndustriesDatabase(array) {
+            const cleaned = Array.from(new Set(
+                (Array.isArray(array) ? array : [])
+                    .map(v => String(v || "").trim())
+                    .filter(Boolean)
+            ));
+            firebaseIndustriesCache = cleaned;
+            firebaseDB.ref('crm/industries').set(cleaned).then(() => {
+                renderIndustryShortcuts();
+                populateIndustrySelects();
+                renderIndustryManagerList();
+                refreshUI();
+            }).catch(err => {
+                console.error('Failed to save industries to Firebase:', err);
+                showToast('Could not save industry/category data to Firebase.', 'danger');
+            });
+        }
+
+        function renderIndustryShortcuts() {
+            const container = document.getElementById('industryShortcutTags');
+            if (!container) return;
+
+            // IMPORTANT: Render every category first, then append Manage Industries
+            // as the FINAL item inside the same flex container. This guarantees that
+            // Manage Industries can NEVER appear between two category buttons when
+            // the row wraps on smaller screens.
+            container.innerHTML = '';
+
+            getIndustriesDatabase().forEach(industry => {
+                const span = document.createElement('span');
+                span.className = 'tag' + (selectedKeywordFilter === industry ? ' active' : '');
+                span.textContent = industry;
+                span.title = 'Filter clients by ' + industry;
+                span.onclick = function() { filterByKeyword(this, industry); };
+                container.appendChild(span);
+            });
+
+            const manageBtn = document.createElement('button');
+            manageBtn.type = 'button';
+            manageBtn.id = 'manageIndustriesBtn';
+            manageBtn.className = 'btn btn-primary';
+            manageBtn.style.cssText = 'padding:6px 11px; font-size:0.78rem; white-space:nowrap;';
+            manageBtn.innerHTML = '<i class="fa-solid fa-sliders"></i> Manage Industries';
+            manageBtn.title = 'Add / Edit Industries';
+            manageBtn.onclick = openIndustriesManager;
+            manageBtn.style.display = (loggedInUser && loggedInUser.role === 'admin') ? 'inline-flex' : 'none';
+            container.appendChild(manageBtn);
+        }
+
+        function populateIndustrySelects() {
+            const industries = getIndustriesDatabase();
+            const selects = [
+                document.getElementById('formIndustry'),
+                document.getElementById('printIndustrySelect'),
+                document.getElementById('exportIndustrySelect')
+            ];
+            selects.forEach(select => {
+                if (!select) return;
+                const current = select.value;
+                select.innerHTML = '';
+                industries.forEach(industry => {
+                    const option = document.createElement('option');
+                    option.value = industry;
+                    option.textContent = industry;
+                    select.appendChild(option);
+                });
+                if (current && industries.includes(current)) select.value = current;
+            });
+        }
+
+        function openIndustriesManager() {
+            if (!loggedInUser || loggedInUser.role !== 'admin') {
+                showToast('Only an administrator can manage industries/categories.', 'danger');
+                return;
+            }
+            renderIndustryManagerList();
+            document.getElementById('newIndustryInput').value = '';
+            document.getElementById('industriesModalOverlay').style.display = 'flex';
+        }
+
+        function toggleIndustriesModal(show) {
+            const modal = document.getElementById('industriesModalOverlay');
+            if (modal) modal.style.display = show ? 'flex' : 'none';
+            if (show) renderIndustryManagerList();
+        }
+
+        function renderIndustryManagerList() {
+            const container = document.getElementById('industryManagerList');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const industries = getIndustriesDatabase();
+            industries.forEach((industry, index) => {
+                const option = document.createElement('option');
+                option.value = String(index);
+                option.textContent = industry;
+                container.appendChild(option);
+            });
+
+            // Keep the first category visibly selected so Edit/Delete works immediately
+            // after opening the manager, while still allowing the user to choose any item.
+            if (container.options.length > 0) {
+                container.selectedIndex = 0;
+            }
+        }
+
+        function getSelectedIndustryIndex() {
+            const list = document.getElementById('industryManagerList');
+            if (!list || list.selectedIndex < 0) {
+                showToast('Please select a category from the list first.', 'danger');
+                return -1;
+            }
+            return parseInt(list.options[list.selectedIndex].value, 10);
+        }
+
+        function editSelectedIndustryCategory() {
+            const index = getSelectedIndustryIndex();
+            if (index < 0) return;
+            editIndustryCategory(index);
+        }
+
+        function deleteSelectedIndustryCategory() {
+            const index = getSelectedIndustryIndex();
+            if (index < 0) return;
+            deleteIndustryCategory(index);
+        }
+
+        function addIndustryCategory() {
+            const input = document.getElementById('newIndustryInput');
+            const value = input.value.trim();
+            if (!value) return showToast('Enter an industry/category name.', 'danger');
+            const industries = [...getIndustriesDatabase()];
+            if (industries.some(v => v.toLowerCase() === value.toLowerCase())) {
+                return showToast('This industry/category already exists.', 'danger');
+            }
+            industries.push(value);
+            saveIndustriesDatabase(industries);
+            input.value = '';
+            showToast('New industry/category added successfully!', 'success');
+        }
+
+        function editIndustryCategory(index) {
+            const industries = [...getIndustriesDatabase()];
+            const oldValue = industries[index];
+            const newValue = prompt('Edit industry/category name:', oldValue);
+            if (newValue === null) return;
+            const value = newValue.trim();
+            if (!value) return showToast('Category name cannot be empty.', 'danger');
+            if (industries.some((v, i) => i !== index && v.toLowerCase() === value.toLowerCase())) {
+                return showToast('Another category with this name already exists.', 'danger');
+            }
+
+            const db = getDatabase();
+            db.forEach(client => {
+                if (client.industry === oldValue || client.category === oldValue) {
+                    client.industry = value;
+                    delete client.category;
+                }
+            });
+            industries[index] = value;
+            saveIndustriesDatabase(industries);
+            saveDatabase(db);
+            if (selectedKeywordFilter === oldValue) selectedKeywordFilter = value;
+            showToast('Industry/category updated successfully!', 'success');
+        }
+
+        function deleteIndustryCategory(index) {
+            const industries = [...getIndustriesDatabase()];
+            const name = industries[index];
+            const assignedCount = getDatabase().filter(client => (client.industry || client.category || '') === name).length;
+            const message = assignedCount
+                ? `${assignedCount} client(s) are currently assigned to "${name}". Delete the shortcut anyway? Existing clients will keep their category.`
+                : `Delete "${name}" from the industry/category list?`;
+            showConfirmModal('Delete Industry / Category?', message, function() {
+                industries.splice(index, 1);
+                saveIndustriesDatabase(industries);
+                if (selectedKeywordFilter === name) {
+                    selectedKeywordFilter = null;
+                }
+                showToast('Industry/category removed from the shortcut list.', 'success');
+            });
+        }
+
+        function getClientIndustry(client) {
+            return (client && (client.industry || client.category || '')).trim();
+        }
+
+        function getIndustryDisplay(client) {
+            return getClientIndustry(client) || 'Uncategorized';
+        }
+
         function getDatabase() {
             let arr = Array.isArray(firebaseClientsCache) ? firebaseClientsCache : defaultClientsDB;
             return arr.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
@@ -2141,7 +2382,9 @@
             });
         }
 
-        function refreshUI() { 
+        function refreshUI() {
+            renderIndustryShortcuts();
+            populateIndustrySelects();
             if (currentView === "officers") { renderOfficersTable(); } 
             else if (currentView === "ratechart") { renderRateChartTable(); } 
             else if (currentView === "clientrate") { renderClientSpecificRateView(); }
@@ -2270,7 +2513,7 @@
         function resetTableHTMLStructure() { 
             let isAdmin = loggedInUser && loggedInUser.role === 'admin';
             let actionTh = isAdmin ? `<th id="thActionCol" style="width: 50px;">Action</th>` : '';
-            document.getElementById("dynamicTableContainer").innerHTML = `<table class="data-table" id="clientTable"><thead><tr><th>SL</th><th>PF Number</th><th>Client Name</th><th>Organisation Type</th><th>Officer</th><th>Status</th>${actionTh}</tr></thead><tbody id="tableBody"></tbody></table>`; 
+            document.getElementById("dynamicTableContainer").innerHTML = `<table class="data-table" id="clientTable"><thead><tr><th>SL</th><th>PF Number</th><th>Client Name</th><th>Organisation Type</th><th>Industry / Category</th><th>Officer</th><th>Status</th>${actionTh}</tr></thead><tbody id="tableBody"></tbody></table>`; 
         }
 
         document.getElementById("linkDashboard").addEventListener("click", () => switchViewLayouts("dashboard"));
@@ -2350,7 +2593,7 @@
             else { selectedKeywordFilter = word; element.classList.add("active"); }
             selectedTypeFilter = selectedOfficerFilter = null; renderTable();
         }
-        function clearTagHighlights() { document.querySelectorAll(".keyword-tags .tag").forEach(t => t.classList.remove("active")); }
+        function clearTagHighlights() { document.querySelectorAll("#industryShortcutTags .tag").forEach(t => t.classList.remove("active")); }
         function resetAllFilters() { 
             selectedOfficerFilter = selectedKeywordFilter = selectedTypeFilter = null; 
             globalSearchQuery = "";
@@ -2378,7 +2621,7 @@
             let activeDataset = [...mappedDb];
             
             if(selectedOfficerFilter) activeDataset = activeDataset.filter(obj => obj.item.officer === selectedOfficerFilter);
-            if(selectedKeywordFilter) activeDataset = activeDataset.filter(obj => (obj.item.name || "").toLowerCase().includes(selectedKeywordFilter.toLowerCase()));
+            if(selectedKeywordFilter) activeDataset = activeDataset.filter(obj => getClientIndustry(obj.item).toLowerCase() === selectedKeywordFilter.toLowerCase());
             if(selectedTypeFilter) activeDataset = activeDataset.filter(obj => obj.item.type === selectedTypeFilter);
             if(globalSearchQuery) activeDataset = activeDataset.filter(obj => (obj.item.name || "").toLowerCase().includes(globalSearchQuery) || (obj.item.officer || "").toLowerCase().includes(globalSearchQuery));
 
@@ -2413,6 +2656,7 @@
                         ${item.name || 'N/A'} ${isDuplicate ? '<span style="font-size:10px; font-weight:normal; background:#ef4444; color:#fff; padding:2px 6px; border-radius:10px; margin-left:5px;">Duplicate</span>' : ''}
                     </td>
                     <td class="col-type ${editableClass}" onclick="makeDropdownEditable(this, ${index}, 'type')">${item.type || 'Private Client'}</td>
+                    <td class="${editableClass}" onclick="makeIndustryDropdownEditable(this, ${index})"><span class="status-badge" style="background:var(--badge-bg); color:var(--sidebar-active);">${getIndustryDisplay(item)}</span></td>
                     <td class="${editableClass}" onclick="makeOfficerDropdownEditable(this, ${index}, 'officer')"><span class="assigned-officer"><i class="fa-solid fa-user-tie"></i> ${item.officer || 'N/A'}</span></td>
                     <td><span class="status-badge" ${isDuplicate ? 'style="background:rgba(239, 68, 68, 0.15); color:var(--color-danger);"' : ''}>${isDuplicate ? 'Duplicate' : 'Active'}</span></td>
                     ${actionCell}`;
@@ -2509,6 +2753,35 @@
             });
         }
         
+        function makeIndustryDropdownEditable(element, index) {
+            if (!loggedInUser || loggedInUser.role !== 'admin') return;
+            if (element.querySelector('select')) return;
+            let db = getDatabase();
+            let current = getClientIndustry(db[index]);
+            let select = document.createElement("select");
+            select.className = "inline-edit-select";
+            const industries = getIndustriesDatabase();
+            select.innerHTML = `<option value="">Uncategorized</option>`;
+            industries.forEach(ind => {
+                select.innerHTML += `<option value="${ind}" ${current === ind ? 'selected' : ''}>${ind}</option>`;
+            });
+            element.innerHTML = "";
+            element.appendChild(select);
+            select.focus();
+
+            const saveIndustry = function() {
+                const value = select.value.trim();
+                db[index].industry = value;
+                delete db[index].category;
+                saveDatabase(db);
+                element.innerHTML = `<span class="status-badge" style="background:var(--badge-bg); color:var(--sidebar-active);">${value || 'Uncategorized'}</span>`;
+            };
+            select.addEventListener("change", saveIndustry);
+            select.addEventListener("blur", function() {
+                if (document.body.contains(select)) saveIndustry();
+            });
+        }
+
         function makeOfficerDropdownEditable(element, index, key) {
             if (!loggedInUser || loggedInUser.role !== 'admin') return;
             if (element.querySelector('select')) return; 
@@ -2578,11 +2851,12 @@
                     let name = cols[0] ? cols[0].trim() : "";
                     let officer = cols[1] ? cols[1].trim() : "";
                     let type = cols[2] ? cols[2].trim() : "Private Client";
+                    let industry = cols[3] ? cols[3].trim() : "";
                     let pf = "";
                     let foundOff = officerRegistry.find(o => o.name === officer);
                     if (foundOff) pf = foundOff.pf;
                     if (name) {
-                        db.push({ pf: pf, name: name, officer: officer, type: type });
+                        db.push({ pf: pf, name: name, officer: officer, type: type, industry: industry });
                     }
                 }
             });
@@ -2594,7 +2868,12 @@
 
         function toggleSingleModal(show) {
             document.getElementById("singleModalOverlay").style.display = show ? "flex" : "none";
-            if(show) { autoFillPf(); } else { document.getElementById("formName").value = ""; }
+            if(show) {
+                populateIndustrySelects();
+                autoFillPf();
+            } else {
+                document.getElementById("formName").value = "";
+            }
         }
 
         function autoFillPf() {
@@ -2680,6 +2959,7 @@
             let offSelect = document.getElementById("exportOfficerSelect");
             offSelect.innerHTML = "";
             officerList.forEach(off => { offSelect.innerHTML += `<option value="${off}">${off}</option>`; });
+            populateIndustrySelects();
             toggleExportSubOptions();
             toggleExportModal(true);
         }
@@ -2706,12 +2986,8 @@
                 subtitle = "Filtered By Officer: " + off;
             } else if (opt === "industry") {
                 let ind = document.getElementById("exportIndustrySelect").value;
-                if(ind === "Government Client" || ind === "Private Client") {
-                    filteredDb = db.filter(c => c.type === ind);
-                } else {
-                    filteredDb = db.filter(c => (c.name || "").toLowerCase().includes(ind.toLowerCase()));
-                }
-                subtitle = "Filtered By Industry Keyword: " + ind;
+                filteredDb = db.filter(c => getClientIndustry(c).toLowerCase() === ind.toLowerCase());
+                subtitle = "Filtered By Industry / Category: " + ind;
             }
             
             // Build highly customized bold/centered HTML for Excel parsing
@@ -2722,12 +2998,12 @@
                 <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;">
                     <thead>
                         <tr>
-                            <td colspan="5" style="text-align: center; font-size: 26pt; font-weight: bold; background-color: #0f172a; color: #ffffff; padding: 20px;">
+                            <td colspan="6" style="text-align: center; font-size: 26pt; font-weight: bold; background-color: #0f172a; color: #ffffff; padding: 20px;">
                                 KALER KANTHO CRM REPORT
                             </td>
                         </tr>
                         <tr>
-                            <td colspan="5" style="text-align: center; font-size: 16pt; font-weight: bold; background-color: #3b82f6; color: #ffffff; padding: 12px;">
+                            <td colspan="6" style="text-align: center; font-size: 16pt; font-weight: bold; background-color: #3b82f6; color: #ffffff; padding: 12px;">
                                 ${subtitle}
                             </td>
                         </tr>
@@ -2736,6 +3012,7 @@
                             <th style="font-weight: bold; font-size: 14pt; background-color: #e2e8f0; text-align: left;">PF Number</th>
                             <th style="font-weight: bold; font-size: 14pt; background-color: #e2e8f0; text-align: left;">Client Name</th>
                             <th style="font-weight: bold; font-size: 14pt; background-color: #e2e8f0; text-align: left;">Organisation Type</th>
+                            <th style="font-weight: bold; font-size: 14pt; background-color: #e2e8f0; text-align: left;">Industry / Category</th>
                             <th style="font-weight: bold; font-size: 14pt; background-color: #e2e8f0; text-align: left;">Assigned Officer</th>
                         </tr>
                     </thead>
@@ -2749,6 +3026,7 @@
                         <td style="font-size: 12pt;">${item.pf || ''}</td>
                         <td style="font-size: 13pt; font-weight: bold;">${item.name || ''}</td>
                         <td style="font-size: 12pt;">${item.type || ''}</td>
+                        <td style="font-size: 12pt;">${getIndustryDisplay(item)}</td>
                         <td style="font-size: 12pt; font-weight: bold; color: #2563eb;">${item.officer || ''}</td>
                     </tr>
                 `;
@@ -2774,6 +3052,7 @@
             let offSelect = document.getElementById("printOfficerSelect");
             offSelect.innerHTML = "";
             officerList.forEach(off => { offSelect.innerHTML += `<option value="${off}">${off}</option>`; });
+            populateIndustrySelects();
             togglePrintSubOptions();
             togglePrintModal(true);
         }
