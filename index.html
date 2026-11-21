@@ -38,21 +38,27 @@
         let firebaseClientsCache = null;
         let firebaseRatesCache = null;
         let firebaseIndustriesCache = null;
+        let firebaseCtgOfficersCache = null;   // Chattogram office officers (separate node)
+        let firebaseCtgClientsCache = null;    // Chattogram office clients (separate node)
         let firebaseReady = false;
 
         async function initializeFirebaseApp() {
             try {
-                const [usersSnap, clientsSnap, ratesSnap, industriesSnap] = await Promise.all([
+                const [usersSnap, clientsSnap, ratesSnap, industriesSnap, ctgOfficersSnap, ctgClientsSnap] = await Promise.all([
                     firebaseDB.ref('crm/users').once('value'),
                     firebaseDB.ref('crm/clients').once('value'),
                     firebaseDB.ref('crm/rates').once('value'),
-                    firebaseDB.ref('crm/industries').once('value')
+                    firebaseDB.ref('crm/industries').once('value'),
+                    firebaseDB.ref('crm/ctgOfficers').once('value'),
+                    firebaseDB.ref('crm/ctgClients').once('value')
                 ]);
 
                 firebaseUsersCache = usersSnap.val();
                 firebaseClientsCache = clientsSnap.val();
                 firebaseRatesCache = ratesSnap.val();
                 firebaseIndustriesCache = industriesSnap.val();
+                firebaseCtgOfficersCache = Array.isArray(ctgOfficersSnap.val()) ? ctgOfficersSnap.val() : [];
+                firebaseCtgClientsCache = Array.isArray(ctgClientsSnap.val()) ? ctgClientsSnap.val() : [];
 
                 if (!Array.isArray(firebaseUsersCache) || firebaseUsersCache.length === 0) {
                     firebaseUsersCache = defaultUsersDB;
@@ -801,7 +807,7 @@
         .bn-footer-pub-date { font-weight: bold; font-size: 13.5px; color: #000; margin-top: 6px; }
 
         /* --- COMMERCIAL EXECUTIVE SECTION --- */
-        #commercialExecutiveSection, #classifiedAdRateSection { display: none; animation: sectionFadeIn 0.25s ease both; }
+        #commercialExecutiveSection, #classifiedAdRateSection, #ctgOfficeSection { display: none; animation: sectionFadeIn 0.25s ease both; }
         
         .commercial-header-card {
             background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #0f172a 100%);
@@ -904,6 +910,32 @@
             padding: 4px 12px; border-radius: 12px; font-size: 0.78rem; font-weight: 700;
             white-space: nowrap;
         }
+
+
+        /* --- CHATTOGRAM OFFICE SECTION --- */
+        .ctg-section-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 12px; flex-wrap:wrap; }
+        .ctg-section-head h3 { font-size:1rem; font-weight:700; color:var(--text-main); }
+        .ctg-filter-label { font-size:.75rem; font-weight:600; color:var(--sidebar-active); background:var(--badge-bg); border:1px solid var(--badge-border); padding:2px 10px; border-radius:12px; margin-left:8px; }
+        .ctg-officer-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; margin-bottom:26px; }
+        .ctg-officer-card { background:var(--bg-card); border:1.5px solid var(--border-color); border-radius:var(--radius-md); padding:14px 14px 14px 16px; display:flex; align-items:center; gap:12px; cursor:pointer; transition:var(--transition-fast); box-shadow:var(--shadow-sm); }
+        .ctg-officer-card:hover { transform:translateY(-2px); box-shadow:var(--shadow-md); background:var(--bg-hover); }
+        .ctg-officer-card.active { border-color:var(--sidebar-active); background:var(--badge-bg); }
+        .ctg-officer-avatar { width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; font-weight:800; font-size:1rem; flex-shrink:0; }
+        .ctg-officer-info { flex:1; min-width:0; }
+        .ctg-officer-name { font-weight:700; font-size:.92rem; color:var(--text-main); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .ctg-officer-meta { font-size:.75rem; color:var(--text-muted); margin-top:2px; }
+        .ctg-officer-side { display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
+        .ctg-officer-count { font-size:.72rem; font-weight:700; background:var(--badge-bg); color:var(--sidebar-active); border:1px solid var(--badge-border); padding:2px 9px; border-radius:12px; white-space:nowrap; }
+        .ctg-icon-btn { background:none; border:none; cursor:pointer; padding:5px 7px; border-radius:6px; color:var(--text-muted); font-size:.8rem; transition:var(--transition-fast); }
+        .ctg-icon-btn:hover { background:var(--bg-hover); color:var(--sidebar-active); }
+        .ctg-icon-btn.danger:hover { background:rgba(239,68,68,.1); color:#ef4444; }
+        .ctg-empty { padding:26px; text-align:center; color:var(--text-muted); font-size:.88rem; grid-column:1 / -1; }
+        .ctg-tag { display:inline-flex; align-items:center; gap:5px; background:#fef3c7; color:#92400e; border:1px solid #fde68a; padding:2px 9px; border-radius:12px; font-size:.7rem; font-weight:700; white-space:nowrap; }
+        body.dark-mode .ctg-tag { background:#78350f; color:#fde68a; border-color:#92400e; }
+        #ctgSearchResultsCard tbody tr { cursor:pointer; }
+        @media (max-width: 768px) { #ctgSearchResultsCard { display:none !important; } }
+        .ctg-print-subtitle { display:none; }
+        .ctg-empty-row td { text-align:center !important; color:var(--text-muted); padding:26px !important; }
 
         /* --- CLASSIFIED AD RATE SECTION --- */
         .classified-header-card {
@@ -1985,6 +2017,22 @@
             body.printing-table .status-badge { border: 1px solid #000; color: #000 !important; background: transparent !important; }
             body.printing-table .assigned-officer { color: #000 !important; }
             
+            body.printing-table #ctgOfficeSection { display: none !important; }
+
+            /* Chattogram Office Print Specifics */
+            body.printing-ctg #crmStandardStandardViews, body.printing-ctg #quotationStudioSection, body.printing-ctg #commercialExecutiveSection, body.printing-ctg #classifiedAdRateSection, body.printing-ctg #userManagementSection, body.printing-ctg .android-bottom-nav { display: none !important; }
+            body.printing-ctg #ctgOfficeSection { display: block !important; }
+            body.printing-ctg #ctgOfficeSection .ctg-section-head, body.printing-ctg #ctgOfficerGrid, body.printing-ctg #ctgOfficeSection .commercial-search-bar, body.printing-ctg .ctg-action-col { display: none !important; }
+            body.printing-ctg .commercial-header-card { background: none !important; color: #000 !important; box-shadow: none !important; border: none !important; padding: 0 0 6px !important; margin-bottom: 8px !important; }
+            body.printing-ctg .commercial-header-card h2, body.printing-ctg .commercial-header-card .dept-subtitle { color: #000 !important; }
+            body.printing-ctg .ctg-print-subtitle { display: block !important; text-align: center; font-weight: 700; font-size: 14px; margin-bottom: 10px; color: #000; }
+            body.printing-ctg .commercial-table-wrapper { border: none !important; box-shadow: none !important; overflow: visible !important; }
+            body.printing-ctg .table-responsive-wrapper { overflow: visible !important; }
+            body.printing-ctg .commercial-table { border-collapse: collapse !important; width: 100% !important; }
+            body.printing-ctg .commercial-table thead tr { background: none !important; }
+            body.printing-ctg .commercial-table th, body.printing-ctg .commercial-table td { border: 1px solid #000 !important; padding: 8px !important; color: #000 !important; font-size: 12px !important; background: none !important; }
+            body.printing-ctg .commercial-sl-badge { background: none !important; color: #000 !important; box-shadow: none !important; width: auto !important; height: auto !important; }
+
             /* Quotation Print Specifics */
             body.printing-quote #crmStandardStandardViews { display: none !important; }
             body.printing-quote #quotationStudioSection { display: block !important; padding: 0 !important; margin: 0 !important; }
@@ -2195,7 +2243,7 @@
     }
 
     #linkClients, #linkDashboard, #linkOfficers, #linkRateChart, #linkClientRate,
-    #linkQuotation, #linkCommercial, #linkClassifiedRate, #linkUsers {
+    #linkQuotation, #linkCommercial, #linkClassifiedRate, #linkCtg, #linkUsers {
         -webkit-tap-highlight-color: transparent;
         touch-action: manipulation;
     }
@@ -2259,6 +2307,7 @@
             
             <li class="sidebar-item" id="menuCommercial"><a href="#" id="linkCommercial"><i class="fa-solid fa-handshake"></i> Commercial Executive</a></li>
             <li class="sidebar-item" id="menuClassifiedRate"><a href="#" id="linkClassifiedRate"><i class="fa-solid fa-newspaper"></i> Classified Ad Rate</a></li>
+            <li class="sidebar-item" id="menuCtg"><a href="#" id="linkCtg"><i class="fa-solid fa-building"></i> Chattogram Office</a></li>
             
             <!-- Hidden by default, shown only to admins -->
             <li class="sidebar-item" id="menuUsers" style="display:none;"><a href="#" id="linkUsers"><i class="fa-solid fa-user-shield"></i> User Management</a></li>
@@ -2395,6 +2444,22 @@
                 <section class="keyword-container" id="keywordContainerSection" style="margin-bottom: 10px;">
                     <div class="keyword-label"><i class="fa-solid fa-tags"></i> Industries:</div>
                     <div class="keyword-tags" id="industryShortcutTags"></div>
+                </section>
+
+                <!-- Chattogram Office matches for the common search -->
+                <section class="table-card" id="ctgSearchResultsCard" style="display:none; margin-bottom:18px;">
+                    <div class="table-header">
+                        <div class="table-title-group">
+                            <div class="table-title"><i class="fa-solid fa-building" style="color:#2563eb; margin-right:6px;"></i>Chattogram Office Results</div>
+                            <span class="commercial-count-badge" id="ctgSearchCountBadge">0 Clients</span>
+                        </div>
+                    </div>
+                    <div class="table-responsive-wrapper">
+                        <table class="data-table" style="min-width:0;">
+                            <thead><tr><th>SL</th><th>PF Number</th><th>Client Name</th><th>Organisation Type</th><th>Industry / Category</th><th>Officer</th><th>Office</th></tr></thead>
+                            <tbody id="ctgSearchResultsBody"></tbody>
+                        </table>
+                    </div>
                 </section>
 
                 <section class="table-card">
@@ -2606,6 +2671,51 @@
                 </div>
             </div>
 
+            <!-- SECTION 6: CHATTOGRAM OFFICE -->
+            <div id="ctgOfficeSection">
+                <div class="commercial-header-card">
+                    <h2><i class="fa-solid fa-building" style="margin-right:10px; color:#93c5fd;"></i>Chattogram Office</h2>
+                    <div class="dept-subtitle">Regional Office — Officers &amp; Clients</div>
+                </div>
+                <div class="ctg-print-subtitle" id="ctgPrintSubtitle"></div>
+
+                <div class="ctg-section-head">
+                    <h3><i class="fa-solid fa-user-tie" style="color:#6366f1; margin-right:6px;"></i>Officers</h3>
+                    <button class="btn btn-primary" id="ctgAddOfficerBtn" style="display:none;" onclick="openCtgOfficerModal(-1)"><i class="fa-solid fa-plus"></i> Add Officer</button>
+                </div>
+                <div class="ctg-officer-grid" id="ctgOfficerGrid"></div>
+
+                <div class="ctg-section-head">
+                    <h3><i class="fa-solid fa-users" style="color:#10b981; margin-right:6px;"></i>Clients<span class="ctg-filter-label" id="ctgFilterLabel" style="display:none;"></span></h3>
+                    <button class="btn btn-success" id="ctgAddClientBtn" style="display:none;" onclick="openCtgClientModal(-1)"><i class="fa-solid fa-plus"></i> Add Client</button>
+                </div>
+                <div class="commercial-table-wrapper">
+                    <div class="commercial-search-bar">
+                        <div class="search-icon-wrap">
+                            <i class="fa-solid fa-search"></i>
+                            <input type="text" id="ctgSearchInput" placeholder="Search client, PF, officer or industry..." onkeyup="ctgSetSearch(this.value)">
+                        </div>
+                        <span class="commercial-count-badge" id="ctgClientCountBadge">0 Clients</span>
+                    </div>
+                    <div class="table-responsive-wrapper" style="overflow-x:auto;">
+                        <table class="commercial-table" id="ctgClientTable">
+                            <thead>
+                                <tr>
+                                    <th style="width:55px;">SL</th>
+                                    <th style="width:100px;">PF Number</th>
+                                    <th>Client Name</th>
+                                    <th>Organisation Type</th>
+                                    <th>Industry / Category</th>
+                                    <th>Officer</th>
+                                    <th id="ctgActionTh" class="ctg-action-col" style="width:90px; display:none;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ctgClientTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <!-- SECTION 5: CLASSIFIED ADVERTISEMENT RATE -->
             <div id="classifiedAdRateSection">
                 <div class="classified-header-card">
@@ -2726,6 +2836,41 @@
         </div>
     </div>
 
+    <!-- CHATTOGRAM OFFICE: OFFICER MODAL (ADMIN ONLY) -->
+    <div class="modal-overlay" id="ctgOfficerModalOverlay">
+        <div class="modal-box">
+            <h3 id="ctgOfficerModalTitle">Add Chattogram Officer</h3>
+            <p class="modal-desc">এই অফিসার শুধু চট্টগ্রাম অফিসের তালিকায় যুক্ত হবে।</p>
+            <div class="form-group"><label>Officer Name</label><input type="text" id="formCtgOfficerName"></div>
+            <div class="form-group"><label>PF Number</label><input type="text" id="formCtgOfficerPf"></div>
+            <div class="form-group"><label>Phone (Optional)</label><input type="text" id="formCtgOfficerPhone"></div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeCtgOfficerModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveCtgOfficer()">Save Officer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHATTOGRAM OFFICE: CLIENT MODAL (ADMIN ONLY) -->
+    <div class="modal-overlay" id="ctgClientModalOverlay">
+        <div class="modal-box">
+            <h3 id="ctgClientModalTitle">Add Chattogram Client</h3>
+            <p class="modal-desc">এই ক্লায়েন্ট শুধু চট্টগ্রাম অফিসের তালিকায় যুক্ত হবে।</p>
+            <div class="form-group"><label>Officer Name</label><select id="formCtgClientOfficer" onchange="ctgAutoFillPf()"></select></div>
+            <div class="form-group"><label>PF Number (Auto)</label><input type="text" id="formCtgClientPf" readonly></div>
+            <div class="form-group"><label>Client Name</label><input type="text" id="formCtgClientName"></div>
+            <div class="form-group">
+                <label>Organisation Type</label>
+                <select id="formCtgClientType"><option value="Private Client">Private Client</option><option value="Government Client">Government Client</option></select>
+            </div>
+            <div class="form-group"><label>Industry / Category</label><select id="formCtgClientIndustry"></select></div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeCtgClientModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveCtgClient()">Save Client</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ADD/EDIT USER MODAL (ADMIN ONLY) -->
     <div class="modal-overlay" id="userModalOverlay">
         <div class="modal-box">
@@ -2811,11 +2956,17 @@
                     <option value="all">All Clients</option>
                     <option value="officer">By Officer</option>
                     <option value="industry">By Industry (University, Bank, etc.)</option>
+                    <option value="ctgAll">Chattogram Office — All Clients</option>
+                    <option value="ctgOfficer">Chattogram Office — By Officer</option>
                 </select>
             </div>
             <div class="form-group" id="printSubOptionOfficer" style="display:none;">
                 <label>Select Officer</label>
                 <select id="printOfficerSelect"></select>
+            </div>
+            <div class="form-group" id="printSubOptionCtgOfficer" style="display:none;">
+                <label>Select Chattogram Officer</label>
+                <select id="printCtgOfficerSelect"></select>
             </div>
             <div class="form-group" id="printSubOptionIndustry" style="display:none;">
                 <label>Select Industry Keyword / Type</label>
@@ -2848,11 +2999,18 @@
                     <option value="all">All Clients (Full Database)</option>
                     <option value="officer">Short by Officer</option>
                     <option value="industry">Short by Industry (Govt, University, Bank, School...)</option>
+                    <option value="ctgAll">Chattogram Office — All Clients</option>
+                    <option value="ctgOfficer">Chattogram Office — By Officer</option>
+                    <option value="both">Both Offices (Dhaka + Chattogram)</option>
                 </select>
             </div>
             <div class="form-group" id="exportSubOptionOfficer" style="display:none;">
                 <label>Select Officer</label>
                 <select id="exportOfficerSelect"></select>
+            </div>
+            <div class="form-group" id="exportSubOptionCtgOfficer" style="display:none;">
+                <label>Select Chattogram Officer</label>
+                <select id="exportCtgOfficerSelect"></select>
             </div>
             <div class="form-group" id="exportSubOptionIndustry" style="display:none;">
                 <label>Select Industry Keyword / Type</label>
@@ -3720,6 +3878,7 @@
             const userManagement = document.getElementById("userManagementSection");
             const commercialSection = document.getElementById("commercialExecutiveSection");
             const classifiedSection = document.getElementById("classifiedAdRateSection");
+            const ctgSection = document.getElementById("ctgOfficeSection");
             const globalSearch = document.getElementById("globalHeaderSearch");
             
             document.querySelectorAll(".sidebar-item").forEach(i => i.classList.remove("active"));
@@ -3729,6 +3888,7 @@
             userManagement.style.display = "none";
             commercialSection.style.display = "none";
             classifiedSection.style.display = "none";
+            ctgSection.style.display = "none";
 
             let isAdmin = loggedInUser && loggedInUser.role === 'admin';
             
@@ -3755,6 +3915,12 @@
                 document.getElementById("menuCommercial").classList.add("active");
                 document.getElementById("mainPageTitle").innerText = "Commercial Executive Outside Dhaka";
                 renderCommercialTable(commercialExecutivesData);
+            } else if (targetView === "ctg") {
+                ctgSection.style.display = "block";
+                globalSearch.style.display = "none";
+                document.getElementById("menuCtg").classList.add("active");
+                document.getElementById("mainPageTitle").innerText = "Chattogram Office";
+                renderCtgOffice();
             } else if (targetView === "classified") {
                 classifiedSection.style.display = "block";
                 globalSearch.style.display = "none";
@@ -3764,6 +3930,7 @@
             } else {
                 standardLayout.style.display = "block";
                 globalSearch.style.display = "block";
+                renderCtgSearchResults();
                 
                 if (targetView === "dashboard") {
                     setActiveMenuItem("menuDashboard");
@@ -3854,6 +4021,7 @@
         bindNavigationLink("linkUsers", "users");
         bindNavigationLink("linkCommercial", "commercial");
         bindNavigationLink("linkClassifiedRate", "classified");
+        bindNavigationLink("linkCtg", "ctg");
 
         /* --- CRM DASHBOARD ARCHITECTURE SCRIPTS --- */
         function initCharts(govtCount, pvtCount) {
@@ -4040,9 +4208,11 @@
                 return haystack.includes(query);
             });
 
-            countEl.textContent = `${matches.length} result${matches.length === 1 ? '' : 's'}`;
+            const ctgMatches = getCtgSearchMatches(query);
+            const totalMatches = matches.length + ctgMatches.length;
+            countEl.textContent = `${totalMatches} result${totalMatches === 1 ? '' : 's'}`;
 
-            if (!matches.length) {
+            if (!matches.length && !ctgMatches.length) {
                 results.innerHTML = `
                     <div class="mobile-search-empty">
                         <i class="fa-regular fa-face-frown" style="font-size:1.5rem;"></i>
@@ -4076,7 +4246,7 @@
                         </span>
                         <span class="mobile-result-arrow"><i class="fa-solid fa-chevron-right"></i></span>
                     </button>`;
-            }).join('');
+            }).join('') + ctgMatches.slice(0, 40).map(ctgMobileResultHtml).join('');
 
             if (matches.length > visibleMatches.length) {
                 results.insertAdjacentHTML('beforeend',
@@ -4228,6 +4398,7 @@
                 </tr>`;
             });
             tbody.innerHTML = rowsHtml;
+            renderCtgSearchResults();
         }
 
         function filterByOfficerFromMatrix(officerName) { selectedOfficerFilter = officerName; selectedKeywordFilter = selectedTypeFilter = null; clearTagHighlights(); switchViewLayouts("dashboard"); }
@@ -5207,6 +5378,7 @@
             offSelect.innerHTML = "";
             officerList.forEach(off => { offSelect.innerHTML += `<option value="${off}">${off}</option>`; });
             populateIndustrySelects();
+            fillCtgOfficerSelect("exportCtgOfficerSelect");
             toggleExportSubOptions();
             toggleExportModal(true);
         }
@@ -5219,6 +5391,7 @@
             let opt = document.getElementById("exportOptionSelect").value;
             document.getElementById("exportSubOptionOfficer").style.display = opt === "officer" ? "block" : "none";
             document.getElementById("exportSubOptionIndustry").style.display = opt === "industry" ? "block" : "none";
+            document.getElementById("exportSubOptionCtgOfficer").style.display = opt === "ctgOfficer" ? "block" : "none";
         }
 
         function executeExcelExport() {
@@ -5226,7 +5399,10 @@
             let db = getDatabase();
             let filteredDb = db;
             let subtitle = "Full Database Report";
-            
+            let rows = null; // set only for Chattogram / both-office exports (adds an Office column)
+            const ctgRows = (arr) => arr.slice().sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+                .map(c => ({ item: c, office: "Chattogram" }));
+
             if (opt === "officer") {
                 let off = document.getElementById("exportOfficerSelect").value;
                 filteredDb = db.filter(c => c.officer === off);
@@ -5235,8 +5411,24 @@
                 let ind = document.getElementById("exportIndustrySelect").value;
                 filteredDb = db.filter(c => getClientIndustry(c).toLowerCase() === ind.toLowerCase());
                 subtitle = "Filtered By Industry / Category: " + ind;
+            } else if (opt === "ctgAll") {
+                rows = ctgRows(getCtgClients());
+                subtitle = "Chattogram Office - All Clients";
+            } else if (opt === "ctgOfficer") {
+                let off = document.getElementById("exportCtgOfficerSelect").value;
+                if (!off) return showToast("Please select a Chattogram officer.", "danger");
+                rows = ctgRows(getCtgClients().filter(c => c.officer === off));
+                subtitle = "Chattogram Office - Officer: " + off;
+            } else if (opt === "both") {
+                rows = db.map(c => ({ item: c, office: "Dhaka" })).concat(ctgRows(getCtgClients()));
+                subtitle = "Both Offices - Dhaka + Chattogram";
             }
-            
+
+            const withOffice = rows !== null;
+            if (!rows) rows = filteredDb.map(c => ({ item: c, office: "" }));
+            const cols = withOffice ? 7 : 6;
+            const th = (label, align) => `<th style="font-weight: bold; font-size: 14pt; background-color: #e2e8f0; text-align: ${align};">${label}</th>`;
+
             // Build highly customized bold/centered HTML for Excel parsing
             let htmlString = `
             <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
@@ -5245,42 +5437,38 @@
                 <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif;">
                     <thead>
                         <tr>
-                            <td colspan="6" style="text-align: center; font-size: 26pt; font-weight: bold; background-color: #0f172a; color: #ffffff; padding: 20px;">
+                            <td colspan="${cols}" style="text-align: center; font-size: 26pt; font-weight: bold; background-color: #0f172a; color: #ffffff; padding: 20px;">
                                 KALER KANTHO CRM REPORT
                             </td>
                         </tr>
                         <tr>
-                            <td colspan="6" style="text-align: center; font-size: 16pt; font-weight: bold; background-color: #3b82f6; color: #ffffff; padding: 12px;">
-                                ${subtitle}
+                            <td colspan="${cols}" style="text-align: center; font-size: 16pt; font-weight: bold; background-color: #3b82f6; color: #ffffff; padding: 12px;">
+                                ${escapeHtml(subtitle)}
                             </td>
                         </tr>
                         <tr>
-                            <th style="font-weight: bold; font-size: 14pt; background-color: #e2e8f0; text-align: center;">SL</th>
-                            <th style="font-weight: bold; font-size: 14pt; background-color: #e2e8f0; text-align: left;">PF Number</th>
-                            <th style="font-weight: bold; font-size: 14pt; background-color: #e2e8f0; text-align: left;">Client Name</th>
-                            <th style="font-weight: bold; font-size: 14pt; background-color: #e2e8f0; text-align: left;">Organisation Type</th>
-                            <th style="font-weight: bold; font-size: 14pt; background-color: #e2e8f0; text-align: left;">Industry / Category</th>
-                            <th style="font-weight: bold; font-size: 14pt; background-color: #e2e8f0; text-align: left;">Assigned Officer</th>
+                            ${th("SL", "center")}${th("PF Number", "left")}${th("Client Name", "left")}${th("Organisation Type", "left")}${th("Industry / Category", "left")}${th("Assigned Officer", "left")}${withOffice ? th("Office", "left") : ""}
                         </tr>
                     </thead>
                     <tbody>
             `;
-            
-            filteredDb.forEach((item, idx) => {
+
+            rows.forEach(({ item, office }, idx) => {
                 htmlString += `
                     <tr>
                         <td style="text-align: center; font-size: 12pt;">${idx + 1}</td>
-                        <td style="font-size: 12pt;">${item.pf || ''}</td>
-                        <td style="font-size: 13pt; font-weight: bold;">${item.name || ''}</td>
-                        <td style="font-size: 12pt;">${item.type || ''}</td>
-                        <td style="font-size: 12pt;">${getIndustryDisplay(item)}</td>
-                        <td style="font-size: 12pt; font-weight: bold; color: #2563eb;">${item.officer || ''}</td>
+                        <td style="font-size: 12pt;">${escapeHtml(item.pf || '')}</td>
+                        <td style="font-size: 13pt; font-weight: bold;">${escapeHtml(item.name || '')}</td>
+                        <td style="font-size: 12pt;">${escapeHtml(item.type || '')}</td>
+                        <td style="font-size: 12pt;">${escapeHtml(getIndustryDisplay(item))}</td>
+                        <td style="font-size: 12pt; font-weight: bold; color: #2563eb;">${escapeHtml(item.officer || '')}</td>
+                        ${withOffice ? `<td style="font-size: 12pt; font-weight: bold;">${office}</td>` : ""}
                     </tr>
                 `;
             });
-            
+
             htmlString += `</tbody></table></body></html>`;
-            
+
             let blob = new Blob(['\ufeff' + htmlString], { type: 'application/vnd.ms-excel' });
             let url = URL.createObjectURL(blob);
             let a = document.createElement('a');
@@ -5289,7 +5477,7 @@
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-            
+
             toggleExportModal(false);
         }
 
@@ -5300,6 +5488,7 @@
             offSelect.innerHTML = "";
             officerList.forEach(off => { offSelect.innerHTML += `<option value="${off}">${off}</option>`; });
             populateIndustrySelects();
+            fillCtgOfficerSelect("printCtgOfficerSelect");
             togglePrintSubOptions();
             togglePrintModal(true);
         }
@@ -5312,11 +5501,32 @@
             let opt = document.getElementById("printOptionSelect").value;
             document.getElementById("printSubOptionOfficer").style.display = opt === "officer" ? "block" : "none";
             document.getElementById("printSubOptionIndustry").style.display = opt === "industry" ? "block" : "none";
+            document.getElementById("printSubOptionCtgOfficer").style.display = opt === "ctgOfficer" ? "block" : "none";
         }
 
         function executePrintReport() {
             let opt = document.getElementById("printOptionSelect").value;
-            
+
+            // Chattogram Office printing: open its view, apply the filter and print that table
+            if (opt === "ctgAll" || opt === "ctgOfficer") {
+                let off = opt === "ctgOfficer" ? document.getElementById("printCtgOfficerSelect").value : null;
+                if (opt === "ctgOfficer" && !off) return showToast("Please select a Chattogram officer.", "danger");
+                ctgSearchQuery = "";
+                const ctgInput = document.getElementById("ctgSearchInput");
+                if (ctgInput) ctgInput.value = "";
+                ctgSelectedOfficer = off;
+                togglePrintModal(false);
+                switchViewLayouts("ctg");
+                document.getElementById("ctgPrintSubtitle").innerText = off ? ("Officer: " + off) : "All Clients";
+                document.body.classList.add('printing-ctg');
+                document.body.classList.remove('printing-table', 'printing-quote');
+                setTimeout(() => {
+                    window.print();
+                    document.body.classList.remove('printing-ctg');
+                }, 500);
+                return;
+            }
+
             // Adjust table based on selection
             if (opt === "all") resetAllFilters();
             else if (opt === "officer") filterByOfficer(document.getElementById("printOfficerSelect").value);
@@ -5480,6 +5690,315 @@
                 String(row.vat).includes(query)
             );
             renderClassifiedTable(filtered);
+        }
+
+/* =====================================================
+           CHATTOGRAM OFFICE - separate officers & clients
+           Firebase nodes: crm/ctgOfficers, crm/ctgClients
+           ===================================================== */
+        let ctgSelectedOfficer = null;
+        let ctgSearchQuery = "";
+        let ctgEditingOfficerIndex = -1;
+        let ctgEditingClientIndex = -1;
+
+        function ctgIsAdmin() { return !!(loggedInUser && loggedInUser.role === 'admin'); }
+        function getCtgOfficers() { return Array.isArray(firebaseCtgOfficersCache) ? firebaseCtgOfficersCache : []; }
+        function getCtgClients() { return Array.isArray(firebaseCtgClientsCache) ? firebaseCtgClientsCache : []; }
+
+        function persistCtg(officers, clients) {
+            const tasks = [];
+            if (officers) { firebaseCtgOfficersCache = officers; tasks.push(firebaseDB.ref('crm/ctgOfficers').set(officers)); }
+            if (clients)  { firebaseCtgClientsCache = clients;   tasks.push(firebaseDB.ref('crm/ctgClients').set(clients)); }
+            return Promise.all(tasks).then(() => { renderCtgOffice(); return true; }).catch(err => {
+                console.error('Failed to save Chattogram office data:', err);
+                showToast('Could not save Chattogram office data to Firebase.', 'danger');
+                return false;
+            });
+        }
+
+        function ctgSetSearch(val) { ctgSearchQuery = val || ""; renderCtgOffice(); }
+
+        function ctgToggleOfficer(index) {
+            const officer = getCtgOfficers()[index];
+            if (!officer) return;
+            ctgSelectedOfficer = (ctgSelectedOfficer === officer.name) ? null : officer.name;
+            renderCtgOffice();
+        }
+
+        function renderCtgOffice() {
+            const admin = ctgIsAdmin();
+            const officers = getCtgOfficers();
+            const clients = getCtgClients();
+
+            document.getElementById('ctgAddOfficerBtn').style.display = admin ? 'inline-flex' : 'none';
+            document.getElementById('ctgAddClientBtn').style.display = admin ? 'inline-flex' : 'none';
+            document.getElementById('ctgActionTh').style.display = admin ? '' : 'none';
+
+            if (ctgSelectedOfficer && !officers.some(o => o.name === ctgSelectedOfficer)) ctgSelectedOfficer = null;
+
+            // --- Officer cards ---
+            const grid = document.getElementById('ctgOfficerGrid');
+            if (!officers.length) {
+                grid.innerHTML = `<div class="ctg-empty"><i class="fa-solid fa-user-plus" style="font-size:1.4rem; display:block; margin-bottom:8px; opacity:.6;"></i>${admin ? 'এখনো কোনো অফিসার যোগ করা হয়নি। "Add Officer" বাটনে ক্লিক করুন।' : 'এখনো কোনো অফিসার যোগ করা হয়নি।'}</div>`;
+            } else {
+                grid.innerHTML = officers.map((o, i) => {
+                    const count = clients.filter(c => c.officer === o.name).length;
+                    const active = ctgSelectedOfficer === o.name ? ' active' : '';
+                    const phone = o.phone ? ` &bull; <i class="fa-solid fa-phone" style="font-size:.65rem;"></i> ${escapeHtml(o.phone)}` : '';
+                    const actions = admin ? `<div>
+                            <button class="ctg-icon-btn" title="Edit" onclick="event.stopPropagation(); openCtgOfficerModal(${i})"><i class="fa-solid fa-pen"></i></button>
+                            <button class="ctg-icon-btn danger" title="Delete" onclick="event.stopPropagation(); deleteCtgOfficer(${i})"><i class="fa-solid fa-trash"></i></button>
+                        </div>` : '';
+                    return `<div class="ctg-officer-card${active}" onclick="ctgToggleOfficer(${i})">
+                        <div class="ctg-officer-avatar">${escapeHtml((o.name || '?').trim().charAt(0).toUpperCase())}</div>
+                        <div class="ctg-officer-info">
+                            <div class="ctg-officer-name">${escapeHtml(o.name)}</div>
+                            <div class="ctg-officer-meta">PF: ${escapeHtml(o.pf)}${phone}</div>
+                        </div>
+                        <div class="ctg-officer-side"><span class="ctg-officer-count">${count} Client${count !== 1 ? 's' : ''}</span>${actions}</div>
+                    </div>`;
+                }).join('');
+            }
+
+            // --- Filter label ---
+            const label = document.getElementById('ctgFilterLabel');
+            if (ctgSelectedOfficer) { label.innerText = ctgSelectedOfficer + ' ✕'; label.style.display = 'inline-block'; label.style.cursor = 'pointer'; label.onclick = () => { ctgSelectedOfficer = null; renderCtgOffice(); }; }
+            else { label.style.display = 'none'; }
+
+            // --- Client table ---
+            const q = ctgSearchQuery.trim().toLowerCase();
+            const rows = clients
+                .map((c, i) => ({ c, i }))
+                .filter(({ c }) => (!ctgSelectedOfficer || c.officer === ctgSelectedOfficer) &&
+                    (!q || [c.name, c.pf, c.officer, c.type, c.industry].some(v => String(v || '').toLowerCase().includes(q))))
+                .sort((a, b) => (a.c.name || '').localeCompare(b.c.name || ''));
+
+            const tbody = document.getElementById('ctgClientTableBody');
+            if (!rows.length) {
+                tbody.innerHTML = `<tr class="ctg-empty-row"><td colspan="${admin ? 7 : 6}">কোনো ক্লায়েন্ট পাওয়া যায়নি।</td></tr>`;
+            } else {
+                tbody.innerHTML = rows.map(({ c, i }, idx) => `<tr data-ctg-index="${i}">
+                    <td><span class="commercial-sl-badge">${idx + 1}</span></td>
+                    <td class="col-pf-exec">${escapeHtml(c.pf)}</td>
+                    <td class="col-name-exec">${escapeHtml(c.name)}</td>
+                    <td>${escapeHtml(c.type || 'Private Client')}</td>
+                    <td>${escapeHtml(c.industry || 'Uncategorized')}</td>
+                    <td class="col-place" style="text-align:center;"><i class="fa-solid fa-user-tie" style="margin-right:5px; font-size:.75rem;"></i>${escapeHtml(c.officer)}</td>
+                    ${admin ? `<td class="ctg-action-col">
+                        <button class="ctg-icon-btn" title="Edit" onclick="openCtgClientModal(${i})"><i class="fa-solid fa-pen"></i></button>
+                        <button class="ctg-icon-btn danger" title="Delete" onclick="deleteCtgClient(${i})"><i class="fa-solid fa-trash"></i></button>
+                    </td>` : ''}
+                </tr>`).join('');
+            }
+            document.getElementById('ctgClientCountBadge').innerText = rows.length + ' Client' + (rows.length !== 1 ? 's' : '');
+        }
+
+/* ---- Common search: include Chattogram office clients ---- */
+        function getCtgSearchMatches(query) {
+            const q = String(query || '').trim().toLowerCase();
+            if (!q) return [];
+            return getCtgClients().map((client, index) => ({ client, index })).filter(({ client }) =>
+                [client.name, client.pf, client.officer, client.type, client.industry]
+                    .map(v => String(v || '').toLowerCase()).join(' ').includes(q));
+        }
+
+        function ctgMobileResultHtml({ client, index }) {
+            const name = escapeHtml(client.name || 'Unnamed Client');
+            const initial = escapeHtml((client.name || 'C').trim().charAt(0).toUpperCase());
+            return `
+                <button type="button" class="mobile-search-result" onclick="openCtgSearchClient(${index})">
+                    <span class="mobile-result-avatar">${initial}</span>
+                    <span class="mobile-result-main">
+                        <span class="mobile-result-name">${name}</span>
+                        <span class="mobile-result-meta">
+                            <span class="ctg-tag"><i class="fa-solid fa-building"></i> Chattogram</span>
+                            <span class="mobile-result-chip">PF ${escapeHtml(client.pf || 'No PF')}</span>
+                            <span class="mobile-result-chip">${escapeHtml(client.industry || 'Uncategorized')}</span>
+                            <span class="mobile-result-chip">${escapeHtml(client.officer || 'No officer')}</span>
+                            <span class="mobile-result-chip">${escapeHtml(client.type || 'Private Client')}</span>
+                        </span>
+                    </span>
+                    <span class="mobile-result-arrow"><i class="fa-solid fa-chevron-right"></i></span>
+                </button>`;
+        }
+
+        function renderCtgSearchResults() {
+            const card = document.getElementById('ctgSearchResultsCard');
+            if (!card) return;
+            const onClientView = (currentView === 'dashboard' || currentView === 'clients');
+            const matches = onClientView ? getCtgSearchMatches(globalSearchQuery) : [];
+            if (!matches.length) { card.style.display = 'none'; return; }
+            document.getElementById('ctgSearchCountBadge').innerText = matches.length + ' Client' + (matches.length !== 1 ? 's' : '');
+            document.getElementById('ctgSearchResultsBody').innerHTML = matches.map(({ client, index }, i) => `
+                <tr title="Open in Chattogram Office" onclick="openCtgSearchClient(${index})">
+                    <td>${i + 1}</td>
+                    <td>${escapeHtml(client.pf || 'N/A')}</td>
+                    <td style="font-weight:600;">${escapeHtml(client.name || 'N/A')}</td>
+                    <td>${escapeHtml(client.type || 'Private Client')}</td>
+                    <td><span class="status-badge" style="background:var(--badge-bg);color:var(--sidebar-active);">${escapeHtml(client.industry || 'Uncategorized')}</span></td>
+                    <td><span class="assigned-officer"><i class="fa-solid fa-user-tie"></i> ${escapeHtml(client.officer || 'N/A')}</span></td>
+                    <td><span class="ctg-tag"><i class="fa-solid fa-building"></i> Chattogram</span></td>
+                </tr>`).join('');
+            card.style.display = 'block';
+        }
+
+        function openCtgSearchClient(index) {
+            if (!getCtgClients()[index]) return;
+            // Clear the common search, then jump to the client inside Chattogram Office
+            const input = document.getElementById('searchInput');
+            if (input) input.value = '';
+            document.querySelectorAll('.inline-table-search input').forEach(i => i.value = '');
+            globalSearchQuery = '';
+            const headerSearch = document.getElementById('globalHeaderSearch');
+            if (headerSearch) headerSearch.classList.remove('has-value');
+            closeMobileSearchPanel();
+
+            ctgSelectedOfficer = null;
+            ctgSearchQuery = '';
+            const ctgInput = document.getElementById('ctgSearchInput');
+            if (ctgInput) ctgInput.value = '';
+
+            switchViewLayouts('ctg');
+            requestAnimationFrame(() => {
+                const row = document.querySelector(`#ctgClientTableBody tr[data-ctg-index="${index}"]`);
+                if (row) {
+                    row.classList.add('mobile-search-focus');
+                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    setTimeout(() => row.classList.remove('mobile-search-focus'), 1800);
+                }
+            });
+        }
+
+function fillCtgOfficerSelect(id) {
+            const sel = document.getElementById(id);
+            if (!sel) return;
+            const officers = getCtgOfficers();
+            sel.innerHTML = officers.length
+                ? officers.map(o => `<option value="${escapeHtml(o.name)}">${escapeHtml(o.name)}</option>`).join('')
+                : '<option value="">No Chattogram officer added yet</option>';
+        }
+
+        /* ---- Officers ---- */
+        function openCtgOfficerModal(index) {
+            if (!ctgIsAdmin()) return;
+            ctgEditingOfficerIndex = index;
+            const o = index > -1 ? getCtgOfficers()[index] : { name: '', pf: '', phone: '' };
+            document.getElementById('ctgOfficerModalTitle').innerText = index > -1 ? 'Edit Chattogram Officer' : 'Add Chattogram Officer';
+            document.getElementById('formCtgOfficerName').value = o.name || '';
+            document.getElementById('formCtgOfficerPf').value = o.pf || '';
+            document.getElementById('formCtgOfficerPhone').value = o.phone || '';
+            document.getElementById('ctgOfficerModalOverlay').style.display = 'flex';
+        }
+        function closeCtgOfficerModal() {
+            document.getElementById('ctgOfficerModalOverlay').style.display = 'none';
+            ctgEditingOfficerIndex = -1;
+        }
+
+        function saveCtgOfficer() {
+            if (!ctgIsAdmin()) return;
+            const name = document.getElementById('formCtgOfficerName').value.trim();
+            const pf = document.getElementById('formCtgOfficerPf').value.trim();
+            const phone = document.getElementById('formCtgOfficerPhone').value.trim();
+            if (!name || !pf) return showToast('Officer name and PF number are required.', 'danger');
+
+            const officers = getCtgOfficers().slice();
+            const dup = officers.findIndex((o, i) => i !== ctgEditingOfficerIndex && o.name.toLowerCase() === name.toLowerCase());
+            if (dup > -1) return showToast('This officer already exists in Chattogram office.', 'danger');
+
+            if (ctgEditingOfficerIndex > -1) {
+                const oldName = officers[ctgEditingOfficerIndex].name;
+                officers[ctgEditingOfficerIndex] = { name, pf, phone };
+                // Keep this officer's clients linked after rename / PF change
+                const clients = getCtgClients().map(c => c.officer === oldName ? Object.assign({}, c, { officer: name, pf }) : c);
+                if (ctgSelectedOfficer === oldName) ctgSelectedOfficer = name;
+                persistCtg(officers, clients).then(ok => { if (ok) showToast('Officer updated successfully!', 'success'); });
+            } else {
+                officers.push({ name, pf, phone });
+                persistCtg(officers, null).then(ok => { if (ok) showToast('Officer added to Chattogram office!', 'success'); });
+            }
+            closeCtgOfficerModal();
+        }
+
+        function deleteCtgOfficer(index) {
+            if (!ctgIsAdmin()) return;
+            const officer = getCtgOfficers()[index];
+            if (!officer) return;
+            if (getCtgClients().some(c => c.officer === officer.name)) {
+                return showToast('এই অফিসারের ক্লায়েন্ট আছে। আগে ক্লায়েন্টগুলো মুছুন বা অন্য অফিসারে দিন।', 'danger', 4500);
+            }
+            showConfirmModal('Delete Officer?', 'Remove "' + officer.name + '" from Chattogram office?', function() {
+                const officers = getCtgOfficers().slice();
+                officers.splice(index, 1);
+                persistCtg(officers, null);
+            });
+        }
+
+        /* ---- Clients ---- */
+        function ctgAutoFillPf() {
+            const name = document.getElementById('formCtgClientOfficer').value;
+            const o = getCtgOfficers().find(x => x.name === name);
+            document.getElementById('formCtgClientPf').value = o ? o.pf : '';
+        }
+
+        function openCtgClientModal(index) {
+            if (!ctgIsAdmin()) return;
+            const officers = getCtgOfficers();
+            if (!officers.length) return showToast('আগে চট্টগ্রাম অফিসের অফিসার যোগ করুন।', 'danger');
+
+            ctgEditingClientIndex = index;
+            const c = index > -1 ? getCtgClients()[index] : null;
+
+            const offSel = document.getElementById('formCtgClientOfficer');
+            offSel.innerHTML = officers.map(o => `<option value="${escapeHtml(o.name)}">${escapeHtml(o.name)}</option>`).join('');
+            offSel.value = c ? c.officer : (ctgSelectedOfficer || officers[0].name);
+
+            const indSel = document.getElementById('formCtgClientIndustry');
+            const inds = getIndustriesDatabase().slice();
+            if (c && c.industry && !inds.includes(c.industry)) inds.push(c.industry);
+            indSel.innerHTML = '<option value="">Uncategorized</option>' + inds.map(i => `<option value="${escapeHtml(i)}">${escapeHtml(i)}</option>`).join('');
+            indSel.value = c ? (c.industry || '') : '';
+
+            document.getElementById('ctgClientModalTitle').innerText = c ? 'Edit Chattogram Client' : 'Add Chattogram Client';
+            document.getElementById('formCtgClientName').value = c ? c.name : '';
+            document.getElementById('formCtgClientType').value = c ? (c.type || 'Private Client') : 'Private Client';
+            ctgAutoFillPf();
+            document.getElementById('ctgClientModalOverlay').style.display = 'flex';
+        }
+        function closeCtgClientModal() {
+            document.getElementById('ctgClientModalOverlay').style.display = 'none';
+            ctgEditingClientIndex = -1;
+        }
+
+        function saveCtgClient() {
+            if (!ctgIsAdmin()) return;
+            const officer = document.getElementById('formCtgClientOfficer').value;
+            const pf = document.getElementById('formCtgClientPf').value.trim();
+            const name = document.getElementById('formCtgClientName').value.trim();
+            const type = document.getElementById('formCtgClientType').value;
+            const industry = document.getElementById('formCtgClientIndustry').value;
+            if (!name) return showToast('Client name is required.', 'danger');
+            if (!officer) return showToast('Please select an officer.', 'danger');
+
+            const clients = getCtgClients().slice();
+            const dup = clients.findIndex((c, i) => i !== ctgEditingClientIndex && c.name.toLowerCase() === name.toLowerCase());
+            if (dup > -1) return showToast('This client already exists in Chattogram office.', 'danger');
+
+            const record = { pf, name, type, industry, officer };
+            if (ctgEditingClientIndex > -1) clients[ctgEditingClientIndex] = record; else clients.push(record);
+            const wasEditing = ctgEditingClientIndex > -1;
+            persistCtg(null, clients).then(ok => { if (ok) showToast(wasEditing ? 'Client updated successfully!' : 'Client added to Chattogram office!', 'success'); });
+            closeCtgClientModal();
+        }
+
+        function deleteCtgClient(index) {
+            if (!ctgIsAdmin()) return;
+            const client = getCtgClients()[index];
+            if (!client) return;
+            showConfirmModal('Delete Client?', 'Remove "' + client.name + '" from Chattogram office?', function() {
+                const clients = getCtgClients().slice();
+                clients.splice(index, 1);
+                persistCtg(null, clients);
+            });
         }
 
         /* Stubbing missing QUOTATION functions if required by other parts of your app */
